@@ -11,3 +11,29 @@
         "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
         "Noto Color Emoji";
 }
+body > div.bg-gray-900\/50.dark\:bg-gray-900\/80.fixed.inset-0.z-40,
+body > div.bg-gray-900\/50.fixed.inset-0.z-40,
+body > div.bg-gray-900\/80.fixed.inset-0.z-40,
+body > div[data-modal-backdrop] {
+    z-index: 55 !important;
+}
+
+/* Alternative dengan attribute selector */
+div[class*="bg-gray-900"][class*="fixed"][class*="inset-0"][class*="z-40"] {
+    z-index: 55 !important;
+}
+
+/* Pastikan modal tetap di atas */
+div[id$="-modal"] {
+    z-index: 60 !important;
+}
+
+/* Override semua kemungkinan backdrop */
+.fixed.inset-0.z-40 {
+    z-index: 55 !important;
+}
+
+/* Khusus untuk dark mode */
+.dark div.bg-gray-900\/80.fixed.inset-0.z-40 {
+    z-index: 55 !important;
+}

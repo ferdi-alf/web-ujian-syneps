@@ -1,0 +1,31 @@
+{
+    "judul": "Ujian Laravel",
+    "kelas": "Full Stack Developer", //kelas sebenarnya dibackend memberi valuenya diambil dari 'kelas' di pengajar_details
+    "soal": [
+        {
+            "soal": "Apa itu Laravel?",
+            "jawaban": [
+                {
+                    "pilihan": "A",
+                    "teks": "Laravel adalah framework PHP yang digunakan untuk membangun aplikasi web.",
+                    "benar": true
+                },
+                {
+                    "pilihan": "B",
+                    "teks": "Laravel adalah bahasa pemrograman baru.",
+                    "benar": false
+                },
+                {
+                    "pilihan": "C",
+                    "teks": "Laravel hanya digunakan untuk aplikasi desktop.",
+                    "benar": false
+                },
+                {
+                    "pilihan": "D",
+                    "teks": "Laravel adalah sistem manajemen basis data.",
+                    "benar": false
+                }
+            ]
+        }
+    ]
+}

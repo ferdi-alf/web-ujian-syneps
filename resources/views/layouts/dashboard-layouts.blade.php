@@ -17,6 +17,18 @@
 </head>
 
 <body>
+
+    @include('components.navigation')
+    @include('components.sidebar')
+
+
+    <div class="md:p-4 p-2 sm:ml-64 bg-gray-50 min-h-screen">
+        <div class="p-4 mt-14">
+            @yield('content')
+        </div>
+    </div>
+
+
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/flowbite@3.1.2/dist/flowbite.min.js"></script>
     <script>
@@ -47,6 +59,7 @@
             });
         @endif
     </script>
+
 </body>
 
 </html>
