@@ -15,6 +15,7 @@
     @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     @endif
+    <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
 </head>
 
 <body class="bg-[#FDFDFC] ">
@@ -33,10 +34,14 @@
             <div class="w-full max-w-6xl bg-white rounded-2xl shadow-2xl overflow-hidden">
                 <div class="grid grid-cols-1 lg:grid-cols-2 min-h-[600px]">
                     <div class="p-8 lg:p-12 flex flex-col justify-center">
+
                         <div class="w-full max-w-md mx-auto">
-                            <h1 class="text-4xl font-bold text-gray-800 mb-2">
-                                Welcome Back
-                            </h1>
+                            <div class="max-w-md w-full flex justify-start items-center space-x-1.5  ">
+                                <img src="/images/logo.png" alt="syneps-logo" class="w-14 h-14">
+                                <h1
+                                    class="font-extrabold text-3xl text-transparent bg-clip-text bg-gradient-to-br from-teal-300 via-emerald-300 to-emerald-400">
+                                    Syneps Academy</h1>
+                            </div>
                             <p class="text-gray-600 mb-8">
                                 Login ke Akunmu
                             </p>
@@ -51,7 +56,7 @@
                                 <x-fragments.text-field id="password" name="password" type="password" label="Password"
                                     placeholder="Masukan Password" :value="old('password')" :error="$errors->first('password')" required />
 
-                                <!-- Remember me -->
+
                                 <div class="flex items-center justify-between">
                                     <div class="flex items-center">
                                         <input id="remember-me" name="remember" type="checkbox"

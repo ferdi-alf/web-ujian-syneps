@@ -15,15 +15,16 @@
         <ul class="space-y-2 font-medium mt-10">
             <x-fragments.sidebar-item route="dashboard" icon="gauge"
                 colors="emerald">Dashboard</x-fragments.sidebar-item>
-            <x-fragments.sidebar-item route="users" icon="user" colors="emerald">Users</x-fragments.sidebar-item>
-            <x-fragments.sidebar-item route="siswa" icon="users" colors="emerald">Siswa</x-fragments.sidebar-item>
+            <x-fragments.sidebar-item route="users.index" icon="user"
+                colors="emerald">Users</x-fragments.sidebar-item>
+            <x-fragments.sidebar-item route="siswa" icon="users" colors="emerald">Members</x-fragments.sidebar-item>
             <x-fragments.sidebar-item route="kelas.index" icon="code-branch"
                 colors="emerald">Kelas</x-fragments.sidebar-item>
-            <x-fragments.sidebar-item route="manajemen.ujian" icon="book" colors="emerald">Manajemen
+            <x-fragments.sidebar-item route="manajemen-ujian.index" icon="book" colors="emerald">Manajemen
                 Ujian</x-fragments.sidebar-item>
-            <x-fragments.sidebar-item route="tambah.ujian" icon="plus" colors="emerald">Tambah
+            <x-fragments.sidebar-item route="tambah-ujian.index" icon="plus" colors="emerald">Tambah
                 ujian</x-fragments.sidebar-item>
-            <x-fragments.sidebar-item route="leaderboard.siswa" icon="chart-simple" colors="emerald">Leaderboard Siswa
+            <x-fragments.sidebar-item route="leaderboard.siswa" icon="chart-simple" colors="emerald">Leaderboard Member
             </x-fragments.sidebar-item>
         </ul>
     </div>

@@ -14,12 +14,12 @@ return new class extends Migration
             Schema::create('ujians', function (Blueprint $table) {
                 $table->id();
                 $table->string('judul');
-               $table->foreignId('kelas_id')
+                $table->foreignId('kelas_id')
                     ->nullable() 
                     ->constrained('kelas')
                     ->onDelete('set null');
-                $table->integer('waktu_menit');
-                $table->timestamp('mulai')->nullable();
+                $table->enum('status', ['pending', 'active', 'finished'])->default('pending');
+                $table->timestamp('waktu')->nullable();
                 $table->timestamps();
             });
     }

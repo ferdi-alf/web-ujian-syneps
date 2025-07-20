@@ -34,7 +34,7 @@
             <option value="">{{ $placeholder }}</option>
         @endif
 
-        @if (is_array($options) && !empty($options))
+        @if (is_array($options) || $options instanceof \Illuminate\Support\Collection)
             @foreach ($options as $key => $option)
                 @if (is_array($option))
                     <option value="{{ $option['value'] }}"

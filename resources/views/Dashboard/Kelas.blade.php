@@ -8,19 +8,24 @@
                 Tambah Kelas
             </x-fragments.modal-button>
         </div>
-        <x-modal-layout id="add-jurusan-modal" title="Tambah Kelas Baru" size="lg" :show="$errors->any()">
-            <form action="{{ route('kelas.store') }}" class="space-y-4 p-2" method="POST">
-                @csrf
-                <x-fragments.text-field label="Nama Kelas" name="name" placeholder="Masukan Kelas..." required />
-                <div class="flex justify-end">
 
-                    <button type="submit"
-                        class="px-4 py-2 text-sm font-medium text-white bg-blue-700 rounded-lg hover:bg-blue-800 transition-colors duration-200">
-                        <i class="fa-solid fa-save mr-2"></i>
-                        Simpan
-                    </button>
-                </div>
-            </form>
-        </x-modal-layout>
+        <x-fragments.form-modal id="add-jurusan-modal" title="Tambah Kelas" action="{{ route('kelas.store') }}">
+            <x-fragments.text-field label="Nama Kelas" name="name" placeholder="Masukan Nama Kelas..." required />
+        </x-fragments.form-modal>
+
+        <div class="mt-6">
+            <x-reusable-table :headers="['No', 'Nama Kelas']" :data="$kelas" :columns="[fn($row, $i) => $i + 1, fn($row) => $row->nama]" :showActions="true" :actionButtons="fn($row) => view('components.action-buttons', [
+                'modalId' => 'modal-update-kelas-' . $row->id,
+                'updateRoute' => route('kelas.update', $row->id),
+                'deleteRoute' => route('kelas.destroy', $row->id),
+            ])"
+                :searchBar="true" :truncate="true" :rowPerPage="10" position="left" />
+        </div>
+        @foreach ($kelas as $row)
+            <x-fragments.form-modal id="modal-update-kelas-{{ $row->id }}" title="Edit Kelas"
+                action="{{ route('kelas.update', $row->id) }}" method="PUT">
+                <x-fragments.text-field label="Nama Kelas" name="name" :value="$row->nama" required />
+            </x-fragments.form-modal>
+        @endforeach
     </div>
 @endsection

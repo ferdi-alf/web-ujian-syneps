@@ -19,7 +19,7 @@
 @endphp
 
 <div id="{{ $id }}"
-    class="fixed inset-0 z-50 bg-black/30 justify-center items-center  {{ $show ? 'flex ' : 'hidden' }} ">
+    class="fixed inset-0 z-[1000]   {{ $show ? 'flex ' : 'hidden' }} items-center justify-center bg-black/30 bg-opacity-50">
 
     <div class="relative p-4 w-full {{ $modalSize }} max-h-full">
         <div class=" bg-white rounded-lg shadow-sm ">

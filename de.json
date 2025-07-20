@@ -1,31 +1,15 @@
 {
-    "judul": "Ujian Laravel",
-    "kelas": "Full Stack Developer", //kelas sebenarnya dibackend memberi valuenya diambil dari 'kelas' di pengajar_details
-    "soal": [
+    "id": "1",
+    "judul": "mengenal web",
+    "kelas": "Fullstack web dev", // didapat dari relasi berdasarkan column kelas_id di table ujians
+    "waktu": "10", // jika kosong return "-"
+    "status": "pending", //return dengan badges seperti "bg-blue-100 text-blue-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-sm  border border-blue-400", jika pending dark/gray, jika active hijau jika finished ungu
+    "total_soal": "10",
+    "hasil": [
         {
-            "soal": "Apa itu Laravel?",
-            "jawaban": [
-                {
-                    "pilihan": "A",
-                    "teks": "Laravel adalah framework PHP yang digunakan untuk membangun aplikasi web.",
-                    "benar": true
-                },
-                {
-                    "pilihan": "B",
-                    "teks": "Laravel adalah bahasa pemrograman baru.",
-                    "benar": false
-                },
-                {
-                    "pilihan": "C",
-                    "teks": "Laravel hanya digunakan untuk aplikasi desktop.",
-                    "benar": false
-                },
-                {
-                    "pilihan": "D",
-                    "teks": "Laravel adalah sistem manajemen basis data.",
-                    "benar": false
-                }
-            ]
+            "nama_lengkap": "Riski S", //diambil dari siswa details, jika kosong berikan "-"
+            "email": "riski@gmail.com",
+            "nilai": "80"
         }
     ]
 }

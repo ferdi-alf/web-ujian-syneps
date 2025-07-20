@@ -17,8 +17,6 @@ return new class extends Migration
             $table->text('soal');
             $table->timestamps();
         });
-
-
     }
 
     /**
