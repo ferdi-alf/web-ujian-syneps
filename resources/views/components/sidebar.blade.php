@@ -17,7 +17,8 @@
                 colors="emerald">Dashboard</x-fragments.sidebar-item>
             <x-fragments.sidebar-item route="users.index" icon="user"
                 colors="emerald">Users</x-fragments.sidebar-item>
-            <x-fragments.sidebar-item route="siswa" icon="users" colors="emerald">Members</x-fragments.sidebar-item>
+            <x-fragments.sidebar-item route="peserta.index" icon="users"
+                colors="emerald">Peserta</x-fragments.sidebar-item>
             <x-fragments.sidebar-item route="kelas.index" icon="code-branch"
                 colors="emerald">Kelas</x-fragments.sidebar-item>
             <x-fragments.sidebar-item route="manajemen-ujian.index" icon="book" colors="emerald">Manajemen

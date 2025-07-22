@@ -14,12 +14,12 @@
         </x-fragments.form-modal>
 
         <div class="mt-6">
-            <x-reusable-table :headers="['No', 'Nama Kelas']" :data="$kelas" :columns="[fn($row, $i) => $i + 1, fn($row) => $row->nama]" :showActions="true" :actionButtons="fn($row) => view('components.action-buttons', [
-                'modalId' => 'modal-update-kelas-' . $row->id,
-                'updateRoute' => route('kelas.update', $row->id),
-                'deleteRoute' => route('kelas.destroy', $row->id),
-            ])"
-                :searchBar="true" :truncate="true" :rowPerPage="10" position="left" />
+            <x-reusable-table :headers="['No', 'Nama Kelas']" position="center" :data="$kelas" :columns="[fn($row, $i) => $i + 1, fn($row) => $row->nama]" :showActions="true"
+                :actionButtons="fn($row) => view('components.action-buttons', [
+                    'modalId' => 'modal-update-kelas-' . $row->id,
+                    'updateRoute' => route('kelas.update', $row->id),
+                    'deleteRoute' => route('kelas.destroy', $row->id),
+                ])" :searchBar="true" :truncate="true" :rowPerPage="10" position="left" />
         </div>
         @foreach ($kelas as $row)
             <x-fragments.form-modal id="modal-update-kelas-{{ $row->id }}" title="Edit Kelas"

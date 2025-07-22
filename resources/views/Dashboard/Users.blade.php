@@ -64,8 +64,6 @@
                 @endif
             </x-fragments.form-modal>
         @endforeach
-
-
     </div>
 
     <script>

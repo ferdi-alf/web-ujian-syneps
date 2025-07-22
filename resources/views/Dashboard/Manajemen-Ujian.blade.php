@@ -3,7 +3,7 @@
 @section('content')
     <div class="mt-10">
         <h2 class="text-lg font-semibold mb-2">Data Ujian</h2>
-        <x-reusable-table :headers="['No', 'Judul', 'Kelas', 'Waktu', 'Status', 'Total Soal']" :data="$dataUjian" :columns="[
+        <x-reusable-table :searchBar="true" :headers="['No', 'Judul', 'Kelas', 'Waktu', 'Status', 'Total Soal']" :data="$dataUjian" :columns="[
             fn($row, $i) => $i + 1,
             fn($row) => $row['judul'],
             fn($row) => $row['kelas'],

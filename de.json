@@ -1,15 +1,16 @@
 {
     "id": "1",
-    "judul": "mengenal web",
-    "kelas": "Fullstack web dev", // didapat dari relasi berdasarkan column kelas_id di table ujians
-    "waktu": "10", // jika kosong return "-"
-    "status": "pending", //return dengan badges seperti "bg-blue-100 text-blue-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-sm  border border-blue-400", jika pending dark/gray, jika active hijau jika finished ungu
-    "total_soal": "10",
+    "name": "peserta_1",
+    "nama_lengkap": "Riski s", //diambil dari siswa_details -> nama_lengkap
+    "kelas": "Fullstack web dev", //diambil dari table siswa_detail -> kelas_id ke table kelas -> nama. dan jika yang request get data adalah Auth::user()->role === "pengajar" maka disesuaikan data siswa yang di ambil sesuai kelas diambil dari users -> pengajar_details -> kelas_id
     "hasil": [
         {
-            "nama_lengkap": "Riski S", //diambil dari siswa details, jika kosong berikan "-"
-            "email": "riski@gmail.com",
-            "nilai": "80"
+            "id": "1",
+            "judul": "materi frond end",
+            "nilai": "80",
+            "waktu": "10 menit",
+            "benar": "8",
+            "salah": 2
         }
     ]
 }

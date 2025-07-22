@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\KelasController;
 use App\Http\Controllers\ManajemenUjianController;
+use App\Http\Controllers\PesertaController;
 use App\Http\Controllers\TambahUjianController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -42,7 +43,13 @@ Route::middleware(['auth'])->group(function () {
     });
 
     Route::get('/leaderboard-siswa', [DashboardController::class, 'index'])->name('leaderboard.siswa');
-    Route::get('/siswa', [DashboardController::class, 'index'])->name('siswa');
+
+   Route::controller(PesertaController::class)->prefix('peserta')->name('peserta.')->group(function () {
+        Route::get('/', 'index')->name('index');        
+        Route::post('/', 'store')->name('store');        
+        Route::put('/{id}', 'update')->name('update');  
+        Route::delete('/{id}', 'destroy')->name('destroy'); 
+    });
 
     Route::controller(KelasController::class)->prefix('kelas')->name('kelas.')->group(function () {
         Route::get('/', 'index')->name('index');        
