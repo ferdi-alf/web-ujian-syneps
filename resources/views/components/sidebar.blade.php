@@ -6,8 +6,14 @@
                 <img src="{{ asset('images/avatar/' . Auth::user()->avatar) }}" alt="profile"
                     class="h-10 w-10 rounded-full border-teal-900 border" />
                 <div class="flex flex-col">
-                    <span class="ms-3 font-bold text-teal-400">{{ Auth::user()->name }}</span>
-                    <span class="ms-3 font-light capitalize text-teal-600">{{ Auth::user()->role }}</span>
+                    <span class="ms-3 font-bold text-teal-400">{{ Auth::user()->nama_lengkap }}</span>
+                    <span class="ms-3 font-light capitalize text-teal-600">
+                        @if (Auth::user()->role === 'siswa')
+                            Peserta
+                        @else
+                            {{ Auth::user()->role }}
+                        @endif
+                    </span>
                 </div>
             </a>
         </div>
@@ -15,18 +21,33 @@
         <ul class="space-y-2 font-medium mt-10">
             <x-fragments.sidebar-item route="dashboard" icon="gauge"
                 colors="emerald">Dashboard</x-fragments.sidebar-item>
-            <x-fragments.sidebar-item route="users.index" icon="user"
-                colors="emerald">Users</x-fragments.sidebar-item>
-            <x-fragments.sidebar-item route="peserta.index" icon="users"
-                colors="emerald">Peserta</x-fragments.sidebar-item>
-            <x-fragments.sidebar-item route="kelas.index" icon="code-branch"
-                colors="emerald">Kelas</x-fragments.sidebar-item>
-            <x-fragments.sidebar-item route="manajemen-ujian.index" icon="book" colors="emerald">Manajemen
-                Ujian</x-fragments.sidebar-item>
-            <x-fragments.sidebar-item route="tambah-ujian.index" icon="plus" colors="emerald">Tambah
-                ujian</x-fragments.sidebar-item>
-            <x-fragments.sidebar-item route="leaderboard.siswa" icon="chart-simple" colors="emerald">Leaderboard Member
-            </x-fragments.sidebar-item>
+            @if (Auth::user()->role === 'admin')
+                <x-fragments.sidebar-item route="users.index" icon="user"
+                    colors="emerald">Users</x-fragments.sidebar-item>
+            @endif
+            @if (Auth::user()->role === 'admin' || Auth::user()->role === 'pengajar')
+                <x-fragments.sidebar-item route="peserta.index" icon="users"
+                    colors="emerald">Peserta</x-fragments.sidebar-item>
+            @endif
+            @if (Auth::user()->role === 'admin')
+                <x-fragments.sidebar-item route="kelas.index" icon="code-branch"
+                    colors="emerald">Kelas</x-fragments.sidebar-item>
+            @endif
+            @if (Auth::user()->role === 'admin' || Auth::user()->role === 'pengajar')
+                <x-fragments.sidebar-item route="manajemen-ujian.index" icon="book" colors="emerald">Manajemen
+                    Ujian</x-fragments.sidebar-item>
+                <x-fragments.sidebar-item route="tambah-ujian.index" icon="plus" colors="emerald">Tambah
+                    ujian</x-fragments.sidebar-item>
+                <x-fragments.sidebar-item route="leaderboard.siswa" icon="chart-simple" colors="emerald">Leaderboard
+                    Member
+                </x-fragments.sidebar-item>
+            @endif
+            @if (Auth::user()->role === 'siswa')
+                <x-fragments.sidebar-item route="ujian.index" icon="book" colors="emerald">
+                    Ujian</x-fragments.sidebar-item>
+                <x-fragments.sidebar-item route="leaderboard.siswa" icon="chart-simple" colors="emerald">Nilai
+                </x-fragments.sidebar-item>
+            @endif
         </ul>
     </div>
 </aside>

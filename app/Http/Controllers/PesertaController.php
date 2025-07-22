@@ -69,7 +69,6 @@ class PesertaController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|min:6',
-            'nama_lengkap' => 'required|string|max:255',
             'kelas_id' => 'required_if:admin_role,true|exists:kelas,id'
         ]);
 
@@ -102,7 +101,6 @@ class PesertaController extends Controller
             SiswaDetail::create([
                 'siswa_id' => $newUser->id,
                 'kelas_id' => $kelasId,
-                'nama_lengkap' => $request->nama_lengkap
             ]);
 
             DB::commit();
@@ -120,7 +118,6 @@ class PesertaController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $id,
-            'nama_lengkap' => 'required|string|max:255',
             'kelas_id' => 'required_if:admin_role,true|exists:kelas,id'
         ]);
 
@@ -164,7 +161,6 @@ class PesertaController extends Controller
                 SiswaDetail::create([
                     'siswa_id' => $siswa->id,
                     'kelas_id' => $kelasId,
-                    'nama_lengkap' => $request->nama_lengkap
                 ]);
             }
 

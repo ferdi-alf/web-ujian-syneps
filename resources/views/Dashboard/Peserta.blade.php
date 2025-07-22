@@ -36,7 +36,8 @@
         </div>
         <x-fragments.text-field label="Password" name="password" type="password" placeholder="Masukkan password" required
             class="mt-4" />
-        <x-fragments.text-field label="Nama Lengkap" name="nama_lengkap" placeholder="Masukkan nama lengkap" required />
+        <x-fragments.text-field label="Nama Lengkap" name="nama_lengkap"
+            placeholder="Masukkan nama lengkap, (Opsional) bisa dikosongkan" />
 
         @if (Auth::user()->role === 'admin')
             <div class="mt-4">
@@ -58,7 +59,8 @@
             <x-fragments.text-field label="Password" name="password" type="password"
                 placeholder="Kosongkan jika tidak ingin mengubah" class="mt-4" />
             <x-fragments.text-field label="Nama Lengkap" name="nama_lengkap" value="{{ $peserta['nama_lengkap'] }}"
-                placeholder="Masukkan nama lengkap" required />
+                placeholder="Masukkan nama lengkap, (Opsional) bisa dikosongkan" />
+
 
             @if (Auth::user()->role === 'admin')
                 <div class="mt-4">

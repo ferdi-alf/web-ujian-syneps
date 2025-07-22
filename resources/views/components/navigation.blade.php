@@ -43,7 +43,11 @@
                                 {{ Auth::user()->email }}
                             </p>
                             <p class="text-sm font-medium text-gray-900 truncate " role="none">
-                                {{ Auth::user()->role }}
+                                @if (Auth::user()->role === 'siswa')
+                                    Peserta
+                                @else
+                                    {{ Auth::user()->role }}
+                                @endif
                             </p>
                         </div>
                         <ul class="py-1" role="none">
@@ -57,7 +61,8 @@
                                     role="menuitem">Settings</a>
                             </li>
                             <li>
-                                <a class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 "
+                                <a href="{{ route('logout') }}"
+                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 "
                                     role="menuitem">Logout</a>
                             </li>
                         </ul>

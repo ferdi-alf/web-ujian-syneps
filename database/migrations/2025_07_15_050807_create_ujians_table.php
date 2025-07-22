@@ -19,7 +19,7 @@ return new class extends Migration
                     ->constrained('kelas')
                     ->onDelete('set null');
                 $table->enum('status', ['pending', 'active', 'finished'])->default('pending');
-                $table->timestamp('waktu')->nullable();
+                $table->integer('waktu')->nullable();
                 $table->timestamps();
             });
     }

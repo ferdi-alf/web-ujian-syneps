@@ -33,6 +33,16 @@ class User extends Authenticatable
         ];
     }
 
+    public function getNamaLengkapAttribute(): string
+    {
+        return match ($this->role) {
+            'siswa' => $this->siswaDetail->nama_lengkap ?? 'Siswa',
+            'pengajar' => $this->pengajarDetail->nama_lengkap ?? 'Pengajar',
+            default => $this->name ?? 'Admin', // Ambil dari tabel user atau fallback
+        };
+    }
+
+
     // Relasi ke siswa_details
     public function siswaDetail(): HasOne
     {

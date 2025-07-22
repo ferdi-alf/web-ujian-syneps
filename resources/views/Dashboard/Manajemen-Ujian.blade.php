@@ -7,7 +7,7 @@
             fn($row, $i) => $i + 1,
             fn($row) => $row['judul'],
             fn($row) => $row['kelas'],
-            fn($row) => $row['waktu'],
+            fn($row) => $row['display_waktu'],
             fn($row) => '<span class=\'' .
                 $row['status']['badge'] .
                 '\'>' .
@@ -27,8 +27,6 @@
                 description="Informasi lengkap tentang hasil ujian {{ $ujian['judul'] }}">
 
                 <div class="space-y-6">
-
-
                     <div class="bg-gray-50 p-4 rounded-lg">
                         <h3 class="text-lg font-semibold mb-4">Hasil Ujian</h3>
                         @if (count($ujian['hasil']) > 0)
@@ -51,7 +49,15 @@
 
                 <x-fragments.text-field label="Judul" name="judul" :value="$ujian['judul']" required />
 
-                <x-fragments.text-field label="Waktu" name="waktu" :value="$ujian['waktu']" placeholder="HH:MM" required />
+                <x-fragments.select-field label="Durasi Ujian" name="waktu" :options="[
+                    '30' => '30 Menit',
+                    '60' => '60 Menit',
+                    '90' => '90 Menit',
+                ]" :value="(string) $ujian['waktu']"
+                    required />
+
+
+
 
                 <x-fragments.select-field label="Status" name="status" :options="[
                     'pending' => 'Pending',
