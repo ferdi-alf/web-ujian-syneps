@@ -25,7 +25,6 @@
         @foreach ($dataUjian as $ujian)
             <x-drawer-layout id="drawer-detail-ujian-{{ $ujian['id'] }}" title="Detail Soal Ujian: {{ $ujian['judul'] }}"
                 description="Daftar soal untuk ujian {{ $ujian['judul'] }}">
-
                 <div class="space-y-6">
                     <div class="bg-gray-50 p-4 rounded-lg">
                         <h3 class="text-lg font-semibold mb-4">Daftar Soal</h3>

@@ -15,11 +15,11 @@
                 <x-fragments.select-field label="Role" name="role" :options="['admin' => 'Admin', 'pengajar' => 'Pengajar']" required />
             </div>
             <x-fragments.text-field label="Email" name="email" type="email" required class="mt-4" />
-            <x-fragments.text-field label="Password" name="password" type="password" required />
-
             <div id="kelas-field" class="hidden mt-4">
                 <x-fragments.select-field label="Kelas" name="kelas_id" :options="$kelas->pluck('nama', 'id')->toArray()" />
             </div>
+            <x-fragments.text-field label="Password" name="password" type="password" required />
+
         </x-fragments.form-modal>
 
         <div class="mt-6">
@@ -58,12 +58,18 @@
                 action="{{ route('users.update', $user->id) }}" method="PUT">
                 <x-fragments.text-field label="Username" name="name" :value="$user->name" required />
                 <x-fragments.text-field label="Email" name="email" type="email" :value="$user->email" required />
+
+                <input type="hidden" name="role" value="{{ $user->role }}">
+
                 @if ($user->role === 'pengajar')
                     <x-fragments.select-field label="Kelas" name="kelas_id" :options="$kelas->pluck('nama', 'id')->toArray()" :value="$user->pengajarDetail->kelas_id ?? ''"
                         required />
                 @endif
+
+                <x-fragments.text-field label="Password (Opsional)" name="password" type="password" />
             </x-fragments.form-modal>
         @endforeach
+
     </div>
 
     <script>

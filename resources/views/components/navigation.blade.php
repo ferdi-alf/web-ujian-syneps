@@ -36,10 +36,10 @@
                                 alt="user photo">
                         </button>
                     </div>
-                    <div class="z-50 w-44 hidden my-4 text-base list-none bg-white divide-y divide-gray-100 rounded-sm shadow-sm "
+                    <div class="z-50 w-50  hidden text-base list-none bg-white divide-y divide-gray-100 rounded-sm shadow-sm "
                         id="dropdown-user">
                         <div class="px-4 py-3" role="none">
-                            <p class="text-sm text-gray-900 " role="none">
+                            <p class="text-sm  text-gray-900 " role="none">
                                 {{ Auth::user()->email }}
                             </p>
                             <p class="text-sm font-medium text-gray-900 truncate " role="none">
@@ -57,7 +57,8 @@
                                     role="menuitem">Dashboard</a>
                             </li>
                             <li>
-                                <a class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 "
+                                <a href="{{ route('profile.index') }}"
+                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 "
                                     role="menuitem">Settings</a>
                             </li>
                             <li>

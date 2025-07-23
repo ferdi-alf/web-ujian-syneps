@@ -6,7 +6,13 @@
                 <img src="{{ asset('images/avatar/' . Auth::user()->avatar) }}" alt="profile"
                     class="h-10 w-10 rounded-full border-teal-900 border" />
                 <div class="flex flex-col">
-                    <span class="ms-3 font-bold text-sm text-teal-400">{{ Auth::user()->nama_lengkap }}</span>
+                    <span class="ms-3 font-bold text-sm text-teal-400">
+                        @if (Auth::user()->nama_lengkap)
+                            {{ Auth::user()->nama_lengkap }}
+                        @else
+                            {{ Auth::user()->name }}
+                        @endif
+                    </span>
                     <span class="ms-3 font-light capitalize text-teal-600">
                         @if (Auth::user()->role === 'siswa')
                             Peserta
@@ -38,7 +44,7 @@
                     Ujian</x-fragments.sidebar-item>
                 <x-fragments.sidebar-item route="tambah-ujian.index" icon="plus" colors="emerald">Tambah
                     ujian</x-fragments.sidebar-item>
-                <x-fragments.sidebar-item route="leaderboard.siswa" icon="chart-simple" colors="emerald">Leaderboard
+                <x-fragments.sidebar-item route="leaderboard" icon="chart-simple" colors="emerald">Leaderboard
                     Member
                 </x-fragments.sidebar-item>
             @endif

@@ -1,7 +1,7 @@
 @extends('layouts.dashboard-layouts')
 
 @section('content')
-    <div class="flex justify-end">
+    <div class="flex justify-end mb-5">
         <input type="file" class="hidden" id="excelFile">
         <label for="excelFile" type="button"
             class="bg-green-600 rounded-lg shadow-md p-3 font-medium cursor-pointer hover:bg-green-900 transition-all items-center gap-3 flex text-white">
@@ -328,7 +328,7 @@
                         } else {
                             console.warn(
                                 `⚠️ Kemungkinan data pilihan masuk ke soal pada baris ${index + 1}: "${soalText}"`
-                                );
+                            );
                         }
                     }
 
@@ -347,7 +347,7 @@
                             } else {
                                 console.warn(
                                     `⚠️ Data pilihan ${letter} kosong atau sama dengan soal pada baris ${index + 1}`
-                                    );
+                                );
                             }
                         }
                     });
@@ -366,11 +366,11 @@
                                     radioButton.checked = true;
                                     console.log(
                                         `✅ Radio button set untuk soal ${index}: ${correctAnswer}`
-                                        );
+                                    );
                                 } else {
                                     console.warn(
                                         `❌ Radio button tidak ditemukan untuk soal ${index}: ${correctAnswer}`
-                                        );
+                                    );
                                 }
                             }, 50);
                         }

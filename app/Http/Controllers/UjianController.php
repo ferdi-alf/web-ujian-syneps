@@ -204,8 +204,6 @@ class UjianController extends Controller
 
         $soalId = $request->input('soal_id');
         $jawaban = $request->input('jawaban');
-
-        // Save or update answer
         JawabanSiswa::updateOrCreate(
             [
                 'siswa_id' => Auth::id(),
@@ -214,7 +212,7 @@ class UjianController extends Controller
             ],
             [
                 'jawaban_pilihan' => $jawaban,
-                'benar' => false, // Will be calculated on submit
+                'benar' => false,
             ]
         );
 

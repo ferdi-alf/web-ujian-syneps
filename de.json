@@ -3,14 +3,24 @@
         "Fullstack Web Dev": [
         {
             "id": 1,
-            "judul": "HTML dan CSS",
-            "total_hasil": "20",
+            "nama": "Fahri Saputra",
             "rata_rata": "84,2",
-            "siswa": [
+            "status": "Mengalami peningkatan dari materi nilai dari materi sebelumnya", // di cek dari table ujians appakah data ujian itu sudah pebih dari dari 1? jika tidak jangan return jika sudah ada baru kita bandiongkan data ujian users role siswa terbaru dengan data sebelumnya!,
+            "chart_ujian": [
                 {
-                    "avatar": "avatar-2.png",
-                    "nama_lengkap": "Fahri Akbar",
-                    "nilai": "80",
+                    "judul": "HTML dan CSS",
+                    "nilai": 80,
+                },
+                 {
+                    "judul": "Semantic HTML",
+                    "nilai": 83,
+                }
+            ],
+            "table_data": [
+                {
+                    "id": 1,
+                    "judul": "HTML dan CSS",
+                    "nilai": 80,
                     "benar": 8,
                     "salah": 2
                 }
@@ -19,15 +29,25 @@
     ],
     "Fullstack Andorid Dev": [
         {
-            "id": 2,
-            "judul": "Pengenalan FLutter",
-            "total_hasil": "20",
+             "id": 3,
+            "nama": "Riski",
             "rata_rata": "84,2",
-            "siswa": [
+            "status": "Mengalami peningkatan dari materi nilai dari materi sebelumnya", 
+            "chart_ujian": [
                 {
-                    "avatar": "avatar-2.png",
-                    "nama_lengkap": "Riski S",
-                    "nilai": "80",
+                    "judul": "Dart",
+                    "nilai": 80,
+                },
+                 {
+                    "judul": "Dasar fultter",
+                    "nilai": 83,
+                }
+            ],
+            "table_data": [
+                {
+                    "id": 1,
+                    "judul": "Dart",
+                    "nilai": 80,
                     "benar": 8,
                     "salah": 2
                 }
@@ -35,33 +55,34 @@
         }
     ],
 
-    // data yang di return ke users role pelajaran hanya data ujian dan siswa siswa yang sama kelas_id nya di users->kelas_id ->kelas->id. menampilkan:
+    
+=   // data yang di return ke users role pelajaran hanya data ujian dan siswa siswa yang sama kelas_id nya di users->kelas_id ->kelas->id. menampilkan:
     [
-        { 
-             "id": 1,
-            "judul": "HTML dan CSS",
-            "total_hasil": "20",
-            "rata_rata": "84,2",
-             "siswa": [
+       {
+             "id": 3,
+            "nama": "Riski",
+            "rata_rata": "82,2",
+            "status": "Mengalami Penurunan dari materi nilai dari materi sebelumnya", 
+            "chart_ujian": [
                 {
-                    "avatar": "avatar-2.png",
-                    "nama_lengkap": "Fahri Akbar",
-                    "nilai": "80",
+                    "judul": "Dart",
+                    "nilai": 80,
+                },
+                 {
+                    "judul": "Dasar fultter",
+                    "nilai": 78,
+                }
+            ],
+            "table_data": [
+                {
+                    "id": 1,
+                    "judul": "Dart",
+                    "nilai": 80,
                     "benar": 8,
                     "salah": 2
                 }
             ]
         }
     ],
-    // jika siswa hanya data ia tanpa drawer atau action button 
-    [
-        {
-            "id": 1,
-            "judul": "HTML dan CSS",
-            "total_soal": 10,
-            "nilai": 80,
-            "benar": 8,
-            "salah": 2
-        }
-    ]
+   
 ]

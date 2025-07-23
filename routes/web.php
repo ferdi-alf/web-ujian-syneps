@@ -3,9 +3,11 @@
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\KelasController;
+use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\ManajemenUjianController;
 use App\Http\Controllers\NilaiController;
 use App\Http\Controllers\PesertaController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TambahUjianController;
 use App\Http\Controllers\UjianController;
 use App\Http\Controllers\UserController;
@@ -22,6 +24,13 @@ Route::middleware(['guest'])->group(function () {
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+   Route::get('/leaderboard', [LeaderboardController::class, 'leaderboard'])->name('leaderboard');
+
+     Route::controller(ProfileController::class)->prefix('profile')->name('profile.')->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::put('/', 'update')->name('index');
+    });
+
 
     Route::controller(UjianController::class)->prefix('ujian')->name('ujian.')->group(function () {
         Route::get('/', 'index')->name('index');

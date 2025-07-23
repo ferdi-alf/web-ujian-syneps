@@ -24,7 +24,7 @@
     @include('components.sidebar')
 
 
-    <div class="md:p-4 p-2 sm:ml-64 bg-gray-50 min-h-screen">
+    <div class="md:p-4 p-2 sm:ml-64 bg-gray-50 min-h-screen overflow-y-auto">
         <div class="p-4 mt-14">
             @yield('content')
         </div>

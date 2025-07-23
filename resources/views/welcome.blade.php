@@ -39,7 +39,7 @@
                             <div class="max-w-md w-full flex justify-start items-center space-x-1.5  ">
                                 <img src="/images/logo.png" alt="syneps-logo" class="w-14 h-14">
                                 <h1
-                                    class="font-extrabold text-3xl text-transparent bg-clip-text bg-gradient-to-br from-teal-300 via-emerald-300 to-emerald-400">
+                                    class="font-extrabold sm:text-3xl text-2xl text-transparent bg-clip-text bg-gradient-to-br from-teal-300 via-emerald-300 to-emerald-400">
                                     Syneps Academy</h1>
                             </div>
                             <p class="text-gray-600 mb-8">
