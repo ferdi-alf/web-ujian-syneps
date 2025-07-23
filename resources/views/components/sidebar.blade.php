@@ -6,7 +6,7 @@
                 <img src="{{ asset('images/avatar/' . Auth::user()->avatar) }}" alt="profile"
                     class="h-10 w-10 rounded-full border-teal-900 border" />
                 <div class="flex flex-col">
-                    <span class="ms-3 font-bold text-teal-400">{{ Auth::user()->nama_lengkap }}</span>
+                    <span class="ms-3 font-bold text-sm text-teal-400">{{ Auth::user()->nama_lengkap }}</span>
                     <span class="ms-3 font-light capitalize text-teal-600">
                         @if (Auth::user()->role === 'siswa')
                             Peserta

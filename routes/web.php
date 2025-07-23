@@ -23,9 +23,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::controller(UjianController::class)->prefix('ujian')->name('ujian.')->group(function () {
-        Route::get('/', 'index')->name('index');  
-        Route::get('/{slug}', 'mulai')->name('mulai');        
-        Route::post('/{slug}', 'store')->name('store');        
+        Route::get('/', 'index')->name('index');
+        Route::get('/{slug}/mulai', 'mulai')->name('mulai');
+        Route::post('/{slug}/store', 'store')->name('store');
+        Route::post('/{slug}/save-progress', 'saveProgress')->name('save-progress');
+        Route::get('/{slug}/selesai', 'selesai')->name('selesai');
     });
 
     Route::controller(UserController::class)->prefix('users')->name('users.')->group(function () {

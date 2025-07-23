@@ -142,44 +142,62 @@
 
                 const columnMap = {};
 
-                const soalPatterns = ['soal', 'pertanyaan', 'question', 'soal_pertanyaan'];
-                columnMap.soal = normalizedHeaders.findIndex(h =>
-                    soalPatterns.some(pattern => h.includes(pattern))
-                );
+                // Perbaikan: Lebih spesifik untuk kolom soal
+                const soalPatterns = ['soal', 'pertanyaan', 'question'];
+                columnMap.soal = normalizedHeaders.findIndex(h => {
+                    // Harus exact match atau mengandung pattern tapi bukan pilihan
+                    return soalPatterns.some(pattern => {
+                        return h === pattern || (h.includes(pattern) && !h.includes('pilihan') && !h
+                            .includes('jawaban'));
+                    });
+                });
 
+                // Perbaikan: Lebih ketat untuk pilihan jawaban - harus exact match
                 const pilihanPatterns = [
-                    ['pilihan_1', 'pilihan1', 'jawaban_1', 'jawaban1', 'jawaban 1', 'pilihan_a', 'pilihana',
-                        'pilihan a', 'jawaban_a', 'jawabana', 'jawaban a', 'a'
+                    // Untuk A
+                    ['pilihan_a', 'pilihana', 'pilihan_1', 'pilihan1', 'jawaban_a', 'jawabana', 'jawaban_1',
+                        'jawaban1'
                     ],
-                    ['pilihan_2', 'pilihan2', 'jawaban_2', 'jawaban2', 'jawaban 2', 'pilihan_b', 'pilihanb',
-                        'pilihan b', 'jawaban_b', 'jawabanb', 'jawaban b', 'b'
+                    // Untuk B  
+                    ['pilihan_b', 'pilihanb', 'pilihan_2', 'pilihan2', 'jawaban_b', 'jawabanb', 'jawaban_2',
+                        'jawaban2'
                     ],
-                    ['pilihan_3', 'pilihan3', 'jawaban_3', 'jawaban3', 'jawaban 3', 'pilihan_c', 'pilihanc',
-                        'pilihan c', 'jawaban_c', 'jawabanc', 'jawaban c', 'c'
+                    // Untuk C
+                    ['pilihan_c', 'pilihanc', 'pilihan_3', 'pilihan3', 'jawaban_c', 'jawabanc', 'jawaban_3',
+                        'jawaban3'
                     ],
-                    ['pilihan_4', 'pilihan4', 'jawaban_4', 'jawaban4', 'jawaban 4', 'pilihan_d', 'pilihand',
-                        'pilihan d', 'jawaban_d', 'jawaband', 'jawaban d', 'd'
+                    // Untuk D
+                    ['pilihan_d', 'pilihand', 'pilihan_4', 'pilihan4', 'jawaban_d', 'jawaband', 'jawaban_4',
+                        'jawaban4'
                     ]
                 ];
 
                 columnMap.pilihan = {};
                 ['A', 'B', 'C', 'D'].forEach((letter, index) => {
-                    columnMap.pilihan[letter] = normalizedHeaders.findIndex(h =>
-                        pilihanPatterns[index].some(pattern => h.includes(pattern))
-                    );
+                    columnMap.pilihan[letter] = normalizedHeaders.findIndex(h => {
+                        // Perbaikan: Harus exact match, bukan includes
+                        return pilihanPatterns[index].includes(h) || h === letter.toLowerCase();
+                    });
                 });
 
+                // Perbaikan: Lebih spesifik untuk jawaban benar
                 const jawabanBenarPatterns = ['jawaban_benar', 'pilihan_benar', 'correct', 'answer',
                     'kunci_jawaban', 'kunci'
                 ];
-                const exactJawabanIndex = normalizedHeaders.findIndex(h => h === 'jawaban');
 
+                // Cek dulu yang exact match 'jawaban' tapi pastikan bukan pilihan
+                const exactJawabanIndex = normalizedHeaders.findIndex(h => {
+                    return h === 'jawaban' && !normalizedHeaders.slice(0, normalizedHeaders.indexOf(h))
+                        .some(prev =>
+                            prev.includes('pilihan') && prev.includes('jawaban')
+                        );
+                });
 
                 if (exactJawabanIndex !== -1) {
                     columnMap.jawabanBenar = exactJawabanIndex;
                 } else {
                     columnMap.jawabanBenar = normalizedHeaders.findIndex(h =>
-                        jawabanBenarPatterns.some(pattern => h.includes(pattern))
+                        jawabanBenarPatterns.some(pattern => h === pattern || h.includes(pattern))
                     );
                 }
 
@@ -262,6 +280,14 @@
                     throw new Error(`Kolom pilihan tidak lengkap. Missing: ${missingPilihan.join(', ')}`);
                 }
 
+                // Perbaikan: Validasi bahwa kolom soal tidak sama dengan kolom pilihan
+                const soalColumnIndex = columnMap.soal;
+                const pilihanIndices = Object.values(columnMap.pilihan);
+
+                if (pilihanIndices.includes(soalColumnIndex)) {
+                    throw new Error('Kolom soal dan pilihan jawaban tidak boleh sama. Periksa format Excel Anda.');
+                }
+
                 const existingSoal = document.querySelectorAll('.soal-item');
                 existingSoal.forEach((item, index) => {
                     if (index > 0) {
@@ -285,20 +311,48 @@
                         }, 10);
                     }
 
+                    // Perbaikan: Pastikan data soal tidak kosong dan berbeda dari pilihan
                     const soalInput = soalItem.querySelector(`input[name="soal[${index}][soal]"]`);
-                    if (soalInput && row[columnMap.soal]) {
-                        soalInput.value = row[columnMap.soal].toString();
+                    const soalData = row[columnMap.soal];
+
+                    if (soalInput && soalData && soalData.toString().trim()) {
+                        const soalText = soalData.toString().trim();
+
+                        // Validasi yang lebih tepat: cek apakah ini benar-benar data pilihan
+                        const isPilihanData = /^[A-D]\.?\s*.{0,20}$/.test(soalText) && soalText.length < 10;
+
+                        // Untuk soal pertama, langsung isi tanpa validasi ketat
+                        if (index === 0 || !isPilihanData) {
+                            soalInput.value = soalText;
+                            console.log(`✅ Soal ${index + 1} diisi: "${soalText.substring(0, 50)}..."`);
+                        } else {
+                            console.warn(
+                                `⚠️ Kemungkinan data pilihan masuk ke soal pada baris ${index + 1}: "${soalText}"`
+                                );
+                        }
                     }
 
+                    // Perbaikan: Validasi setiap pilihan jawaban
                     ['A', 'B', 'C', 'D'].forEach(letter => {
                         const pilihanInput = soalItem.querySelector(
                             `input[name="soal[${index}][jawaban][${letter}]"]`);
                         const columnIndex = columnMap.pilihan[letter];
+
                         if (pilihanInput && columnIndex !== -1 && row[columnIndex]) {
-                            pilihanInput.value = row[columnIndex].toString();
+                            const pilihanData = row[columnIndex].toString().trim();
+
+                            // Validasi: pastikan bukan data soal yang masuk ke pilihan
+                            if (pilihanData && pilihanData !== row[columnMap.soal]) {
+                                pilihanInput.value = pilihanData;
+                            } else {
+                                console.warn(
+                                    `⚠️ Data pilihan ${letter} kosong atau sama dengan soal pada baris ${index + 1}`
+                                    );
+                            }
                         }
                     });
 
+                    // Jawaban benar (tidak berubah)
                     if (columnMap.jawabanBenar !== -1 && row[columnMap.jawabanBenar]) {
                         console.log(`✅ Found jawaban benar for row ${index}:`, row[columnMap.jawabanBenar]);
                         const correctAnswer = parseJawabanBenar(row[columnMap.jawabanBenar]);
@@ -312,18 +366,14 @@
                                     radioButton.checked = true;
                                     console.log(
                                         `✅ Radio button set untuk soal ${index}: ${correctAnswer}`
-                                    );
+                                        );
                                 } else {
                                     console.warn(
                                         `❌ Radio button tidak ditemukan untuk soal ${index}: ${correctAnswer}`
-                                    );
+                                        );
                                 }
                             }, 50);
                         }
-                    } else {
-                        console.log(
-                            `❌ No jawaban benar found for row ${index}. Column index: ${columnMap.jawabanBenar}, Value:`,
-                            row[columnMap.jawabanBenar]);
                     }
                 });
 

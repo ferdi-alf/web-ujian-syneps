@@ -36,38 +36,33 @@ class User extends Authenticatable
     public function getNamaLengkapAttribute(): string
     {
         return match ($this->role) {
-            'siswa' => $this->siswaDetail->nama_lengkap ?? 'Siswa',
+            'siswa' => $this->siswaDetail->nama_lengkap ?? 'Siswa' ,
             'pengajar' => $this->pengajarDetail->nama_lengkap ?? 'Pengajar',
-            default => $this->name ?? 'Admin', // Ambil dari tabel user atau fallback
+            default => $this->name ?? 'Admin',
         };
     }
 
 
-    // Relasi ke siswa_details
     public function siswaDetail(): HasOne
     {
         return $this->hasOne(SiswaDetail::class, 'siswa_id');
     }
 
-    // Relasi ke pengajar_details
     public function pengajarDetail(): HasOne
     {
         return $this->hasOne(PengajarDetail::class, 'pengajar_id');
     }
 
-    // Relasi ke jawaban_siswas
     public function jawabanSiswa(): HasMany
     {
         return $this->hasMany(JawabanSiswa::class, 'siswa_id');
     }
 
-    // Relasi ke hasil_ujians
     public function hasilUjian(): HasMany
     {
         return $this->hasMany(HasilUjian::class, 'siswa_id');
     }
 
-    // Scope untuk role tertentu
     public function scopeAdmin($query)
     {
         return $query->where('role', 'admin');
@@ -129,9 +124,7 @@ class User extends Authenticatable
             return asset('images/avatar/default.jpg');
         }
 
-    /**
-     * Get user initials
-     */
+    
     public function getInitials() {
         $nameParts = explode(' ', trim($this->name));
         $initials = '';

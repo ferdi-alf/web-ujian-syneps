@@ -1,16 +1,39 @@
-{
-    "id": "1",
-    "name": "peserta_1",
-    "nama_lengkap": "Riski s", //diambil dari siswa_details -> nama_lengkap
-    "kelas": "Fullstack web dev", //diambil dari table siswa_detail -> kelas_id ke table kelas -> nama. dan jika yang request get data adalah Auth::user()->role === "pengajar" maka disesuaikan data siswa yang di ambil sesuai kelas diambil dari users -> pengajar_details -> kelas_id
-    "hasil": [
-        {
-            "id": "1",
-            "judul": "materi frond end",
-            "nilai": "80",
-            "waktu": "10 menit",
-            "benar": "8",
-            "salah": 2
-        }
-    ]
-}
+[
+    {
+        "id": 7,
+        "judul": "HTML dan CSS",
+        "kelas_id": 2,
+        "status": "active",
+        "waktu": 60,
+        "created_at": "2025-07-23T03:36:55.000000Z",
+        "updated_at": "2025-07-23T03:37:25.000000Z",
+        "kelas": {
+            "id": 2,
+            "nama": "Fullstack Web developer",
+            "created_at": "2025-07-22T10:10:54.000000Z",
+            "updated_at": "2025-07-22T10:10:54.000000Z"
+        },
+        "soals": [
+            {
+                "id": 146,
+                "ujian_id": 7,
+                "soal": "Apa kepanjangan dari HTML?",
+                "created_at": "2025-07-23T03:36:55.000000Z",
+                "updated_at": "2025-07-23T03:36:55.000000Z"
+            }
+        ],
+        "hasil_ujians": [
+            {
+                "id": 3,
+                "siswa_id": 4,
+                "ujian_id": 7,
+                "jumlah_benar": 13,
+                "jumlah_salah": 12,
+                "nilai": 52,
+                "waktu_pengerjaan": 87,
+                "created_at": "2025-07-23T04:50:29.000000Z",
+                "updated_at": "2025-07-23T04:50:29.000000Z"
+            }
+        ]
+    }
+]
