@@ -45,9 +45,10 @@
             @if (Auth::user()->role === 'siswa')
                 <x-fragments.sidebar-item route="ujian.index" icon="book" colors="emerald">
                     Ujian</x-fragments.sidebar-item>
-                <x-fragments.sidebar-item route="leaderboard.siswa" icon="chart-simple" colors="emerald">Nilai
-                </x-fragments.sidebar-item>
             @endif
+            <x-fragments.sidebar-item route="nilai.index" icon="fa-solid fa-square-poll-horizontal"
+                colors="emerald">Nilai
+            </x-fragments.sidebar-item>
         </ul>
     </div>
 </aside>

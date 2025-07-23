@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\KelasController;
 use App\Http\Controllers\ManajemenUjianController;
+use App\Http\Controllers\NilaiController;
 use App\Http\Controllers\PesertaController;
 use App\Http\Controllers\TambahUjianController;
 use App\Http\Controllers\UjianController;
@@ -41,6 +42,10 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/', 'index')->name('index');        
         Route::put('/{id}', 'update')->name('update');  
         Route::delete('/{id}', 'destroy')->name('destroy'); 
+    });
+
+    Route::controller(NilaiController::class)->prefix('nilai')->name('nilai.')->group(function () {
+        Route::get('/', 'index')->name('index');        
     });
 
    

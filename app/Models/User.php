@@ -122,7 +122,7 @@ class User extends Authenticatable
             }
             
             return asset('images/avatar/default.jpg');
-        }
+    }
 
     
     public function getInitials() {

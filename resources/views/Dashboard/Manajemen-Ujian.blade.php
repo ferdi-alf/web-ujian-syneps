@@ -23,20 +23,41 @@
             ])" />
 
         @foreach ($dataUjian as $ujian)
-            <x-drawer-layout id="drawer-detail-ujian-{{ $ujian['id'] }}" title="Detail Hasil Ujian: {{ $ujian['judul'] }}"
-                description="Informasi lengkap tentang hasil ujian {{ $ujian['judul'] }}">
+            <x-drawer-layout id="drawer-detail-ujian-{{ $ujian['id'] }}" title="Detail Soal Ujian: {{ $ujian['judul'] }}"
+                description="Daftar soal untuk ujian {{ $ujian['judul'] }}">
 
                 <div class="space-y-6">
                     <div class="bg-gray-50 p-4 rounded-lg">
-                        <h3 class="text-lg font-semibold mb-4">Hasil Ujian</h3>
-                        @if (count($ujian['hasil']) > 0)
-                            <x-reusable-table :headers="['Nama Lengkap', 'Email', 'Nilai']" :data="$ujian['hasil']" :columns="[
-                                fn($row) => $row['nama_lengkap'],
-                                fn($row) => $row['email'],
-                                fn($row) => $row['nilai'],
-                            ]" :showActions="false" />
+                        <h3 class="text-lg font-semibold mb-4">Daftar Soal</h3>
+                        @if (count($ujian['soals']) > 0)
+                            <div class="space-y-4">
+                                @foreach ($ujian['soals'] as $index => $soal)
+                                    <div class="border-b pb-4">
+                                        <p class="text-sm font-medium mb-2">
+                                            {{ $index + 1 }}. {{ $soal['teks'] }}
+                                        </p>
+                                        <ul class="space-y-2">
+                                            @foreach ($soal['jawabans'] as $jawaban)
+                                                <li
+                                                    class="flex items-center {{ $jawaban['benar'] ? 'bg-green-100 text-green-800 p-2 rounded' : 'p-2' }}">
+                                                    <span class="mr-2">{{ $jawaban['pilihan'] }}.
+                                                        {{ $jawaban['teks'] }}</span>
+                                                    @if ($jawaban['benar'])
+                                                        <svg class="w-5 h-5 text-green-600" fill="none"
+                                                            stroke="currentColor" viewBox="0 0 24 24"
+                                                            xmlns="http://www.w3.org/2000/svg">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                                        </svg>
+                                                    @endif
+                                                </li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                @endforeach
+                            </div>
                         @else
-                            <p class="text-gray-500 text-sm">Belum ada hasil ujian.</p>
+                            <p class="text-gray-500 text-sm">Belum ada soal untuk ujian ini.</p>
                         @endif
                     </div>
                 </div>
@@ -56,9 +77,6 @@
                 ]" :value="(string) $ujian['waktu']"
                     required />
 
-
-
-
                 <x-fragments.select-field label="Status" name="status" :options="[
                     'pending' => 'Pending',
                     'active' => 'Active',
@@ -66,6 +84,5 @@
                 ]" :value="$ujian['status']['text']" required />
             </x-fragments.form-modal>
         @endforeach
-
     </div>
 @endsection

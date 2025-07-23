@@ -40,9 +40,7 @@
             </div>
         </div>
 
-        <!-- Detail Hasil -->
         <div class="grid md:grid-cols-2 gap-6 mb-6">
-            <!-- Info Ujian -->
             <div class="bg-white rounded-lg shadow-lg p-6">
                 <h2 class="text-xl font-semibold mb-4 text-gray-800">Detail Ujian</h2>
                 <div class="space-y-3">
@@ -65,11 +63,9 @@
                 </div>
             </div>
 
-            <!-- Statistik Hasil -->
             <div class="bg-white rounded-lg shadow-lg p-6">
                 <h2 class="text-xl font-semibold mb-4 text-gray-800">Hasil Anda</h2>
                 <div class="space-y-4">
-                    <!-- Nilai -->
                     <div
                         class="text-center p-4 rounded-lg 
                     @if ($hasil->nilai >= 80) bg-green-50 border border-green-200
