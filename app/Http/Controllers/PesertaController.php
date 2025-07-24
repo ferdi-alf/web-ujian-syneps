@@ -100,6 +100,7 @@ class PesertaController extends Controller
         
             SiswaDetail::create([
                 'siswa_id' => $newUser->id,
+                'nama_lengkap' => $request->nama_lengkap,
                 'kelas_id' => $kelasId,
             ]);
 
