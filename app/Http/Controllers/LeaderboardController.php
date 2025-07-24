@@ -171,7 +171,7 @@ class LeaderboardController extends Controller
         $nilaiSebelumnya = $hasilUjians->slice(-2, 1)->first()->nilai;
         
         if ($nilaiTerbaru > $nilaiSebelumnya) {
-            return "Mengalami peningkatan dari materi nilai dari materi sebelumnya";
+            return "Mengalami peningkatan nilai dari materi sebelumnya";
         } elseif ($nilaiTerbaru < $nilaiSebelumnya) {
             return "Mengalami penurunan dari materi nilai dari materi sebelumnya";
         } else {

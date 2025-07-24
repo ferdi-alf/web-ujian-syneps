@@ -206,9 +206,7 @@ class PesertaController extends Controller
         }
     }
 
-    /**
-     * Get peserta data for AJAX requests
-     */
+    
     public function getPesertaData()
     {
         $user = Auth::user();

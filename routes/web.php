@@ -28,7 +28,7 @@ Route::middleware(['auth'])->group(function () {
 
      Route::controller(ProfileController::class)->prefix('profile')->name('profile.')->group(function () {
         Route::get('/', 'index')->name('index');
-        Route::put('/', 'update')->name('index');
+        Route::put('/', 'update')->name('update');
     });
 
 

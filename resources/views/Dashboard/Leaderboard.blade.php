@@ -1,6 +1,7 @@
 @extends('layouts.dashboard-layouts')
 
 @section('content')
+
     <div class="">
         <h1 class="text-2xl font-bold text-gray-800 mb-2 text-center sm:hidden block">
             @switch($user->role)
@@ -146,46 +147,44 @@
                                 <h2 class="text-xl font-semibold text-gray-800">Kelas {{ $namaKelas }}</h2>
                                 <span class="text-sm text-blue-500 font-bold">{{ count($siswaList) }} siswa</span>
                             </div>
-                            <x-reusable-table :searchBar="true" :truncate="true" :headers="['Peringkat', 'Siswa', 'Rata-rata Nilai', 'Status Perkembangan']" :data="$siswaList"
-                                :columns="[
-                                    fn(
-                                        $row,
-                                        $i,
-                                    ) => '<span class=\'inline-flex items-center px-3 py-1 rounded-full text-sm font-bold ' .
-                                        ($i === 0
+                            <x-reusable-table :searchBar="true" :headers="['Peringkat', 'Siswa', 'Rata-rata Nilai', 'Status Perkembangan']" :data="$siswaList" :columns="[
+                                fn(
+                                    $row,
+                                    $i,
+                                ) => '<span class=\'inline-flex items-center px-3 py-1 rounded-full text-sm font-bold ' .
+                                    ($i === 0
+                                        ? 'bg-yellow-100 text-yellow-800'
+                                        : ($i === 1
+                                            ? 'bg-gray-100 text-gray-800'
+                                            : ($i === 2
+                                                ? 'bg-orange-100 text-orange-800'
+                                                : 'bg-blue-100 text-blue-800'))) .
+                                    '\'>#' .
+                                    ($i + 1) .
+                                    '</span>',
+                                fn(
+                                    $row,
+                                ) => '<div class=\'flex items-center\'><div class=\'h-10 w-10\'><img class=\'h-10 w-10 rounded-full object-cover\' src=\'' .
+                                    $row['avatar'] .
+                                    '\' alt=\'' .
+                                    $row['nama'] .
+                                    '\'></div><div class=\'ml-3\'><div class=\'text-sm font-medium text-gray-900\'>' .
+                                    $row['nama'] .
+                                    '</div></div></div>',
+                                fn(
+                                    $row,
+                                ) => '<span class=\'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ' .
+                                    ((float) $row['rata_rata'] >= 80
+                                        ? 'bg-green-100 text-green-800'
+                                        : ((float) $row['rata_rata'] >= 70
                                             ? 'bg-yellow-100 text-yellow-800'
-                                            : ($i === 1
-                                                ? 'bg-gray-100 text-gray-800'
-                                                : ($i === 2
-                                                    ? 'bg-orange-100 text-orange-800'
-                                                    : 'bg-blue-100 text-blue-800'))) .
-                                        '\'>#' .
-                                        ($i + 1) .
-                                        '</span>',
-                                    fn(
-                                        $row,
-                                    ) => '<div class=\'flex items-center\'><div class=\'h-10 w-10\'><img class=\'h-10 w-10 rounded-full object-cover\' src=\'' .
-                                        $row['avatar'] .
-                                        '\' alt=\'' .
-                                        $row['nama'] .
-                                        '\'></div><div class=\'ml-3\'><div class=\'text-sm font-medium text-gray-900\'>' .
-                                        $row['nama'] .
-                                        '</div></div></div>',
-                                    fn(
-                                        $row,
-                                    ) => '<span class=\'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ' .
-                                        ((float) $row['rata_rata'] >= 80
-                                            ? 'bg-green-100 text-green-800'
-                                            : ((float) $row['rata_rata'] >= 70
-                                                ? 'bg-yellow-100 text-yellow-800'
-                                                : 'bg-red-100 text-red-800')) .
-                                        '\'>' .
-                                        $row['rata_rata'] .
-                                        '</span>',
-                                    fn($row) => '<div class=\'text-sm text-gray-600 max-w-xs truncate\'>' .
-                                        $row['status'] .
-                                        '</div>',
-                                ]" :showActions="true"
+                                            : 'bg-red-100 text-red-800')) .
+                                    '\'>' .
+                                    $row['rata_rata'] .
+                                    '</span>',
+                                fn($row) => '<div class=\'text-sm text-gray-600 \'>' . $row['status'] . '</div>',
+                            ]"
+                                :showActions="true"
                                 :actionButtons="fn($row) => view('components.action-buttons', [
                                     'drawerId' => 'drawer-admin-leaderboard-'.$row['id'],
                                     'hideEdit' => true,
@@ -257,7 +256,6 @@
         @endswitch
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             @if ($user->role === 'pengajar')

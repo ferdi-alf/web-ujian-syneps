@@ -11,7 +11,7 @@
 
         <x-fragments.form-modal id="add-user-modal" title="Tambah User" action="{{ route('users.store') }}">
             <div class="grid grid-cols-2 gap-4">
-                <x-fragments.text-field label="Username" name="name" placeholder="Masukkan Username" required />
+                <x-fragments.text-field label="name" name="name" placeholder="Masukkan name untuk login" required />
                 <x-fragments.select-field label="Role" name="role" :options="['admin' => 'Admin', 'pengajar' => 'Pengajar']" required />
             </div>
             <x-fragments.text-field label="Email" name="email" type="email" required class="mt-4" />
@@ -58,7 +58,6 @@
                 action="{{ route('users.update', $user->id) }}" method="PUT">
                 <x-fragments.text-field label="Username" name="name" :value="$user->name" required />
                 <x-fragments.text-field label="Email" name="email" type="email" :value="$user->email" required />
-
                 <input type="hidden" name="role" value="{{ $user->role }}">
 
                 @if ($user->role === 'pengajar')

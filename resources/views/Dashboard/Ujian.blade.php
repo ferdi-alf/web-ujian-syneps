@@ -2,13 +2,13 @@
 
 @section('content')
     <div class="bg-white rounded-lg px-5 py-5">
-        <h3 class="text-lg text-end font-bold">{{ \Carbon\Carbon::now()->locale('id')->isoFormat('dddd, DD MMMM YYYY') }}
-        </h3>
+        @if ($ujians->isNotEmpty())
+            <h3 class="text-lg text-end font-bold">{{ \Carbon\Carbon::now()->locale('id')->isoFormat('dddd, DD MMMM YYYY') }}
+            </h3>
 
-        <div class="grid grid-cols-12 gap-3 mt-8">
-            <div class="col-span-12 md:block hidden md:col-span-3">
-                <div id="active-exam-content">
-                    @if ($ujians->count() > 0)
+            <div class="grid grid-cols-12 gap-3 mt-8">
+                <div class="col-span-12 md:block hidden md:col-span-3">
+                    <div id="active-exam-content">
                         @php
                             $activeUjian = $ujians->first();
                             $isCompleted = $activeUjian->hasilUjians->where('siswa_id', Auth::id())->isNotEmpty();
@@ -55,22 +55,20 @@
                                 </button>
                             @endif
                         </div>
-                    @endif
+                    </div>
                 </div>
-            </div>
 
-            <div class="col-span-12 md:col-span-9 flex justify-center">
-                @php
-                    $activeUjian = $ujians->first();
-                    $imageNumber = ($activeUjian->id % 10) + 1;
-                @endphp
-                <img class="exam-image" src="{{ asset('images/background/bg-' . $imageNumber . '.png') }}"
-                    alt="Background Ujian {{ $activeUjian->judul }}">
-            </div>
+                <div class="col-span-12 md:col-span-9 flex justify-center">
+                    @php
+                        $activeUjian = $ujians->first();
+                        $imageNumber = $activeUjian ? ($activeUjian->id % 10) + 1 : 1;
+                    @endphp
+                    <img class="exam-image" src="{{ asset('images/background/bg-' . $imageNumber . '.png') }}"
+                        alt="Background Ujian {{ $activeUjian ? $activeUjian->judul : 'Default' }}">
+                </div>
 
-            <div class="col-span-12 md:hidden block md:col-span-3">
-                <div id="active-exam-content">
-                    @if ($ujians->count() > 0)
+                <div class="col-span-12 md:hidden block md:col-span-3">
+                    <div id="active-exam-content">
                         @php
                             $activeUjian = $ujians->first();
                             $isCompleted = $activeUjian->hasilUjians->where('siswa_id', Auth::id())->isNotEmpty();
@@ -118,109 +116,113 @@
                                 </button>
                             @endif
                         </div>
-                    @endif
-                </div>
-            </div>
-        </div>
-
-        <div class="mt-3">
-            <p class="font-bold md:px-5 px-3">Ujian Lainnya</p>
-            <div class="relative mt-3">
-                <div class="overflow-x-auto scrollbar-hide">
-                    <div class="flex space-x-5 md:px-5 px-3 py-4" id="carousel-container" style="width: max-content;">
-                        @foreach ($ujians as $index => $ujian)
-                            @php
-                                $isCompleted = $ujian->hasilUjians->where('siswa_id', Auth::id())->isNotEmpty();
-                                $isActive = $index === 0;
-                                $colors = [
-                                    [
-                                        'gradient' => 'from-emerald-300 to-emerald-500',
-                                        'border' => 'border-emerald-500',
-                                        'text' => 'text-white',
-                                    ],
-                                    [
-                                        'gradient' => 'from-red-300 to-red-500',
-                                        'border' => 'border-red-500',
-                                        'text' => 'text-white',
-                                    ],
-                                    [
-                                        'gradient' => 'from-amber-300 to-amber-500',
-                                        'border' => 'border-amber-500',
-                                        'text' => 'text-white',
-                                    ],
-                                    [
-                                        'gradient' => 'from-cyan-300 to-cyan-500',
-                                        'border' => 'border-cyan-500',
-                                        'text' => 'text-white',
-                                    ],
-                                    [
-                                        'gradient' => 'from-purple-300 to-purple-500',
-                                        'border' => 'border-purple-500',
-                                        'text' => 'text-white',
-                                    ],
-                                    [
-                                        'gradient' => 'from-pink-300 to-pink-500',
-                                        'border' => 'border-pink-500',
-                                        'text' => 'text-white',
-                                    ],
-                                    [
-                                        'gradient' => 'from-fuchsia-300 to-fuchsia-500',
-                                        'border' => 'border-fuchsia-500',
-                                        'text' => 'text-white',
-                                    ],
-                                    [
-                                        'gradient' => 'from-cyan-300 to-cyan-500',
-                                        'border' => 'border-cyan-500',
-                                        'text' => 'text-white',
-                                    ],
-                                    [
-                                        'gradient' => 'from-yellow-300 to-yellow-500',
-                                        'border' => 'border-yellow-500',
-                                        'text' => 'text-white',
-                                    ],
-                                ];
-                                $colorIndex = $index % count($colors);
-                                $color = $colors[$colorIndex];
-                                $words = explode(' ', $ujian->judul);
-                                $initials = '';
-                                foreach (array_slice($words, 0, 2) as $word) {
-                                    $initials .= strtoupper(substr($word, 0, 1));
-                                }
-                                if (strlen($initials) < 2) {
-                                    $initials = strtoupper(substr($ujian->judul, 0, 2));
-                                }
-                                $formattedDate = \Carbon\Carbon::parse($ujian->created_at)
-                                    ->locale('id')
-                                    ->isoFormat('dddd, DD MMMM YYYY');
-                                $ujianImageNumber = ($ujian->id % 10) + 1;
-                            @endphp
-
-                            <div class="flex-shrink-0 w-96 sm:w-72 lg:w-80">
-                                <div class="exam-card cursor-pointer rounded-lg shadow-lg px-3 py-7 flex gap-3 transform transition-all duration-300 hover:scale-105 hover:shadow-xl
-                                    {{ $isActive ? 'bg-gradient-to-bl ' . $color['gradient'] . ' ' . $color['text'] : 'bg-white border ' . $color['border'] . ' text-gray-700 hover:shadow-lg' }}"
-                                    data-ujian-id="{{ $ujian->id }}" data-ujian-title="{{ $ujian->judul }}"
-                                    data-ujian-kelas="{{ $ujian->kelas->nama ?? 'Fullstack Web Developer' }}"
-                                    data-ujian-soal="{{ $ujian->soals->count() }}" data-ujian-waktu="{{ $ujian->waktu }}"
-                                    data-ujian-date="{{ $formattedDate }}"
-                                    data-ujian-completed="{{ $isCompleted ? 'true' : 'false' }}"
-                                    data-ujian-image="{{ $ujianImageNumber }}"
-                                    data-color-gradient="{{ $color['gradient'] }}"
-                                    data-color-border="{{ $color['border'] }}" data-color-text="{{ $color['text'] }}">
-                                    <div
-                                        class="w-16 h-16 font-bold rounded-lg bg-white/30 backdrop-blur-md shadow-inner flex justify-center items-center text-lg">
-                                        {{ $initials }}
-                                    </div>
-                                    <div class="flex flex-col justify-around">
-                                        <h2 class="font-semibold text-lg">{{ Str::limit($ujian->judul, 25) }}</h2>
-                                        <p class="font-light text-sm">{{ $formattedDate }}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        @endforeach
                     </div>
                 </div>
             </div>
-        </div>
+
+            <div class="mt-3">
+                <p class="font-bold md:px-5 px-3">Ujian Lainnya</p>
+                <div class="relative mt-3">
+                    <div class="overflow-x-auto scrollbar-hide">
+                        <div class="flex space-x-5 md:px-5 px-3 py-4" id="carousel-container" style="width: max-content;">
+                            @foreach ($ujians as $index => $ujian)
+                                @php
+                                    $isCompleted = $ujian->hasilUjians->where('siswa_id', Auth::id())->isNotEmpty();
+                                    $isActive = $index === 0;
+                                    $colors = [
+                                        [
+                                            'gradient' => 'from-emerald-300 to-emerald-500',
+                                            'border' => 'border-emerald-500',
+                                            'text' => 'text-white',
+                                        ],
+                                        [
+                                            'gradient' => 'from-red-300 to-red-500',
+                                            'border' => 'border-red-500',
+                                            'text' => 'text-white',
+                                        ],
+                                        [
+                                            'gradient' => 'from-amber-300 to-amber-500',
+                                            'border' => 'border-amber-500',
+                                            'text' => 'text-white',
+                                        ],
+                                        [
+                                            'gradient' => 'from-cyan-300 to-cyan-500',
+                                            'border' => 'border-cyan-500',
+                                            'text' => 'text-white',
+                                        ],
+                                        [
+                                            'gradient' => 'from-purple-300 to-purple-500',
+                                            'border' => 'border-purple-500',
+                                            'text' => 'text-white',
+                                        ],
+                                        [
+                                            'gradient' => 'from-pink-300 to-pink-500',
+                                            'border' => 'border-pink-500',
+                                            'text' => 'text-white',
+                                        ],
+                                        [
+                                            'gradient' => 'from-fuchsia-300 to-fuchsia-500',
+                                            'border' => 'border-fuchsia-500',
+                                            'text' => 'text-white',
+                                        ],
+                                        [
+                                            'gradient' => 'from-cyan-300 to-cyan-500',
+                                            'border' => 'border-cyan-500',
+                                            'text' => 'text-white',
+                                        ],
+                                        [
+                                            'gradient' => 'from-yellow-300 to-yellow-500',
+                                            'border' => 'border-yellow-500',
+                                            'text' => 'text-white',
+                                        ],
+                                    ];
+                                    $colorIndex = $index % count($colors);
+                                    $color = $colors[$colorIndex];
+                                    $words = explode(' ', $ujian->judul);
+                                    $initials = '';
+                                    foreach (array_slice($words, 0, 2) as $word) {
+                                        $initials .= strtoupper(substr($word, 0, 1));
+                                    }
+                                    if (strlen($initials) < 2) {
+                                        $initials = strtoupper(substr($ujian->judul, 0, 2));
+                                    }
+                                    $formattedDate = \Carbon\Carbon::parse($ujian->created_at)
+                                        ->locale('id')
+                                        ->isoFormat('dddd, DD MMMM YYYY');
+                                    $ujianImageNumber = ($ujian->id % 10) + 1;
+                                @endphp
+
+                                <div class="flex-shrink-0 w-96 sm:w-72 lg:w-80">
+                                    <div class="exam-card cursor-pointer rounded-lg shadow-lg px-3 py-7 flex gap-3 transform transition-all duration-300 hover:scale-105 hover:shadow-xl
+                                    {{ $isActive ? 'bg-gradient-to-bl ' . $color['gradient'] . ' ' . $color['text'] : 'bg-white border ' . $color['border'] . ' text-gray-700 hover:shadow-lg' }}"
+                                        data-ujian-id="{{ $ujian->id }}" data-ujian-title="{{ $ujian->judul }}"
+                                        data-ujian-kelas="{{ $ujian->kelas->nama ?? 'Fullstack Web Developer' }}"
+                                        data-ujian-soal="{{ $ujian->soals->count() }}"
+                                        data-ujian-waktu="{{ $ujian->waktu }}" data-ujian-date="{{ $formattedDate }}"
+                                        data-ujian-completed="{{ $isCompleted ? 'true' : 'false' }}"
+                                        data-ujian-image="{{ $ujianImageNumber }}"
+                                        data-color-gradient="{{ $color['gradient'] }}"
+                                        data-color-border="{{ $color['border'] }}" data-color-text="{{ $color['text'] }}">
+                                        <div
+                                            class="w-16 h-16 font-bold rounded-lg bg-white/30 backdrop-blur-md shadow-inner flex justify-center items-center text-lg">
+                                            {{ $initials }}
+                                        </div>
+                                        <div class="flex flex-col justify-around">
+                                            <h2 class="font-semibold text-lg">{{ Str::limit($ujian->judul, 25) }}</h2>
+                                            <p class="font-light text-sm">{{ $formattedDate }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @else
+            <div class="text-center py-10">
+                <p class="text-lg font-medium text-gray-600">Belum ada data ujian</p>
+            </div>
+        @endif
     </div>
 
     <style>
