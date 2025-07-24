@@ -32,7 +32,6 @@
 
 <body class="bg-gray-50">
     <div class="container mx-auto px-4 py-6">
-        <!-- Header -->
         <div class="bg-white rounded-lg shadow-md p-6 mb-6">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
                 <div>
@@ -47,7 +46,6 @@
                 </div>
             </div>
 
-            <!-- Progress Bar -->
             <div class="w-full bg-gray-200 rounded-full h-2">
                 <div id="progress-bar" class="bg-blue-600 h-2 rounded-full transition-all duration-300"
                     style="width: 0%"></div>
@@ -58,7 +56,6 @@
             </p>
         </div>
 
-        <!-- Question Content -->
         <div class="bg-white rounded-lg shadow-md p-6 mb-6">
             <div id="question-container">
                 @foreach ($ujian->soals as $index => $soal)
@@ -126,6 +123,384 @@
     <script src="https://cdn.jsdelivr.net/npm/flowbite@3.1.2/dist/flowbite.min.js"></script>
 
     <script>
+        class AntiCheatDetector {
+            constructor(ujianApp) {
+                this.ujianApp = ujianApp;
+                this.violations = [];
+                this.warningCount = 0;
+                this.maxWarnings = 3;
+                this.isWindowFocused = true;
+                this.originalWindowHeight = window.innerHeight;
+                this.originalWindowWidth = window.innerWidth;
+                this.minimumScreenPercentage = 80;
+                this.lastTabSwitchViolation = 0; // Track last tab switch violation time
+                this.debounceDelay = 500; // Debounce delay in milliseconds
+
+                // Show initial SweetAlert warning
+                this.showInitialWarning();
+
+                this.initDetection();
+                this.logViolation('Ujian dimulai', 'info');
+            }
+
+            showInitialWarning() {
+                Swal.fire({
+                    title: 'Peringatan Penting!',
+                    html: `
+                <div class="text-left">
+                    <p class="text-gray-700 mb-2">Untuk menjaga integritas ujian, harap patuhi peraturan berikut:</p>
+                    <ul class="text-sm text-red-600 list-disc list-inside">
+                        <li>Jangan berpindah tab atau aplikasi lain selama ujian.</li>
+                        <li>Jangan keluar dari halaman ujian.</li>
+                        <li>Jangan menggunakan split-screen atau membuka developer tools.</li>
+                    </ul>
+                    <p class="text-gray-700 mt-2">Sistem ini dapat mendeteksi aktivitas tersebut dan akan mencatat pelanggaran. Pelanggaran berulang dapat menyebabkan ujian otomatis disubmit.</p>
+                </div>
+            `,
+                    icon: 'info',
+                    confirmButtonColor: '#16a34a',
+                    confirmButtonText: 'Saya Mengerti',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false
+                });
+            }
+
+            initDetection() {
+                this.detectTabSwitch();
+                this.detectWindowResize();
+                this.detectDevTools();
+                this.detectKeyboardShortcuts();
+                this.detectCopyPaste();
+                this.detectMouseActivity();
+            }
+
+            detectTabSwitch() {
+                window.addEventListener('blur', () => {
+                    if (this.isWindowFocused) {
+                        this.isWindowFocused = false;
+                        const now = Date.now();
+                        if (now - this.lastTabSwitchViolation > this.debounceDelay) {
+                            this.handleViolation('Berpindah tab atau aplikasi lain', 'tab_switch');
+                            this.lastTabSwitchViolation = now;
+                        }
+                    }
+                });
+
+                window.addEventListener('focus', () => {
+                    if (!this.isWindowFocused) {
+                        this.isWindowFocused = true;
+                        this.logViolation('Kembali ke ujian', 'info');
+                    }
+                });
+
+                document.addEventListener('visibilitychange', () => {
+                    if (document.hidden) {
+                        const now = Date.now();
+                        if (now - this.lastTabSwitchViolation > this.debounceDelay) {
+                            this.handleViolation('Tab ujian tidak aktif/tersembunyi', 'visibility_change');
+                            this.lastTabSwitchViolation = now;
+                        }
+                    } else {
+                        this.logViolation('Tab ujian kembali aktif', 'info');
+                    }
+                });
+            }
+
+            detectWindowResize() {
+                window.addEventListener('resize', () => {
+                    const currentHeight = window.innerHeight;
+                    const currentWidth = window.innerWidth;
+
+                    const heightPercentage = (currentHeight / this.originalWindowHeight) * 100;
+                    const widthPercentage = (currentWidth / this.originalWindowWidth) * 100;
+
+                    if (heightPercentage < this.minimumScreenPercentage || widthPercentage < this
+                        .minimumScreenPercentage) {
+                        this.handleViolation(
+                            `Ukuran layar terlalu kecil (${Math.round(heightPercentage)}% x ${Math.round(widthPercentage)}%). Minimum ${this.minimumScreenPercentage}%`,
+                            'window_resize'
+                        );
+                    }
+                });
+            }
+
+            detectDevTools() {
+                let devtools = {
+                    open: false
+                };
+                const threshold = 160;
+
+                setInterval(() => {
+                    if (window.outerHeight - window.innerHeight > threshold ||
+                        window.outerWidth - window.innerWidth > threshold) {
+                        if (!devtools.open) {
+                            devtools.open = true;
+                            this.handleViolation('Developer Tools terdeteksi dibuka', 'devtools');
+                        }
+                    } else {
+                        if (devtools.open) {
+                            devtools.open = false;
+                            this.logViolation('Developer Tools ditutup', 'info');
+                        }
+                    }
+                }, 500);
+            }
+
+            detectKeyboardShortcuts() {
+                document.addEventListener('keydown', (e) => {
+                    const dangerousShortcuts = [{
+                            key: 'F12'
+                        },
+                        {
+                            ctrl: true,
+                            shift: true,
+                            key: 'I'
+                        },
+                        {
+                            ctrl: true,
+                            shift: true,
+                            key: 'J'
+                        },
+                        {
+                            ctrl: true,
+                            shift: true,
+                            key: 'C'
+                        },
+                        {
+                            ctrl: true,
+                            key: 'U'
+                        },
+                        {
+                            ctrl: true,
+                            key: 'R'
+                        },
+                        {
+                            key: 'F5'
+                        },
+                        {
+                            ctrl: true,
+                            shift: true,
+                            key: 'R'
+                        },
+                        {
+                            alt: true,
+                            key: 'Tab'
+                        },
+                        {
+                            ctrl: true,
+                            key: 'Tab'
+                        },
+                        {
+                            ctrl: true,
+                            shift: true,
+                            key: 'Tab'
+                        },
+                        {
+                            ctrl: true,
+                            key: 'N'
+                        },
+                        {
+                            ctrl: true,
+                            key: 'T'
+                        },
+                        {
+                            ctrl: true,
+                            shift: true,
+                            key: 'N'
+                        },
+                        {
+                            key: 'PrintScreen'
+                        },
+                        {
+                            alt: true,
+                            key: 'PrintScreen'
+                        },
+                        {
+                            ctrl: true,
+                            shift: true,
+                            key: 'Escape'
+                        },
+                        {
+                            ctrl: true,
+                            alt: true,
+                            key: 'Delete'
+                        }
+                    ];
+
+                    const isMatch = dangerousShortcuts.some(shortcut => {
+                        return Object.keys(shortcut).every(prop => {
+                            if (prop === 'key') return e.key === shortcut[prop] || e.code ===
+                                shortcut[prop];
+                            if (prop === 'ctrl') return e.ctrlKey === shortcut[prop];
+                            if (prop === 'alt') return e.altKey === shortcut[prop];
+                            if (prop === 'shift') return e.shiftKey === shortcut[prop];
+                            return true;
+                        });
+                    });
+
+                    if (isMatch) {
+                        e.preventDefault();
+                        this.handleViolation(`Shortcut terlarang: ${e.key}`, 'keyboard_shortcut');
+                        return false;
+                    }
+                });
+
+                document.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                    this.handleViolation('Klik kanan terdeteksi', 'right_click');
+                    return false;
+                });
+            }
+
+            detectCopyPaste() {
+                document.addEventListener('copy', (e) => {
+                    e.preventDefault();
+                    this.handleViolation('Mencoba menyalin teks', 'copy');
+                    return false;
+                });
+
+                document.addEventListener('paste', (e) => {
+                    e.preventDefault();
+                    this.handleViolation('Mencoba menempel teks', 'paste');
+                    return false;
+                });
+
+                document.addEventListener('keydown', (e) => {
+                    if (e.ctrlKey && e.key === 'a') {
+                        e.preventDefault();
+                        this.handleViolation('Mencoba memilih semua teks', 'select_all');
+                        return false;
+                    }
+                });
+            }
+
+            detectMouseActivity() {
+                let mouseLeaveCount = 0;
+
+                document.addEventListener('mouseleave', () => {
+                    mouseLeaveCount++;
+                    if (mouseLeaveCount > 5) {
+                        this.handleViolation('Mouse sering keluar dari area ujian', 'mouse_leave');
+                        mouseLeaveCount = 0;
+                    }
+                });
+            }
+
+            handleViolation(message, type) {
+                this.warningCount++;
+                this.logViolation(message, 'warning');
+                this.saveViolationToServer(message, type);
+
+                if (this.warningCount >= this.maxWarnings) {
+                    this.forceSubmitDueToViolation();
+                } else {
+                    this.showWarning(message);
+                }
+            }
+
+            showWarning(message) {
+                const remainingWarnings = this.maxWarnings - this.warningCount;
+
+                Swal.fire({
+                    title: '⚠️ Peringatan Kecurangan!',
+                    html: `
+                <div class="text-left">
+                    <p class="text-red-600 font-semibold mb-2">${message}</p>
+                    <p class="text-gray-700">Peringatan ke-${this.warningCount} dari ${this.maxWarnings}</p>
+                    <p class="text-sm text-red-500 mt-2">
+                        ${remainingWarnings > 0 ? 
+                            `Sisa ${remainingWarnings} peringatan lagi sebelum ujian otomatis disubmit!` : 
+                            'Ujian akan otomatis disubmit!'
+                        }
+                    </p>
+                </div>
+            `,
+                    icon: 'warning',
+                    confirmButtonColor: '#dc2626',
+                    confirmButtonText: 'Saya Mengerti',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    timer: 5000,
+                    timerProgressBar: true
+                });
+            }
+
+            forceSubmitDueToViolation() {
+                clearInterval(this.ujianApp.timerInterval);
+                if (!this.ujianApp || typeof this.ujianApp.processSubmit !== 'function') {
+                    console.error('Error: ujianApp is not properly initialized');
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'Gagal mengakhiri ujian karena masalah teknis.',
+                        icon: 'error',
+                        confirmButtonColor: '#dc2626'
+                    });
+                    return;
+                }
+                Swal.fire({
+                    title: '🚫 Ujian Dihentikan!',
+                    html: `
+                <div class="text-left">
+                    <p class="text-red-600 font-semibold mb-2">Terlalu banyak pelanggaran terdeteksi!</p>
+                    <p class="text-gray-700">Ujian akan otomatis disubmit karena:</p>
+                    <ul class="text-sm text-red-600 mt-2 list-disc list-inside">
+                        ${this.violations.slice(-3).map(v => `<li>${v.message}</li>`).join('')}
+                    </ul>
+                </div>
+            `,
+                    icon: 'error',
+                    confirmButtonColor: '#dc2626',
+                    confirmButtonText: 'Submit Ujian',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false
+                }).then(() => {
+                    this.ujianApp.processSubmit();
+                });
+            }
+
+            logViolation(message, level) {
+                const violation = {
+                    timestamp: new Date().toISOString(),
+                    message: message,
+                    level: level,
+                    url: window.location.href,
+                    userAgent: navigator.userAgent
+                };
+
+                this.violations.push(violation);
+                console.warn(`[Anti-Cheat] ${level.toUpperCase()}: ${message}`);
+            }
+
+            saveViolationToServer(message, type) {
+                fetch(`/ujian/${this.ujianApp.ujianSlug}/violation`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        type: type,
+                        timestamp: new Date().toISOString(),
+                        warning_count: this.warningCount,
+                        user_agent: navigator.userAgent,
+                        screen_resolution: `${screen.width}x${screen.height}`,
+                        window_size: `${window.innerWidth}x${window.innerHeight}`
+                    })
+                }).catch(error => {
+                    console.error('Failed to save violation:', error);
+                });
+            }
+
+            getViolationSummary() {
+                return {
+                    total_violations: this.violations.length,
+                    warning_count: this.warningCount,
+                    violations: this.violations
+                };
+            }
+        }
+
         class UjianApp {
             constructor() {
                 this.currentQuestion = 0;
@@ -387,10 +762,12 @@
                 clearInterval(this.timerInterval);
 
                 const waktuPengerjaan = Math.floor((Date.now() - this.startTime) / 1000);
+                const violationSummary = this.antiCheat ? this.antiCheat.getViolationSummary() : null;
 
                 const formData = {
                     answers: this.answers,
-                    waktu_pengerjaan: waktuPengerjaan
+                    waktu_pengerjaan: waktuPengerjaan,
+                    violations: violationSummary
                 };
 
                 Swal.fire({
@@ -439,10 +816,12 @@
                         });
                     });
             }
+
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            new UjianApp();
+            const ujianApp = new UjianApp();
+            ujianApp.antiCheat = new AntiCheatDetector(ujianApp);
         });
     </script>
 </body>

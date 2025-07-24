@@ -10,7 +10,6 @@ use App\Helpers\AlertHelper;
 class DenyRolesMiddleware
 {
     /**
-     * Handle an incoming request.
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \Closure  $next
@@ -19,15 +18,12 @@ class DenyRolesMiddleware
      */
     public function handle(Request $request, Closure $next, ...$deniedRoles)
     {
-        // Check if user is authenticated
         if (!Auth::check()) {
             return redirect('/')->with(AlertHelper::error('You must be logged in to access this page.', 'Authentication Required'));
         }
 
-        // Get user role
         $userRole = Auth::user()->role;
 
-        // Check if user's role is in denied roles
         if (in_array($userRole, $deniedRoles)) {
             return redirect('/')->with(AlertHelper::error('Access denied for role: ' . $userRole, 'Access Forbidden'));
         }

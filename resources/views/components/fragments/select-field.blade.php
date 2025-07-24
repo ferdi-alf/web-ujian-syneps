@@ -27,7 +27,7 @@
     @endif
 
     <select name="{{ $name }}" id="{{ $name }}"
-        class="bg-gray-50 border {{ $errorClass }} {{ $isDisabled }} text-gray-900 text-sm rounded-lg block w-full p-2.5 transition-colors duration-200"
+        class="bg-gray-50 border {{ $errorClass }} {{ $isDisabled }} text-gray-900 text-sm rounded-lg text-start block w-full py-2.5 pr-10 transition-colors duration-200"
         {{ $required ? 'required' : '' }} {{ $attributes }}>
 
         @if ($placeholder)
