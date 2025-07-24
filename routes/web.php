@@ -55,6 +55,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::controller(NilaiController::class)->prefix('nilai')->name('nilai.')->group(function () {
         Route::get('/', 'index')->name('index');        
+        Route::get('/download', 'download')->name('download');        
     });
 
    

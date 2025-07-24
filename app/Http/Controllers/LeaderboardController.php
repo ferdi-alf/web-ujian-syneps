@@ -173,7 +173,7 @@ class LeaderboardController extends Controller
         if ($nilaiTerbaru > $nilaiSebelumnya) {
             return "Mengalami peningkatan nilai dari materi sebelumnya";
         } elseif ($nilaiTerbaru < $nilaiSebelumnya) {
-            return "Mengalami penurunan dari materi nilai dari materi sebelumnya";
+            return "Mengalami penurunan nilai dari materi sebelumnya";
         } else {
             return "Nilai tetap stabil dari materi sebelumnya";
         }

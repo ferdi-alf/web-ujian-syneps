@@ -2,6 +2,18 @@
 
 @section('content')
     <div class="">
+
+        <div class="flex justify-end">
+            @if (in_array($user->role, ['admin', 'pengajar']))
+                <div class="mb-4">
+                    <a href="{{ route('nilai.download') }}"
+                        class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded inline-flex items-center">
+                        <i class="fa-solid fa-file-pdf"></i>
+                        Download Hasil Ujian
+                    </a>
+                </div>
+            @endif
+        </div>
         <h1 class="text-2xl font-bold text-gray-800 mb-2 text-center sm:hidden block">
             @switch($user->role)
                 @case('admin')
@@ -148,7 +160,8 @@
                 @endif
 
                 @foreach ($data as $ujian)
-                    <x-drawer-layout id="drawer-detail-ujian-{{ $ujian['id'] }}" title="Detail Hasil Ujian: {{ $ujian['judul'] }}"
+                    <x-drawer-layout id="drawer-detail-ujian-{{ $ujian['id'] }}"
+                        title="Detail Hasil Ujian: {{ $ujian['judul'] }}"
                         description="Hasil ujian dari {{ $ujian['total_hasil'] }} siswa dengan rata-rata {{ $ujian['rata_rata'] }}">
                         <div class="space-y-6">
                             <div class="bg-gray-50 p-4 rounded-lg">
@@ -385,5 +398,4 @@
             @break
         @endswitch
     </div>
-
 @endsection

@@ -67,7 +67,7 @@
                     @if ($currentUserRank && $currentUserRank <= 3)
                         <div class="mb-4 p-3 bg-green-100 border-l-4 border-green-500 rounded">
                             <div class="flex items-center">
-                                <i class="fa-solid fa-trophy text-green-600 mr-2"></i>
+                                <i class="fa-solid fa-trophy text-yellow-500 mr-2"></i>
                                 <p class="text-green-800 font-semibold">
                                     Selamat! Anda berada di peringkat {{ $currentUserRank }} dari {{ count($leaderboardData) }}
                                     siswa!
