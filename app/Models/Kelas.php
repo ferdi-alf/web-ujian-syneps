@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Kelas extends Model
@@ -19,10 +20,16 @@ class Kelas extends Model
         return $this->hasMany(SiswaDetail::class, 'kelas_id');
     }
 
-    public function pengajarDetails(): HasMany
+    public function pengajarDetails(): BelongsToMany
     {
-        return $this->hasMany(PengajarDetail::class, 'kelas_id');
+        return $this->belongsToMany(
+            PengajarDetail::class,
+            'pengajar_kelas',
+            'kelas_id',
+            'pengajar_detail_id'
+        );
     }
+
 
     public function ujians(): HasMany
     {

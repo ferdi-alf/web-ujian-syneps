@@ -11,14 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-       Schema::create('pengajar_details', function (Blueprint $table) {
+       Schema::create('batches', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('pengajar_id')->constrained('users')->onDelete('cascade');
-            $table->string('nama_lengkap')->nullable();
+            $table->string('nama'); 
+            $table->enum('status', ['active', 'inactive'])->default('inactive');
             $table->timestamps();
         });
-
-
     }
 
     /**
@@ -26,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pengajar_details');
+        Schema::dropIfExists('batches');
     }
 };

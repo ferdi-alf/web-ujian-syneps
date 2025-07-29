@@ -11,12 +11,18 @@ class SiswaDetail extends Model
     use HasFactory;
 
     protected $fillable = [
-        'siswa_id',
-        'kelas_id',
-        'nama_lengkap',
-    ];
+    'siswa_id',
+    'kelas_id',
+    'batch_id',
+    'nama_lengkap',
+];
 
-    // Relasi ke users
+public function batches(): BelongsTo
+{
+    return $this->belongsTo(Batches::class, 'batch_id');
+}
+
+
     public function siswa(): BelongsTo
     {
         return $this->belongsTo(User::class, 'siswa_id');

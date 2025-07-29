@@ -5,6 +5,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\AdminResetController;
 use App\Http\Controllers\AuthenticationController;
+use App\Http\Controllers\BatchController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UjianController;
 use App\Http\Controllers\UserController;
@@ -25,7 +26,6 @@ Route::middleware(['guest'])->group(function () {
 });
 
 Route::middleware(['auth'])->group(function () {
-    // Routes accessible by siswa, admin, and pengajar
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/leaderboard-siswa', [DashboardController::class, 'index'])->name('leaderboard.siswa');
 
@@ -47,7 +47,6 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/download', 'download')->name('download');
     });
 
-    // Routes accessible by admin and pengajar only (deny siswa)
     Route::middleware(['deny.roles:siswa'])->group(function () {
         Route::get('/leaderboard', [LeaderboardController::class, 'leaderboard'])->name('leaderboard');
         Route::post('/admin/reset-data', [AdminResetController::class, 'resetData'])->name('admin.reset.data');
@@ -57,6 +56,12 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/', 'store')->name('store');
             Route::get('/progress', 'getProgress')->name('progress');
             Route::post('/clear-progress', 'clearProgress')->name('clear-progress');
+        });
+
+        Route::controller(BatchController::class)->prefix('batch')->name('batch.')->group(function () {
+            Route::post('/', 'store')->name('store');
+            Route::put('/{id}', 'update')->name('update');
+            Route::delete('/{id}', 'destroy')->name('destroy');
         });
 
         Route::controller(ManajemenUjianController::class)->prefix('manajemen-ujian')->name('manajemen-ujian.')->group(function () {

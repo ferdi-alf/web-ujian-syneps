@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Batches;
 use App\Models\HasilUjian;
 use App\Models\Kelas;
 use App\Models\Ujian;
@@ -12,7 +13,8 @@ use ZipArchive;
 
 class NilaiController extends Controller
 {
-    public function index() {
+     public function index()
+    {
         $user = Auth::user();
         
         switch ($user->role) {
@@ -29,26 +31,11 @@ class NilaiController extends Controller
                 $data = [];
         }
         
-        return view('Dashboard.Nilai', compact('data', 'user'));
-    }
-
-    public function download() {
-        $user = Auth::user();
+        $batchOptions = $this->getBatchOptionsFromData($data);
         
-        if (!in_array($user->role, ['admin', 'pengajar'])) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
-        
-        switch ($user->role) {
-            case 'admin':
-                return $this->downloadForAdmin();
-            case 'pengajar':
-                return $this->downloadForPengajar($user);
-            default:
-                return response()->json(['error' => 'Invalid role'], 400);
-        }
+        return view('Dashboard.Nilai', compact('data', 'user', 'batchOptions'));
     }
-
+    
     private function getAdminData() {
         $result = [];
         
@@ -56,15 +43,19 @@ class NilaiController extends Controller
         
         foreach ($kelasList as $kelas) {
             $ujianList = Ujian::where('kelas_id', $kelas->id)
-                ->withCount('hasilUjians')
-                ->get();
+                ->whereHas('batch', function ($query) {
+                    $query->where('status', 'active');
+                })
+                ->with(['hasilUjians', 'batch'])
+                ->get()
+                ->sortByDesc(function ($ujian) {
+                    return optional($ujian->batch)->status === 'active' ? 1 : 0;
+                })->values();
             
             $kelasData = [];
             
             foreach ($ujianList as $ujian) {
-                $hasilUjians = HasilUjian::where('ujian_id', $ujian->id)
-                    ->with(['siswa.siswaDetail'])
-                    ->get();
+                $hasilUjians = $ujian->hasilUjians()->with(['siswa.siswaDetail'])->get();
                 
                 $totalHasil = $hasilUjians->count();
                 $rataRata = $totalHasil > 0 ? $hasilUjians->avg('nilai') : 0;
@@ -77,16 +68,26 @@ class NilaiController extends Controller
                         'nama_lengkap' => $siswaDetail ? $siswaDetail->nama_lengkap : $hasil->siswa->name,
                         'nilai' => $hasil->nilai,
                         'benar' => $hasil->jumlah_benar,
-                        'salah' => $hasil->jumlah_salah
+                        'salah' => $hasil->jumlah_salah,
+                        'batch_nama' => optional($ujian->batch)->nama ?? '-',
+                        'batch_status' => optional($ujian->batch)->status ?? '-',
                     ];
                 }
+                
+                $batchNama = optional($ujian->batch)->nama ?? '-';
+                $batchStatus = optional($ujian->batch)->status ?? '-';
+                $badgeClass = $batchStatus === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800';
+                $batchBadge = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ' . $badgeClass . '">' . $batchNama . '</span>';
                 
                 $kelasData[] = [
                     'id' => $ujian->id,
                     'judul' => $ujian->judul,
                     'total_hasil' => (string) $totalHasil,
                     'rata_rata' => number_format($rataRata, 1),
-                    'siswa' => $siswaData
+                    'siswa' => $siswaData,
+                    'batch_nama' => $batchNama,
+                    'batch_status' => $batchStatus,
+                    'batch_badge' => $batchBadge,
                 ];
             }
             
@@ -98,7 +99,8 @@ class NilaiController extends Controller
         return $result;
     }
 
-    private function getPengajarData($user) {
+    private function getPengajarData($user)
+    {
         $result = [];
         
         $pengajarDetail = $user->pengajarDetail;
@@ -106,53 +108,93 @@ class NilaiController extends Controller
             return $result;
         }
         
-        $kelas = Kelas::find($pengajarDetail->kelas_id);
-        if (!$kelas) {
+        $kelasList = $pengajarDetail->kelas()->get();
+        if ($kelasList->isEmpty()) {
             return $result;
         }
         
-        $ujianList = Ujian::where('kelas_id', $kelas->id)
-            ->withCount('hasilUjians')
-            ->get();
-        
-        foreach ($ujianList as $ujian) {
-            $hasilUjians = HasilUjian::where('ujian_id', $ujian->id)
-                ->with(['siswa.siswaDetail'])
-                ->get();
+        foreach ($kelasList as $kelas) {
+            $ujianList = Ujian::where('kelas_id', $kelas->id)
+                ->whereHas('batch', function ($query) {
+                    $query->where('status', 'active');
+                })
+                ->with(['hasilUjians', 'batch'])
+                ->get()
+                ->sortByDesc(function ($ujian) {
+                    return optional($ujian->batch)->status === 'active' ? 1 : 0;
+                })->values();
             
-            $totalHasil = $hasilUjians->count();
-            $rataRata = $totalHasil > 0 ? $hasilUjians->avg('nilai') : 0;
+            $kelasData = [];
             
-            $siswaData = [];
-            foreach ($hasilUjians as $hasil) {
-                $siswaDetail = $hasil->siswa->siswaDetail;
-                $siswaData[] = [
-                    'avatar' => $hasil->siswa->getAvatarUrl(),
-                    'nama_lengkap' => $siswaDetail ? $siswaDetail->nama_lengkap : $hasil->siswa->name,
-                    'nilai' => $hasil->nilai,
-                    'benar' => $hasil->jumlah_benar,
-                    'salah' => $hasil->jumlah_salah
+            foreach ($ujianList as $ujian) {
+                $hasilUjians = $ujian->hasilUjians()->with(['siswa.siswaDetail'])->get();
+                
+                $totalHasil = $hasilUjians->count();
+                $rataRata = $totalHasil > 0 ? $hasilUjians->avg('nilai') : 0;
+                
+                $siswaData = [];
+                foreach ($hasilUjians as $hasil) {
+                    $siswaDetail = $hasil->siswa->siswaDetail;
+                    $siswaData[] = [
+                        'avatar' => $hasil->siswa->getAvatarUrl(),
+                        'nama_lengkap' => $siswaDetail ? $siswaDetail->nama_lengkap : $hasil->siswa->name,
+                        'nilai' => $hasil->nilai,
+                        'benar' => $hasil->jumlah_benar,
+                        'salah' => $hasil->jumlah_salah,
+                        'batch_nama' => optional($ujian->batch)->nama ?? '-',
+                        'batch_status' => optional($ujian->batch)->status ?? '-',
+                    ];
+                }
+                
+                $batchNama = optional($ujian->batch)->nama ?? '-';
+                $batchStatus = optional($ujian->batch)->status ?? '-';
+                $badgeClass = $batchStatus === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800';
+                $batchBadge = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ' . $badgeClass . '">' . $batchNama . '</span>';
+                
+                $kelasData[] = [
+                    'id' => $ujian->id,
+                    'judul' => $ujian->judul,
+                    'total_hasil' => (string) $totalHasil,
+                    'rata_rata' => number_format($rataRata, 1),
+                    'siswa' => $siswaData,
+                    'batch_nama' => $batchNama,
+                    'batch_status' => $batchStatus,
+                    'batch_badge' => $batchBadge,
                 ];
             }
             
-            $result[] = [
-                'id' => $ujian->id,
-                'judul' => $ujian->judul,
-                'total_hasil' => (string) $totalHasil,
-                'rata_rata' => number_format($rataRata, 1),
-                'siswa' => $siswaData
-            ];
+            if (!empty($kelasData)) {
+                $result[$kelas->nama] = $kelasData;
+            }
         }
         
         return $result;
     }
 
-    private function getSiswaData($user) {
+private function getBatchOptionsFromData($data) {
+    $batchNames = [];
+    
+    foreach ($data as $namaKelas => $ujianList) {
+        foreach ($ujianList as $ujian) {
+            if (!empty($ujian['batch_nama']) && $ujian['batch_nama'] !== '-') {
+                $batchNames[] = $ujian['batch_nama'];
+            }
+        }
+    }
+    
+    return array_values(array_unique($batchNames));
+}
+
+    private function getSiswaData($user)
+    {
         $result = [];
         
         $hasilUjians = HasilUjian::where('siswa_id', $user->id)
-            ->with(['ujian.soals'])
-            ->get();
+            ->with(['ujian.soals', 'ujian.batch'])
+            ->get()
+            ->sortByDesc(function ($hasil) {
+                return optional($hasil->ujian->batch)->status === 'active' ? 1 : 0;
+            })->values();
         
         foreach ($hasilUjians as $hasil) {
             $totalSoal = $hasil->ujian->soals->count();
@@ -163,15 +205,41 @@ class NilaiController extends Controller
                 'total_soal' => $totalSoal,
                 'nilai' => $hasil->nilai,
                 'benar' => $hasil->jumlah_benar,
-                'salah' => $hasil->jumlah_salah
+                'salah' => $hasil->jumlah_salah,
+                'batch_nama' => optional($hasil->ujian->batch)->nama ?? '-',
+                'batch_status' => optional($hasil->ujian->batch)->status ?? '-',
             ];
         }
         
         return $result;
     }
 
-    private function downloadForAdmin() {
-        $zipFileName = 'hasil_ujian_semua_kelas_' . date('Y-m-d_H-i-s') . '.zip';
+    public function download(Request $request)
+    {
+        $user = Auth::user();
+        
+        if (!in_array($user->role, ['admin', 'pengajar'])) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+        
+        $batchOption = $request->input('batch_option', 'all'); // 'active' or 'all'
+
+        switch ($user->role) {
+            case 'admin':
+                return $this->downloadForAdmin($batchOption);
+            case 'pengajar':
+                return $this->downloadForPengajar($user, $batchOption);
+            default:
+                return response()->json(['error' => 'Invalid role'], 400);
+        }
+    }
+
+    private function downloadForAdmin($batchOption)
+    {
+        $activeBatch = $batchOption === 'active' ? Batches::aktif()->first() : null;
+        $zipFileName = $batchOption === 'active' && $activeBatch
+            ? 'hasil_' . $this->sanitizeFileName($activeBatch->nama) . '_' . date('d-m-y') . '.zip'
+            : 'hasil_ujian_semua_kelas_' . date('Y-m-d_H-i-s') . '.zip';
         $zipPath = storage_path('app/temp/' . $zipFileName);
         
         if (!file_exists(storage_path('app/temp'))) {
@@ -179,51 +247,60 @@ class NilaiController extends Controller
         }
         
         $zip = new ZipArchive;
-        if ($zip->open($zipPath, ZipArchive::CREATE) === TRUE) {
-            
-            $kelasList = Kelas::all();
-            
-            foreach ($kelasList as $kelas) {
-                $ujianList = Ujian::where('kelas_id', $kelas->id)->get();
-                
-                foreach ($ujianList as $ujian) {
-                    $hasilUjians = HasilUjian::where('ujian_id', $ujian->id)
-                        ->with(['siswa.siswaDetail'])
-                        ->get();
+        if ($zip->open($zipPath, ZipArchive::CREATE) !== TRUE) {
+            return response()->json(['error' => 'Failed to create zip file'], 500);
+        }
+
+        $kelasList = Kelas::all();
+        $batches = $batchOption === 'active' && $activeBatch ? collect([$activeBatch]) : Batches::all();
+
+        foreach ($kelasList as $kelas) {
+            $ujianList = Ujian::where('kelas_id', $kelas->id)
+                ->when($batchOption === 'active' && $activeBatch, function ($query) use ($activeBatch) {
+                    $query->where('batch_id', $activeBatch->id);
+                })
+                ->with(['hasilUjians.siswa.siswaDetail', 'batch'])
+                ->get();
+
+            foreach ($ujianList as $ujian) {
+                foreach ($ujian->hasilUjians as $hasil) {
+                    $siswaDetail = $hasil->siswa->siswaDetail;
+                    $namaSiswa = $siswaDetail ? $siswaDetail->nama_lengkap : $hasil->siswa->name;
                     
-                    foreach ($hasilUjians as $hasil) {
-                        $siswaDetail = $hasil->siswa->siswaDetail;
-                        $namaSiswa = $siswaDetail ? $siswaDetail->nama_lengkap : $hasil->siswa->name;
-                        
-                        $pdfContent = $this->generatePdfContent($hasil, $ujian, $namaSiswa);
-                        $pdf = Pdf::loadHtml($pdfContent);
-                        
-                        $pathInZip = $kelas->nama . '/' . $this->sanitizeFileName($namaSiswa) . '/' . $this->sanitizeFileName($ujian->judul) . '.pdf';
-                        $zip->addFromString($pathInZip, $pdf->output());
-                    }
+                    $pdfContent = $this->generatePdfContent($hasil->siswa, $kelas->nama);
+                    $pdf = Pdf::loadHtml($pdfContent);
+                    
+                    $pathInZip = $batchOption === 'active' && $activeBatch
+                        ? $this->sanitizeFileName($kelas->nama) . '/nilai_' . $this->sanitizeFileName($namaSiswa) . '.pdf'
+                        : $this->sanitizeFileName(optional($ujian->batch)->nama ?? 'No Batch') . '/' . 
+                          $this->sanitizeFileName($kelas->nama) . '/nilai_' . $this->sanitizeFileName($namaSiswa) . '.pdf';
+                    
+                    $zip->addFromString($pathInZip, $pdf->output());
                 }
             }
-            
-            $zip->close();
-            
-            return response()->download($zipPath, $zipFileName)->deleteFileAfterSend(true);
         }
         
-        return response()->json(['error' => 'Failed to create zip file'], 500);
+        $zip->close();
+        
+        return response()->download($zipPath, $zipFileName)->deleteFileAfterSend(true);
     }
 
-    private function downloadForPengajar($user) {
+    private function downloadForPengajar($user, $batchOption)
+    {
         $pengajarDetail = $user->pengajarDetail;
         if (!$pengajarDetail) {
             return response()->json(['error' => 'Pengajar detail not found'], 404);
         }
         
-        $kelas = Kelas::find($pengajarDetail->kelas_id);
-        if (!$kelas) {
-            return response()->json(['error' => 'Kelas not found'], 404);
+        $kelasList = $pengajarDetail->kelas()->get();
+        if ($kelasList->isEmpty()) {
+            return response()->json(['error' => 'No classes found for pengajar'], 404);
         }
         
-        $zipFileName = 'hasil_ujian_kelas_' . $kelas->nama . '_' . date('Y-m-d_H-i-s') . '.zip';
+        $activeBatch = $batchOption === 'active' ? Batches::aktif()->first() : null;
+        $zipFileName = $batchOption === 'active' && $activeBatch
+            ? 'hasil_' . $this->sanitizeFileName($activeBatch->nama) . '_' . date('d-m-y') . '.zip'
+            : 'hasil_ujian_kelas_' . date('Y-m-d_H-i-s') . '.zip';
         $zipPath = storage_path('app/temp/' . $zipFileName);
         
         if (!file_exists(storage_path('app/temp'))) {
@@ -231,39 +308,69 @@ class NilaiController extends Controller
         }
         
         $zip = new ZipArchive;
-        if ($zip->open($zipPath, ZipArchive::CREATE) === TRUE) {
-            
-            $ujianList = Ujian::where('kelas_id', $kelas->id)->get();
+        if ($zip->open($zipPath, ZipArchive::CREATE) !== TRUE) {
+            return response()->json(['error' => 'Failed to create zip file'], 500);
+        }
+        
+        foreach ($kelasList as $kelas) {
+            $ujianList = Ujian::where('kelas_id', $kelas->id)
+                ->when($batchOption === 'active' && $activeBatch, function ($query) use ($activeBatch) {
+                    $query->where('batch_id', $activeBatch->id);
+                })
+                ->with(['hasilUjians.siswa.siswaDetail', 'batch'])
+                ->get();
             
             foreach ($ujianList as $ujian) {
-                $hasilUjians = HasilUjian::where('ujian_id', $ujian->id)
-                    ->with(['siswa.siswaDetail'])
-                    ->get();
-                
-                foreach ($hasilUjians as $hasil) {
+                foreach ($ujian->hasilUjians as $hasil) {
                     $siswaDetail = $hasil->siswa->siswaDetail;
                     $namaSiswa = $siswaDetail ? $siswaDetail->nama_lengkap : $hasil->siswa->name;
                     
-                    $pdfContent = $this->generatePdfContent($hasil, $ujian, $namaSiswa);
+                    $pdfContent = $this->generatePdfContent($hasil->siswa, $kelas->nama);
                     $pdf = Pdf::loadHtml($pdfContent);
                     
-                    $pathInZip = $this->sanitizeFileName($namaSiswa) . '/' . $this->sanitizeFileName($ujian->judul) . '.pdf';
+                    $pathInZip = $batchOption === 'active' && $activeBatch
+                        ? $this->sanitizeFileName($kelas->nama) . '/nilai_' . $this->sanitizeFileName($namaSiswa) . '.pdf'
+                        : $this->sanitizeFileName(optional($ujian->batch)->nama ?? 'No Batch') . '/' . 
+                          $this->sanitizeFileName($kelas->nama) . '/nilai_' . $this->sanitizeFileName($namaSiswa) . '.pdf';
+                    
                     $zip->addFromString($pathInZip, $pdf->output());
                 }
             }
-            
-            $zip->close();
-            
-            return response()->download($zipPath, $zipFileName)->deleteFileAfterSend(true);
         }
         
-        return response()->json(['error' => 'Failed to create zip file'], 500);
+        $zip->close();
+        
+        return response()->download($zipPath, $zipFileName)->deleteFileAfterSend(true);
     }
 
-    private function generatePdfContent($hasilUjian, $ujian, $namaSiswa) {
-        $totalSoal = $ujian->soals->count();
-        $grade = $this->calculateGrade($hasilUjian->nilai);
+    private function generatePdfContent($siswa, $kelasNama)
+    {
+        $hasilUjians = HasilUjian::where('siswa_id', $siswa->id)
+            ->with(['ujian.soals', 'ujian.batch'])
+            ->get();
         
+        $averageNilai = $hasilUjians->count() > 0 ? $hasilUjians->avg('nilai') : 0;
+        $namaSiswa = $siswa->siswaDetail ? $siswa->siswaDetail->nama_lengkap : $siswa->name;
+        
+        $tableRows = '';
+        foreach ($hasilUjians as $hasil) {
+            $ujian = $hasil->ujian;
+            $totalSoal = $ujian->soals->count();
+            $grade = $this->calculateGrade($hasil->nilai);
+            $batchNama = optional($ujian->batch)->nama ?? '-';
+            
+            $tableRows .= "
+                <tr>
+                    <td style='border: 1px solid #ddd; padding: 8px;'>{$ujian->judul}</td>
+                    <td style='border: 1px solid #ddd; padding: 8px;'>{$batchNama}</td>
+                    <td style='border: 1px solid #ddd; padding: 8px; text-align: center;'>{$hasil->nilai}</td>
+                    <td style='border: 1px solid #ddd; padding: 8px; text-align: center;'>{$hasil->jumlah_benar}</td>
+                    <td style='border: 1px solid #ddd; padding: 8px; text-align: center;'>{$hasil->jumlah_salah}</td>
+                    <td style='border: 1px solid #ddd; padding: 8px; text-align: center;'>{$grade}</td>
+                </tr>
+            ";
+        }
+
         return "
         <!DOCTYPE html>
         <html>
@@ -276,17 +383,16 @@ class NilaiController extends Controller
                 .info-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
                 .info-table td { padding: 8px 12px; border: 1px solid #ddd; }
                 .info-table .label { background-color: #f5f5f5; font-weight: bold; width: 30%; }
-                .score-card { background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
-                .score-item { display: inline-block; margin-right: 20px; text-align: center; }
-                .score-value { font-size: 24px; font-weight: bold; color: #333; }
-                .score-label { font-size: 12px; color: #666; }
-                .grade { font-size: 36px; font-weight: bold; color: " . ($hasilUjian->nilai >= 80 ? '#4CAF50' : ($hasilUjian->nilai >= 70 ? '#FF9800' : '#F44336')) . "; }
+                .results-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                .results-table th, .results-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                .results-table th { background-color: #f5f5f5; font-weight: bold; }
+                .average { font-size: 16px; font-weight: bold; text-align: center; margin-top: 20px; }
             </style>
         </head>
         <body>
             <div class='header'>
                 <h1>HASIL UJIAN</h1>
-                <h2>{$ujian->judul}</h2>
+                <h2>{$namaSiswa}</h2>
             </div>
             
             <table class='info-table'>
@@ -295,38 +401,33 @@ class NilaiController extends Controller
                     <td>{$namaSiswa}</td>
                 </tr>
                 <tr>
-                    <td class='label'>Judul Ujian</td>
-                    <td>{$ujian->judul}</td>
-                </tr>
-                <tr>
-                    <td class='label'>Total Soal</td>
-                    <td>{$totalSoal} soal</td>
+                    <td class='label'>Kelas</td>
+                    <td>{$kelasNama}</td>
                 </tr>
                 <tr>
                     <td class='label'>Tanggal</td>
-                    <td>" . $hasilUjian->created_at->format('d F Y H:i') . "</td>
+                    <td>" . date('d F Y') . "</td>
                 </tr>
             </table>
             
-            <div class='score-card'>
-                <div style='text-align: center;'>
-                    <div class='score-item'>
-                        <div class='score-value'>{$hasilUjian->nilai}</div>
-                        <div class='score-label'>NILAI</div>
-                    </div>
-                    <div class='score-item'>
-                        <div class='score-value' style='color: #4CAF50;'>{$hasilUjian->jumlah_benar}</div>
-                        <div class='score-label'>BENAR</div>
-                    </div>
-                    <div class='score-item'>
-                        <div class='score-value' style='color: #F44336;'>{$hasilUjian->jumlah_salah}</div>
-                        <div class='score-label'>SALAH</div>
-                    </div>
-                    <div class='score-item'>
-                        <div class='grade'>{$grade}</div>
-                        <div class='score-label'>GRADE</div>
-                    </div>
-                </div>
+            <table class='results-table'>
+                <thead>
+                    <tr>
+                        <th>Judul Ujian</th>
+                        <th>Batch</th>
+                        <th style='text-align: center;'>Nilai</th>
+                        <th style='text-align: center;'>Benar</th>
+                        <th style='text-align: center;'>Salah</th>
+                        <th style='text-align: center;'>Grade</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {$tableRows}
+                </tbody>
+            </table>
+            
+            <div class='average'>
+                Rata-rata Nilai: " . number_format($averageNilai, 1) . "
             </div>
             
             <div style='margin-top: 40px; text-align: center; color: #666; font-size: 12px;'>
@@ -337,7 +438,8 @@ class NilaiController extends Controller
         ";
     }
 
-    private function calculateGrade($nilai) {
+    private function calculateGrade($nilai)
+    {
         if ($nilai >= 90) return 'A';
         if ($nilai >= 80) return 'B';
         if ($nilai >= 70) return 'C';
@@ -345,7 +447,8 @@ class NilaiController extends Controller
         return 'E';
     }
 
-    private function sanitizeFileName($filename) {
+    private function sanitizeFileName($filename)
+    {
         $filename = preg_replace('/[^a-zA-Z0-9\s\-_]/', '', $filename);
         $filename = preg_replace('/\s+/', '_', $filename);
         return trim($filename, '_');

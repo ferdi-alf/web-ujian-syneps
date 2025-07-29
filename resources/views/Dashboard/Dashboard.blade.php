@@ -53,9 +53,9 @@
 
             <div class="mt-6 bg-white rounded-lg shadow-md p-4">
                 <div class="mb-4">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Leaderboard Siswa -
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Leaderboard Peserta -
                         {{ Auth::user()->siswaDetail->kelas->nama }}</h3>
-                    <p class="text-sm text-gray-600">Peringkat siswa berdasarkan rata-rata nilai ujian</p>
+                    <p class="text-sm text-gray-600">Peringkat peserta berdasarkan rata-rata nilai ujian</p>
                 </div>
 
                 @if (count($leaderboardData) > 0)
@@ -70,7 +70,7 @@
                                 <i class="fa-solid fa-trophy text-yellow-500 mr-2"></i>
                                 <p class="text-green-800 font-semibold">
                                     Selamat! Anda berada di peringkat {{ $currentUserRank }} dari {{ count($leaderboardData) }}
-                                    siswa!
+                                    peserta!
                                 </p>
                             </div>
                         </div>
@@ -84,9 +84,13 @@
                                         Peringkat</th>
                                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Siswa
                                     </th>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    dro
+                                    <th
+                                        class=" px-10 truncate py-3 text-left text-xs font-medium   text-gray-500 uppercase tracking-wider">
                                         Rata-rata Nilai</th>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase truncate tracking-wider">
+                                        Total
                                         Ujian</th>
                                 </tr>
                             </thead>
@@ -125,7 +129,7 @@
                                             </div>
                                         </td>
                                         <td class="px-4 py-4 whitespace-nowrap">
-                                            <div class="flex items-center">
+                                            <div class="flex items-center md:px-0 px-5">
                                                 <span class="text-sm font-bold text-gray-900">{{ $siswa['rata_rata'] }}</span>
                                                 <div class="ml-2 w-20 bg-gray-200 rounded-full h-2">
                                                     <div class="bg-gradient-to-r from-green-400 to-blue-500 h-2 rounded-full"
@@ -226,14 +230,14 @@
             </div>
 
             <div class="grid grid-cols-12 gap-3 mt-10">
-                <div class="col-span-8">
+                <div class="md:col-span-8 col-span-12">
                     <div class="bg-white p-4 rounded-lg shadow-md" style="height: 520px;">
                         <h3 class="text-lg font-semibold mb-4">Rata-rata Nilai Per Kelas</h3>
                         <canvas id="stackedBarChart" style="max-height: 450px;"></canvas>
                     </div>
                 </div>
 
-                <div class="col-span-4">
+                <div class="md:col-span-4 col-span-12">
                     <div class="md:col-span-4 shadow-md bg-white p-4 rounded-lg">
                         <h3 class="text-lg font-semibold mb-4">Peserta yang baru selesai ujian</h3>
                         <p>diambil berdasarkan ujian active saat ini:
@@ -326,6 +330,59 @@
                 @endif
             </div>
 
+            @if (Auth::user()->role === 'admin')
+                <div class="mt-8">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-2 text-center sm:hidden block">Manajemen Batch</h2>
+
+                    <div class="flex mb-4 items-center justify-end gap-2">
+                        <x-fragments.modal-button target="modal-add-batch" variant="emerald">
+                            <i class="fa-solid fa-plus mr-2"></i>
+                            Tambah Batch
+                        </x-fragments.modal-button>
+                    </div>
+
+                    <x-reusable-table :searchBar="true" :truncate="true" :headers="['No', 'Nama Batch', 'Status', 'Jumlah Peserta', 'Dibuat']" :data="$batchData" :columns="[
+                        fn($row, $i) => $i + 1,
+                        fn($row) => $row['nama'],
+                        fn($row) => $row['status_badge'],
+                        fn($row) => $row['jumlah_peserta'],
+                        fn($row) => $row['created_at'],
+                    ]"
+                        :showActions="true" :actionButtons="fn($row) => view('components.action-buttons', [
+                            'modalId' => 'modal-edit-batch-' . $row['id'],
+                            'updateRoute' => route('batch.update', $row['id']),
+                            'deleteRoute' => route('batch.destroy', $row['id']),
+                        ])" />
+                </div>
+
+                <x-fragments.form-modal id="modal-add-batch" title="Tambah Batch Baru" action="{{ route('batch.store') }}">
+                    <x-fragments.text-field label="Nama Batch" name="nama" placeholder="Masukkan nama batch" required />
+                    <div class="mt-4">
+                        <x-fragments.select-field label="Status" name="status" :options="[
+                            'inactive' => 'Inactive',
+                            'active' => 'Active',
+                        ]" required />
+                    </div>
+                </x-fragments.form-modal>
+
+                @if (isset($batchData))
+                    @foreach ($batchData as $batch)
+                        <x-fragments.form-modal id="modal-edit-batch-{{ $batch['id'] }}" title="Edit Batch"
+                            action="{{ route('batch.update', $batch['id']) }}" method="PUT">
+                            <x-fragments.text-field label="Nama Batch" name="nama" value="{{ $batch['nama'] }}"
+                                placeholder="Masukkan nama batch" required />
+                            <div class="mt-4">
+                                <x-fragments.select-field label="Status" name="status" :options="[
+                                    'inactive' => 'Inactive',
+                                    'active' => 'Active',
+                                ]"
+                                    value="{{ $batch['status'] }}" required />
+                            </div>
+                        </x-fragments.form-modal>
+                    @endforeach
+                @endif
+            @endif
+
             @foreach ($activeExamData as $exam)
                 <x-drawer-layout id="drawer-detail-active-exam-{{ $exam['id'] }}" title="Detail Ujian: {{ $exam['judul'] }}"
                     description="Ujian aktif untuk kelas {{ $exam['kelas'] }} dengan {{ $exam['total_hasil'] }}">
@@ -362,7 +419,7 @@
                                 </div>
                                 <div>
                                     <p class="text-sm text-gray-600">Total Peserta:</p>
-                                    <p class="font-medium">{{ count($exam['siswa_results']) }} siswa</p>
+                                    <p class="font-medium">{{ count($exam['siswa_results']) }} Peserta</p>
                                 </div>
                                 <div>
                                     <p class="text-sm text-gray-600">Rata-rata Nilai:</p>
@@ -378,7 +435,7 @@
                         </div>
 
                         <div class="bg-gray-50 p-4 rounded-lg">
-                            <h3 class="text-lg font-semibold mb-4">Hasil Siswa</h3>
+                            <h3 class="text-lg font-semibold mb-4">Hasil Peserta</h3>
                             @if (count($exam['siswa_results']) > 0)
                                 <div class="overflow-x-auto">
                                     <table class="min-w-full divide-y divide-gray-200">
@@ -389,7 +446,7 @@
                                                     No</th>
                                                 <th
                                                     class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Siswa</th>
+                                                    Peserta</th>
                                                 <th
                                                     class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                     Nilai</th>
@@ -454,7 +511,7 @@
                                     <div class="text-gray-400 mb-4">
                                         <i class="fas fa-user-slash text-4xl"></i>
                                     </div>
-                                    <p class="text-gray-500 text-sm">Belum ada siswa yang mengerjakan ujian ini.</p>
+                                    <p class="text-gray-500 text-sm">Belum ada peserta yang mengerjakan ujian ini.</p>
                                 </div>
                             @endif
                         </div>

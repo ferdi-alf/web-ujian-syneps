@@ -11,10 +11,8 @@
     </div>
     <form id="examForm" class="relative pb-32">
 
-        <div class="flex mb-4 items-center {{ Auth::user()->role === 'admin' ? 'justify-between' : 'justify-end' }} gap-2">
-            @if (Auth::user()->role === 'admin')
-                <x-fragments.select-field label="Pilih Kelas" name="kelas_id" :options="$kelas->pluck('nama', 'id')->toArray()" />
-            @endif
+        <div class="flex mb-4 items-center justify-between gap-2">
+            <x-fragments.select-field label="Pilih Kelas" name="kelas_id" :options="$kelas->pluck('nama', 'id')->toArray()" />
             <button type="button" id="tambahSoalBtn"
                 class="text-white h-12 sm:mt-0 mt-5 bg-gradient-to-br from-teal-300 cursor-pointer to-emerald-400 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-green-200 font-medium rounded-lg text-sm p-2 text-center transition-all duration-200 hover:scale-105">
                 Tambah Soal +
@@ -142,31 +140,24 @@
 
                 const columnMap = {};
 
-                // Perbaikan: Lebih spesifik untuk kolom soal
                 const soalPatterns = ['soal', 'pertanyaan', 'question'];
                 columnMap.soal = normalizedHeaders.findIndex(h => {
-                    // Harus exact match atau mengandung pattern tapi bukan pilihan
                     return soalPatterns.some(pattern => {
                         return h === pattern || (h.includes(pattern) && !h.includes('pilihan') && !h
                             .includes('jawaban'));
                     });
                 });
 
-                // Perbaikan: Lebih ketat untuk pilihan jawaban - harus exact match
                 const pilihanPatterns = [
-                    // Untuk A
                     ['pilihan_a', 'pilihana', 'pilihan_1', 'pilihan1', 'jawaban_a', 'jawabana', 'jawaban_1',
                         'jawaban1'
                     ],
-                    // Untuk B  
                     ['pilihan_b', 'pilihanb', 'pilihan_2', 'pilihan2', 'jawaban_b', 'jawabanb', 'jawaban_2',
                         'jawaban2'
                     ],
-                    // Untuk C
                     ['pilihan_c', 'pilihanc', 'pilihan_3', 'pilihan3', 'jawaban_c', 'jawabanc', 'jawaban_3',
                         'jawaban3'
                     ],
-                    // Untuk D
                     ['pilihan_d', 'pilihand', 'pilihan_4', 'pilihan4', 'jawaban_d', 'jawaband', 'jawaban_4',
                         'jawaban4'
                     ]
@@ -175,7 +166,6 @@
                 columnMap.pilihan = {};
                 ['A', 'B', 'C', 'D'].forEach((letter, index) => {
                     columnMap.pilihan[letter] = normalizedHeaders.findIndex(h => {
-                        // Perbaikan: Harus exact match, bukan includes
                         return pilihanPatterns[index].includes(h) || h === letter.toLowerCase();
                     });
                 });
@@ -280,7 +270,6 @@
                     throw new Error(`Kolom pilihan tidak lengkap. Missing: ${missingPilihan.join(', ')}`);
                 }
 
-                // Perbaikan: Validasi bahwa kolom soal tidak sama dengan kolom pilihan
                 const soalColumnIndex = columnMap.soal;
                 const pilihanIndices = Object.values(columnMap.pilihan);
 
@@ -311,17 +300,14 @@
                         }, 10);
                     }
 
-                    // Perbaikan: Pastikan data soal tidak kosong dan berbeda dari pilihan
                     const soalInput = soalItem.querySelector(`input[name="soal[${index}][soal]"]`);
                     const soalData = row[columnMap.soal];
 
                     if (soalInput && soalData && soalData.toString().trim()) {
                         const soalText = soalData.toString().trim();
 
-                        // Validasi yang lebih tepat: cek apakah ini benar-benar data pilihan
                         const isPilihanData = /^[A-D]\.?\s*.{0,20}$/.test(soalText) && soalText.length < 10;
 
-                        // Untuk soal pertama, langsung isi tanpa validasi ketat
                         if (index === 0 || !isPilihanData) {
                             soalInput.value = soalText;
                             console.log(`✅ Soal ${index + 1} diisi: "${soalText.substring(0, 50)}..."`);
@@ -332,7 +318,6 @@
                         }
                     }
 
-                    // Perbaikan: Validasi setiap pilihan jawaban
                     ['A', 'B', 'C', 'D'].forEach(letter => {
                         const pilihanInput = soalItem.querySelector(
                             `input[name="soal[${index}][jawaban][${letter}]"]`);
@@ -341,7 +326,6 @@
                         if (pilihanInput && columnIndex !== -1 && row[columnIndex]) {
                             const pilihanData = row[columnIndex].toString().trim();
 
-                            // Validasi: pastikan bukan data soal yang masuk ke pilihan
                             if (pilihanData && pilihanData !== row[columnMap.soal]) {
                                 pilihanInput.value = pilihanData;
                             } else {
@@ -352,7 +336,6 @@
                         }
                     });
 
-                    // Jawaban benar (tidak berubah)
                     if (columnMap.jawabanBenar !== -1 && row[columnMap.jawabanBenar]) {
                         console.log(`✅ Found jawaban benar for row ${index}:`, row[columnMap.jawabanBenar]);
                         const correctAnswer = parseJawabanBenar(row[columnMap.jawabanBenar]);

@@ -16,13 +16,17 @@ class Ujian extends Model
         'kelas_id',
         'waktu',
         'status',
+        'batch_id',
     ];
-
-   
 
     public function kelas(): BelongsTo
     {
         return $this->belongsTo(Kelas::class, 'kelas_id');
+    }
+
+    public function batch(): BelongsTo
+    {
+        return $this->belongsTo(Batches::class, 'batch_id');
     }
 
     public function soals(): HasMany
@@ -39,6 +43,4 @@ class Ujian extends Model
     {
         return $this->hasMany(HasilUjian::class, 'ujian_id');
     }
-
-   
 }

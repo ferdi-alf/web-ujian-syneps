@@ -3,10 +3,11 @@
 @section('content')
     <div class="mt-10">
         <h2 class="text-lg font-semibold mb-2">Data Ujian</h2>
-        <x-reusable-table :searchBar="true" :headers="['No', 'Judul', 'Kelas', 'Waktu', 'Status', 'Total Soal']" :data="$dataUjian" :columns="[
+        <x-reusable-table :searchBar="true" :truncate="true" :headers="['No', 'Judul', 'Kelas', 'Batch', 'Waktu', 'Status', 'Total Soal']" :data="$dataUjian" :columns="[
             fn($row, $i) => $i + 1,
             fn($row) => $row['judul'],
             fn($row) => $row['kelas'],
+            fn($row) => $row['batch'],
             fn($row) => $row['display_waktu'],
             fn($row) => '<span class=\'' .
                 $row['status']['badge'] .
@@ -14,13 +15,18 @@
                 ucfirst($row['status']['text']) .
                 '</span>',
             fn($row) => $row['total_soal'],
-        ]" :showActions="true"
+        ]"
+            :showActions="true"
             :actionButtons="fn($row) => view('components.action-buttons', [
                 'modalId' => 'modal-update-ujian-'.$row['id'],
                 'drawerId' => 'drawer-detail-ujian-'.$row['id'],
                 'updateRoute' => route('manajemen-ujian.update', $row['id']),
                 'deleteRoute' => route('manajemen-ujian.destroy', $row['id']),
-            ])" />
+            ])"
+            :autoFilter="[
+                3 => 'Batch', // Filter by column index 3 (Batch)
+            ]"
+            :filterPlaceholder="'Semua'" />
 
         @foreach ($dataUjian as $ujian)
             <x-drawer-layout id="drawer-detail-ujian-{{ $ujian['id'] }}" title="Detail Soal Ujian: {{ $ujian['judul'] }}"
@@ -66,16 +72,13 @@
         @foreach ($dataUjian as $ujian)
             <x-fragments.form-modal id="modal-update-ujian-{{ $ujian['id'] }}" title="Edit Ujian"
                 action="{{ route('manajemen-ujian.update', $ujian['id']) }}" method="PUT">
-
                 <x-fragments.text-field label="Judul" name="judul" :value="$ujian['judul']" required />
-
                 <x-fragments.select-field label="Durasi Ujian" name="waktu" :options="[
                     '30' => '30 Menit',
                     '60' => '60 Menit',
                     '90' => '90 Menit',
                 ]" :value="(string) $ujian['waktu']"
                     required />
-
                 <x-fragments.select-field label="Status" name="status" :options="[
                     'pending' => 'Pending',
                     'active' => 'Active',

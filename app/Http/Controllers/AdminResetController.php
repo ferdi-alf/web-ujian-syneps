@@ -7,8 +7,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
-use App\Models\SiswaDetail;
-use App\Models\PengajarDetail;
 use App\Models\Ujian;
 use App\Models\Kelas;
 use App\Models\HasilUjian;

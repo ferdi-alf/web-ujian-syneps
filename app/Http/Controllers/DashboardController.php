@@ -2,32 +2,57 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Batches;
 use App\Models\Kelas;
 use App\Models\Ujian;
 use App\Models\HasilUjian;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
 
-class DashboardController extends Controller
-{
-    public function index()  {         
+class DashboardController extends Controller {
+    public function index()
+    {
         $user = Auth::user();
         
         $data = ['user' => $user];
         
         if (in_array($user->role, ['admin', 'pengajar'])) {
-            $data['cardData'] = $this->getCardData($user);                  
-            $data['chartData'] = $this->getStackedBarChartData($user);                  
-            $data['recentSubmissions'] = $this->getRecentExamSubmissions($user);         
+            $data['cardData'] = $this->getCardData($user);
+            $data['chartData'] = $this->getStackedBarChartData($user);
+            $data['recentSubmissions'] = $this->getRecentExamSubmissions($user);
             $data['activeExamData'] = $this->getActiveExamData($user);
+            if ($user->role === 'admin') {
+                $batchData = $this->getBatchData();
+                $data['batchData'] = $batchData;
+                // Debugging: Log batchData to verify contents
+                Log::info('Batch Data: ', $batchData->toArray());
+            }
         } else {
             $data['chartData'] = $this->getSiswaChartData($user);
             $data['leaderboardData'] = $this->getSiswaLeaderboardData($user);
         }
         
-        return view('Dashboard.Dashboard', $data);     
+        return view('Dashboard.Dashboard', $data);
+    }
+
+    private function getBatchData()
+    {
+        return Batches::withCount('siswaDetails')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($batch) {
+                return [
+                    'id' => $batch->id,
+                    'nama' => $batch->nama,
+                    'status' => $batch->status,
+                    'status_badge' => $batch->status === 'active'
+                        ? '<span class="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">Active</span>'
+                        : '<span class="px-2 py-1 bg-gray-100 text-gray-800 text-xs font-medium rounded-full">Inactive</span>',
+                    'jumlah_peserta' => $batch->siswa_details_count . ' siswa',
+                    'created_at' => $batch->created_at->format('d M Y'),
+                ];
+            });
     }
 
     private function getCardData($user) {
@@ -48,15 +73,24 @@ class DashboardController extends Controller
             ];
         } else if ($user->role === 'pengajar') {
             $pengajarDetail = $user->pengajarDetail;
-            $kelasId = $pengajarDetail ? $pengajarDetail->kelas_id : null;
+            if (!$pengajarDetail) {
+                return [
+                    'total_peserta' => 0,
+                    'total_ujian' => 0,
+                    'total_ujian_active' => 0,
+                    'show_kelas_card' => false
+                ];
+            }
+            
+            $kelasIds = $pengajarDetail->kelas()->pluck('kelas.id')->toArray();
             
             $totalSiswa = User::where('role', 'siswa')
-                ->whereHas('siswaDetail', function($q) use ($kelasId) {
-                    $q->where('kelas_id', $kelasId);
+                ->whereHas('siswaDetail', function($q) use ($kelasIds) {
+                    $q->whereIn('kelas_id', $kelasIds);
                 })->count();
             
-            $totalUjian = Ujian::where('kelas_id', $kelasId)->count();
-            $totalUjianActive = Ujian::where('kelas_id', $kelasId)
+            $totalUjian = Ujian::whereIn('kelas_id', $kelasIds)->count();
+            $totalUjianActive = Ujian::whereIn('kelas_id', $kelasIds)
                 ->where('status', 'active')->count();
             
             $data = [
@@ -70,7 +104,8 @@ class DashboardController extends Controller
         return $data;
     }
 
-    private function getStackedBarChartData($user) {
+    private function getStackedBarChartData($user)
+    {
         $currentYear = now()->year;
 
         if ($user->role === 'admin') {
@@ -122,63 +157,72 @@ class DashboardController extends Controller
             }
         } else if ($user->role === 'pengajar') {
             $pengajarDetail = $user->pengajarDetail;
-            $kelas = Kelas::find($pengajarDetail->kelas_id);
-
-            if (!$kelas) {
+            if (!$pengajarDetail) {
                 return [
                     'labels' => [],
                     'datasets' => []
                 ];
             }
 
-            $ujianList = Ujian::where('kelas_id', $kelas->id)
-                ->orderBy('created_at', 'asc')
-                ->get();
-
-            if ($ujianList->isEmpty()) {
+            $kelasList = $pengajarDetail->kelas()->get();
+            if ($kelasList->isEmpty()) {
                 return [
-                    'labels' => ['Tidak ada ujian'],
+                    'labels' => ['Tidak ada kelas'],
                     'datasets' => []
                 ];
             }
 
-            $labels = $ujianList->map(function ($ujian) {
-                return $ujian->nama ?? 'Ujian ' . $ujian->judul;
-            })->toArray();
+            $months = [
+                'January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'
+            ];
+            $currentMonth = now()->month;
 
             $chartData = [
-                'labels' => $labels,
+                'labels' => $months,
                 'datasets' => []
             ];
 
-            $colors = ['#36A2EB'];
-
-            $ujianAverages = [];
-
-            foreach ($ujianList as $ujian) {
-                $average = HasilUjian::whereHas('siswa.siswaDetail', function ($q) use ($kelas) {
-                        $q->where('kelas_id', $kelas->id);
-                    })
-                    ->where('ujian_id', $ujian->id)
-                    ->avg('nilai');
-
-                $ujianAverages[] = $average ? round($average, 1) : 0;
-            }
-
-            $chartData['datasets'][] = [
-                'label' => 'Rata-rata Nilai - ' . $kelas->nama,
-                'data' => $ujianAverages,
-                'backgroundColor' => $colors[0],
-                'borderColor' => $colors[0],
-                'fill' => false,
-                'type' => 'line'
+            $colors = [
+                '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
+                '#FF9F40', '#FF6384', '#C9CBCF', '#4BC0C0', '#FF6384'
             ];
+
+            foreach ($kelasList as $index => $kelas) {
+                $monthlyAverages = [];
+
+                for ($month = 1; $month <= 12; $month++) {
+                    if ($month <= $currentMonth) {
+                        $average = HasilUjian::whereHas('siswa.siswaDetail', function ($q) use ($kelas) {
+                                $q->where('kelas_id', $kelas->id);
+                            })
+                            ->whereHas('ujian', function ($q) use ($kelas) {
+                                $q->where('kelas_id', $kelas->id);
+                            })
+                            ->whereMonth('created_at', $month)
+                            ->whereYear('created_at', $currentYear)
+                            ->avg('nilai');
+
+                        $monthlyAverages[] = $average ? round($average, 1) : 0;
+                    } else {
+                        $monthlyAverages[] = 0;
+                    }
+                }
+
+                $chartData['datasets'][] = [
+                    'label' => $kelas->nama,
+                    'data' => $monthlyAverages,
+                    'backgroundColor' => $colors[$index % count($colors)],
+                    'type' => 'bar'
+                ];
+            }
         }
 
         return $chartData;
     }
 
-    private function getRecentExamSubmissions($user) {
+    private function getRecentExamSubmissions($user)
+    {
         $twelveHoursAgo = now()->subHours(12);
         $activeExams = [];
         $recentSubmissions = [];
@@ -196,23 +240,34 @@ class DashboardController extends Controller
                 ->get();
         } else if ($user->role === 'pengajar') {
             $pengajarDetail = $user->pengajarDetail;
-            $kelasId = $pengajarDetail ? $pengajarDetail->kelas_id : null;
-
-            if ($kelasId) {
-                $activeExams = Ujian::where('status', 'active')
-                    ->where('kelas_id', $kelasId)
-                    ->pluck('judul', 'id');
-
-                $recentSubmissions = HasilUjian::with(['siswa', 'ujian'])
-                    ->whereHas('ujian', function ($q) use ($kelasId) {
-                        $q->where('status', 'active')
-                          ->where('kelas_id', $kelasId);
-                    })
-                    ->where('created_at', '>=', $twelveHoursAgo)
-                    ->whereNotNull('siswa_id')
-                    ->orderBy('created_at', 'desc')
-                    ->get();
+            if (!$pengajarDetail) {
+                return [
+                    'active_exam_titles' => '',
+                    'submissions' => []
+                ];
             }
+
+            $kelasIds = $pengajarDetail->kelas()->pluck('kelas.id')->toArray();
+            if (empty($kelasIds)) {
+                return [
+                    'active_exam_titles' => '',
+                    'submissions' => []
+                ];
+            }
+
+            $activeExams = Ujian::where('status', 'active')
+                ->whereIn('kelas_id', $kelasIds)
+                ->pluck('judul', 'id');
+
+            $recentSubmissions = HasilUjian::with(['siswa', 'ujian'])
+                ->whereHas('ujian', function ($q) use ($kelasIds) {
+                    $q->where('status', 'active')
+                      ->whereIn('kelas_id', $kelasIds);
+                })
+                ->where('created_at', '>=', $twelveHoursAgo)
+                ->whereNotNull('siswa_id')
+                ->orderBy('created_at', 'desc')
+                ->get();
         }
 
         $activeExamTitles = $activeExams->values()->implode(', ');
@@ -223,7 +278,8 @@ class DashboardController extends Controller
         ];
     }
 
-    private function getActiveExamData($user) {
+    private function getActiveExamData($user)
+    {
         $result = [];
         
         switch ($user->role) {
@@ -240,7 +296,8 @@ class DashboardController extends Controller
         return $result;
     }
 
-    private function getAdminActiveExamData() {
+    private function getAdminActiveExamData()
+    {
         $result = [];
         
         $ujianList = Ujian::where('status', 'active')
@@ -251,13 +308,13 @@ class DashboardController extends Controller
         foreach ($ujianList as $index => $ujian) {
             $hasilUjians = $ujian->hasilUjians;
             $totalHasil = $hasilUjians->count();
-            $waktuPengerjaan = $this->formatWaktuPengerjaan($ujian->waktu);
+            $waktuPengerjaan = $ujian->waktu;
             
             $result[] = [
                 'no' => $index + 1,
                 'id' => $ujian->id,
                 'judul' => $ujian->judul,
-                'waktu_pengerjaan' => $waktuPengerjaan,
+                'waktu_pengerjaan' => $waktuPengerjaan . " menit",
                 'status' => ucfirst($ujian->status),
                 'kelas' => $ujian->kelas->nama ?? '-',
                 'total_hasil' => $totalHasil . ' siswa',
@@ -269,7 +326,8 @@ class DashboardController extends Controller
         return $result;
     }
 
-    private function getPengajarActiveExamData($user) {
+    private function getPengajarActiveExamData($user)
+    {
         $result = [];
         
         $pengajarDetail = $user->pengajarDetail;
@@ -277,8 +335,13 @@ class DashboardController extends Controller
             return $result;
         }
         
+        $kelasIds = $pengajarDetail->kelas()->pluck('kelas.id')->toArray();
+        if (empty($kelasIds)) {
+            return $result;
+        }
+        
         $ujianList = Ujian::where('status', 'active')
-            ->where('kelas_id', $pengajarDetail->kelas_id)
+            ->whereIn('kelas_id', $kelasIds)
             ->with(['kelas', 'hasilUjians'])
             ->orderBy('created_at', 'desc')
             ->get();
@@ -287,13 +350,14 @@ class DashboardController extends Controller
             $hasilUjians = $ujian->hasilUjians;
             $totalHasil = $hasilUjians->count();
             
-            $waktuPengerjaan = $this->formatWaktuPengerjaan($ujian->waktu_pengerjaan);
+           $waktuPengerjaan = $ujian->waktu;
+
             
             $result[] = [
                 'no' => $index + 1,
                 'id' => $ujian->id,
                 'judul' => $ujian->judul,
-                'waktu_pengerjaan' => $waktuPengerjaan,
+                'waktu_pengerjaan' => $waktuPengerjaan . " menit",
                 'status' => ucfirst($ujian->status),
                 'kelas' => $ujian->kelas->nama ?? '-',
                 'total_hasil' => $totalHasil . ' siswa',
@@ -305,7 +369,8 @@ class DashboardController extends Controller
         return $result;
     }
 
-    private function getSiswaResultsForExam($ujianId) {
+    private function getSiswaResultsForExam($ujianId)
+    {
         $hasilUjians = HasilUjian::where('ujian_id', $ujianId)
             ->with(['siswa.siswaDetail'])
             ->orderBy('nilai', 'desc')
@@ -327,7 +392,8 @@ class DashboardController extends Controller
         return $siswaData;
     }
 
-    private function formatWaktuPengerjaanDetik($waktuDetik) {
+    private function formatWaktuPengerjaanDetik($waktuDetik)
+    {
         if ($waktuDetik < 60) {
             return $waktuDetik . ' detik';
         }
@@ -356,22 +422,8 @@ class DashboardController extends Controller
         return $result;
     }
 
-    private function formatWaktuPengerjaan($waktuMenit) {
-        if ($waktuMenit < 60) {
-            return $waktuMenit . ' menit';
-        }
-        
-        $jam = floor($waktuMenit / 60);
-        $sisaMenit = $waktuMenit % 60;
-        
-        if ($sisaMenit == 0) {
-            return $jam . ' jam';
-        }
-        
-        return $jam . ' jam ' . $sisaMenit . ' menit';
-    }
-
-    private function getSiswaChartData($user) {
+    private function getSiswaChartData($user)
+    {
         $siswaDetail = $user->siswaDetail;
         if (!$siswaDetail) {
             return [
@@ -467,7 +519,8 @@ class DashboardController extends Controller
         return $chartData;
     }
 
-    private function getSiswaLeaderboardData($user) {
+    private function getSiswaLeaderboardData($user)
+    {
         $siswaDetail = $user->siswaDetail;
         if (!$siswaDetail) {
             return [];

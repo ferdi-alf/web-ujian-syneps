@@ -1,23 +1,48 @@
+{{-- Update view Dashboard/Peserta.blade.php --}}
+
 @extends('layouts.dashboard-layouts')
 
 @section('content')
     <div class="">
         <h1 class="text-2xl font-bold text-gray-800 mb-2 text-center sm:hidden block">Manajemen Peserta</h1>
 
-        <div class="flex md:flex-row flex-col sm:justify-between justify-end items-end sm:items-center mb-6">
-            <h1 class="text-2xl sm:block hidden font-bold text-gray-800">Manajemen Peserta</h1>
-            <x-fragments.modal-button target="modal-add-peserta" variant="emerald">
+        <div class="flex mb-4 items-center justify-between gap-2">
+            <div class="flex items-center gap-4">
+                {{-- Info Active Batch --}}
+                @if (isset($activeBatch))
+                    <div class="bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+                        <div class="flex items-center">
+                            <i class="fas fa-layer-group text-green-600 mr-2"></i>
+                            <span class="text-sm text-green-800">
+                                <strong>Batch Aktif:</strong> {{ $activeBatch->nama }}
+                            </span>
+                        </div>
+                    </div>
+                @else
+                    <div class="bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                        <div class="flex items-center">
+                            <i class="fas fa-exclamation-triangle text-red-600 mr-2"></i>
+                            <span class="text-sm text-red-800">
+                                <strong>Peringatan:</strong> Tidak ada batch aktif
+                            </span>
+                        </div>
+                    </div>
+                @endif
+            </div>
+
+            <x-fragments.modal-button target="modal-add-peserta" variant="emerald" :disabled="!isset($activeBatch)">
                 <i class="fa-solid fa-plus mr-2"></i>
-                Tambah Perserta
+                Tambah Peserta
             </x-fragments.modal-button>
         </div>
 
-        <x-reusable-table :searchBar="true" :truncate="true" :headers="['No', 'Avatar', 'Nama Lengkap', 'Email', 'Kelas', 'Hasil Ujian']" :data="$pesertaData" :columns="[
+        <x-reusable-table :searchBar="true" :truncate="true" :headers="['No', 'Avatar', 'Nama Lengkap', 'Email', 'Kelas', 'Batch', 'Hasil Ujian']" :data="$pesertaData" :columns="[
             fn($row, $i) => $i + 1,
             fn($row) => $row['avatar'],
             fn($row) => $row['nama_lengkap'],
             fn($row) => $row['email'],
             fn($row) => $row['kelas'],
+            fn($row) => $row['batch'],
             fn($row) => count($row['hasil']) . ' ujian',
         ]"
             :showActions="true" :actionButtons="fn($row) => view('components.action-buttons', [
@@ -25,28 +50,38 @@
                 'drawerId' => 'drawer-detail-peserta-' . $row['id'],
                 'updateRoute' => route('peserta.update', $row['id']),
                 'deleteRoute' => route('peserta.destroy', $row['id']),
-            ])" />
+            ])" :autoFilter="[
+                5 => 'Batch', // Filter by column index 5 (Batch)
+            ]" :filterPlaceholder="'Semua'" />
     </div>
 
     <x-fragments.form-modal id="modal-add-peserta" title="Tambah Peserta Baru" action="{{ route('peserta.store') }}">
+        @if (isset($activeBatch))
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                <div class="flex items-center">
+                    <i class="fas fa-info-circle text-blue-600 mr-2"></i>
+                    <span class="text-sm text-blue-800">
+                        Peserta akan ditambahkan ke batch: <strong>{{ $activeBatch->nama }}</strong>
+                    </span>
+                </div>
+            </div>
+        @endif
+
         <div class="grid grid-cols-2 gap-4">
-            <x-fragments.text-field label="Nama User" name="name" placeholder="Masukkan name"
-                placeholder="masukan name untuk login peserta" required />
+            <x-fragments.text-field label="Nama User" name="name" placeholder="Masukkan nama untuk login peserta"
+                required />
             <x-fragments.text-field label="Email" name="email" type="email" placeholder="Masukkan email" required />
         </div>
         <x-fragments.text-field label="Password" name="password" type="password" placeholder="Masukkan password" required
             class="mt-4" />
         <x-fragments.text-field label="Nama Lengkap" name="nama_lengkap"
             placeholder="Masukkan nama lengkap, (Opsional) bisa dikosongkan" />
-
-        @if (Auth::user()->role === 'admin')
-            <div class="mt-4">
-                <x-fragments.select-field label="Kelas" name="kelas_id" :options="$kelas->pluck('nama', 'id')->toArray()" required />
-                <input type="hidden" name="admin_role" value="true">
-            </div>
-        @endif
+        <div class="mt-4">
+            <x-fragments.select-field label="Kelas" name="kelas_id" :options="$kelas->pluck('nama', 'id')->toArray()" required />
+        </div>
     </x-fragments.form-modal>
 
+    {{-- Modal Edit Peserta --}}
     @foreach ($pesertaData as $peserta)
         <x-fragments.form-modal id="modal-edit-peserta-{{ $peserta['id'] }}" title="Edit Peserta"
             action="{{ route('peserta.update', $peserta['id']) }}" method="PUT">
@@ -60,20 +95,27 @@
                 placeholder="Kosongkan jika tidak ingin mengubah" class="mt-4" />
             <x-fragments.text-field label="Nama Lengkap" name="nama_lengkap" value="{{ $peserta['nama_lengkap'] }}"
                 placeholder="Masukkan nama lengkap, (Opsional) bisa dikosongkan" />
+            <div class="mt-4">
+                <x-fragments.select-field label="Kelas" name="kelas_id" :options="$kelas->pluck('nama', 'id')->toArray()"
+                    value="{{ $peserta['kelas_id'] }}" required />
+            </div>
 
-
-            @if (Auth::user()->role === 'admin')
-                <div class="mt-4">
-                    <x-fragments.select-field label="Kelas" name="kelas_id" :options="$kelas->pluck('nama', 'id')->toArray()"
-                        value="{{ $peserta['kelas_id'] }}" required />
-                    <input type="hidden" name="admin_role" value="true">
+            {{-- Info Current Batch --}}
+            <div class="bg-gray-50 border border-gray-200 rounded-lg p-3 mt-4">
+                <div class="flex items-center">
+                    <i class="fas fa-layer-group text-gray-600 mr-2"></i>
+                    <span class="text-sm text-gray-700">
+                        <strong>Batch saat ini:</strong> {{ $peserta['batch'] }}
+                    </span>
                 </div>
-            @endif
+            </div>
         </x-fragments.form-modal>
     @endforeach
 
+    {{-- Drawer Detail tetap sama --}}
     @foreach ($pesertaData as $peserta)
-        <x-drawer-layout id="drawer-detail-peserta-{{ $peserta['id'] }}" title="Detail Hasil Ujian: {{ $peserta['name'] }}"
+        <x-drawer-layout id="drawer-detail-peserta-{{ $peserta['id'] }}"
+            title="Detail Hasil Ujian: {{ $peserta['name'] }}"
             description="Informasi lengkap tentang hasil ujian {{ $peserta['nama_lengkap'] }}">
             <div class="space-y-6">
                 <div class="bg-gray-50 p-4 rounded-lg">
@@ -95,9 +137,14 @@
                             <p class="text-sm text-gray-600">Kelas:</p>
                             <p class="font-medium">{{ $peserta['kelas'] }}</p>
                         </div>
+                        <div>
+                            <p class="text-sm text-gray-600">Batch:</p>
+                            <p class="font-medium">{{ $peserta['batch'] }}</p>
+                        </div>
                     </div>
                 </div>
 
+                {{-- Riwayat Hasil Ujian sama seperti sebelumnya --}}
                 <div class="bg-gray-50 p-4 rounded-lg">
                     <h3 class="text-lg font-semibold mb-4">Riwayat Hasil Ujian</h3>
                     @if (count($peserta['hasil']) > 0)
@@ -108,11 +155,11 @@
                                         <h4 class="font-semibold text-blue-600">{{ $hasil['judul'] }}</h4>
                                         <span
                                             class="px-3 py-1 rounded-full text-sm font-medium
-                                {{ $hasil['nilai'] >= 80
-                                    ? 'bg-green-100 text-green-800'
-                                    : ($hasil['nilai'] >= 70
-                                        ? 'bg-yellow-100 text-yellow-800'
-                                        : 'bg-red-100 text-red-800') }}">
+                                            {{ $hasil['nilai'] >= 80
+                                                ? 'bg-green-100 text-green-800'
+                                                : ($hasil['nilai'] >= 70
+                                                    ? 'bg-yellow-100 text-yellow-800'
+                                                    : 'bg-red-100 text-red-800') }}">
                                             {{ $hasil['nilai'] }}
                                         </span>
                                     </div>

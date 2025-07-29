@@ -20,6 +20,7 @@ return new class extends Migration
                     ->onDelete('set null');
                 $table->enum('status', ['pending', 'active', 'finished'])->default('pending');
                 $table->integer('waktu')->nullable();
+                
                 $table->timestamps();
             });
     }

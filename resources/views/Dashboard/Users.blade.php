@@ -16,10 +16,16 @@
             </div>
             <x-fragments.text-field label="Email" name="email" type="email" required class="mt-4" />
             <div id="kelas-field" class="hidden mt-4">
-                <x-fragments.select-field label="Kelas" name="kelas_id" :options="$kelas->pluck('nama', 'id')->toArray()" />
+                <x-fragments.multiple-select-badges label="Kelas" name="kelas_id" :options="$kelas
+                    ->map(fn($k) => ['value' => (string) $k->id, 'label' => $k->nama])
+                    ->values()
+                    ->toArray()"
+                    placeholder="Pilih kelas untuk pengajar" required />
             </div>
+            <script>
+                console.log(@json($kelas));
+            </script>
             <x-fragments.text-field label="Password" name="password" type="password" required />
-
         </x-fragments.form-modal>
 
         <div class="mt-6">
@@ -44,11 +50,12 @@
                 fn($row) => $row->name,
                 fn($row) => $row->email,
                 fn($row) => $row->pengajarDetail->nama_lengkap ?? '-',
-                fn($row) => optional($row->pengajarDetail->kelas)->nama ?? '-',
+                fn($row) => $row->pengajarDetail && $row->pengajarDetail->kelas
+                    ? $row->pengajarDetail->kelas->pluck('nama')->join(', ')
+                    : '-',
             ]" :showActions="true" :actionButtons="fn($row) => view('components.action-buttons', [
                 'modalId' => 'modal-update-user-' . $row->id,
                 'updateRoute' => route('users.update', $row->id),
-            
                 'deleteRoute' => route('users.destroy', $row->id),
             ])" />
         </div>
@@ -61,8 +68,13 @@
                 <input type="hidden" name="role" value="{{ $user->role }}">
 
                 @if ($user->role === 'pengajar')
-                    <x-fragments.select-field label="Kelas" name="kelas_id" :options="$kelas->pluck('nama', 'id')->toArray()" :value="$user->pengajarDetail->kelas_id ?? ''"
-                        required />
+                    <x-fragments.multiple-select-badges label="Kelas" name="kelas_id" :options="$kelas
+                        ->map(fn($k) => ['value' => (string) $k->id, 'label' => $k->nama])
+                        ->values()
+                        ->toArray()" :value="$user->pengajarDetail && $user->pengajarDetail->kelas
+                        ? $user->pengajarDetail->kelas->pluck('id')->map(fn($id) => (string) $id)->toArray()
+                        : []"
+                        placeholder="Pilih kelas untuk pengajar" required />
                 @endif
 
                 <x-fragments.text-field label="Password (Opsional)" name="password" type="password" />
@@ -70,6 +82,7 @@
         @endforeach
 
     </div>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {

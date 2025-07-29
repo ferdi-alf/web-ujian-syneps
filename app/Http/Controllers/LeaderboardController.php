@@ -9,7 +9,8 @@ use Illuminate\Support\Facades\Auth;
 
 class LeaderboardController extends Controller
 {
-    public function leaderboard() {
+    public function leaderboard()
+    {
         $user = Auth::user();
         
         switch ($user->role) {
@@ -26,7 +27,8 @@ class LeaderboardController extends Controller
         return view('Dashboard.Leaderboard', compact('data', 'user'));
     }
 
-    private function getAdminLeaderboardData() {
+    private function getAdminLeaderboardData()
+    {
         $result = [];
         
         $kelasList = Kelas::all();
@@ -44,7 +46,10 @@ class LeaderboardController extends Controller
             foreach ($siswaList as $siswa) {
                 $hasilUjians = $siswa->hasilUjian()
                     ->whereHas('ujian', function($q) use ($kelas) {
-                        $q->where('kelas_id', $kelas->id);
+                        $q->where('kelas_id', $kelas->id)
+                          ->whereHas('batch', function ($query) {
+                              $query->where('status', 'active');
+                          });
                     })
                     ->with('ujian')
                     ->orderBy('created_at', 'asc')
@@ -54,14 +59,12 @@ class LeaderboardController extends Controller
                     $rataRata = $hasilUjians->avg('nilai');
                     $status = $this->getStatusPerubahan($hasilUjians);
                     $chartUjian = [];
+                    $tableData = [];
                     foreach ($hasilUjians as $hasil) {
                         $chartUjian[] = [
                             'judul' => $hasil->ujian->judul,
                             'nilai' => $hasil->nilai
                         ];
-                    }
-                    $tableData = [];
-                    foreach ($hasilUjians as $hasil) {
                         $tableData[] = [
                             'id' => $hasil->id,
                             'judul' => $hasil->ujian->judul,
@@ -82,6 +85,7 @@ class LeaderboardController extends Controller
                     ];
                 }
             }
+            
             usort($kelasData, function($a, $b) {
                 return (float)$b['rata_rata'] <=> (float)$a['rata_rata'];
             });
@@ -94,7 +98,8 @@ class LeaderboardController extends Controller
         return $result;
     }
 
-    private function getPengajarLeaderboardData($user) {
+    private function getPengajarLeaderboardData($user)
+    {
         $result = [];
         
         $pengajarDetail = $user->pengajarDetail;
@@ -102,67 +107,78 @@ class LeaderboardController extends Controller
             return $result;
         }
         
-        $kelas = Kelas::find($pengajarDetail->kelas_id);
-        if (!$kelas) {
+        $kelasList = $pengajarDetail->kelas()->get();
+        if ($kelasList->isEmpty()) {
             return $result;
         }
         
-        $siswaList = User::where('role', 'siswa')
-            ->whereHas('siswaDetail', function($q) use ($kelas) {
-                $q->where('kelas_id', $kelas->id);
-            })
-            ->with(['siswaDetail', 'hasilUjian.ujian'])
-            ->get();
-        
-        foreach ($siswaList as $siswa) {
-            $hasilUjians = $siswa->hasilUjian()
-                ->whereHas('ujian', function($q) use ($kelas) {
+        foreach ($kelasList as $kelas) {
+            $siswaList = User::where('role', 'siswa')
+                ->whereHas('siswaDetail', function($q) use ($kelas) {
                     $q->where('kelas_id', $kelas->id);
                 })
-                ->with('ujian')
-                ->orderBy('created_at', 'asc')
+                ->with(['siswaDetail', 'hasilUjian.ujian'])
                 ->get();
             
-            if ($hasilUjians->count() > 0) {
-                $rataRata = $hasilUjians->avg('nilai');
-                $status = $this->getStatusPerubahan($hasilUjians);
-                $chartUjian = [];
-                foreach ($hasilUjians as $hasil) {
-                    $chartUjian[] = [
-                        'judul' => $hasil->ujian->judul,
-                        'nilai' => $hasil->nilai
-                    ];
-                }
-                $tableData = [];
-                foreach ($hasilUjians as $hasil) {
-                    $tableData[] = [
-                        'id' => $hasil->id,
-                        'judul' => $hasil->ujian->judul,
-                        'nilai' => $hasil->nilai,
-                        'benar' => $hasil->jumlah_benar,
-                        'salah' => $hasil->jumlah_salah
-                    ];
-                }
+            $kelasData = [];
+            
+            foreach ($siswaList as $siswa) {
+                $hasilUjians = $siswa->hasilUjian()
+                    ->whereHas('ujian', function($q) use ($kelas) {
+                        $q->where('kelas_id', $kelas->id)
+                          ->whereHas('batch', function ($query) {
+                              $query->where('status', 'active');
+                          });
+                    })
+                    ->with('ujian')
+                    ->orderBy('created_at', 'asc')
+                    ->get();
                 
-                $result[] = [
-                    'id' => $siswa->id,
-                    'nama' => $siswa->siswaDetail ? $siswa->siswaDetail->nama_lengkap : $siswa->name,
-                    'avatar' => $siswa->getAvatarUrl(),
-                    'rata_rata' => number_format($rataRata, 1),
-                    'status' => $status,
-                    'chart_ujian' => $chartUjian,
-                    'table_data' => $tableData
-                ];
+                if ($hasilUjians->count() > 0) {
+                    $rataRata = $hasilUjians->avg('nilai');
+                    $status = $this->getStatusPerubahan($hasilUjians);
+                    $chartUjian = [];
+                    $tableData = [];
+                    foreach ($hasilUjians as $hasil) {
+                        $chartUjian[] = [
+                            'judul' => $hasil->ujian->judul,
+                            'nilai' => $hasil->nilai
+                        ];
+                        $tableData[] = [
+                            'id' => $hasil->id,
+                            'judul' => $hasil->ujian->judul,
+                            'nilai' => $hasil->nilai,
+                            'benar' => $hasil->jumlah_benar,
+                            'salah' => $hasil->jumlah_salah
+                        ];
+                    }
+                    
+                    $kelasData[] = [
+                        'id' => $siswa->id,
+                        'nama' => $siswa->siswaDetail ? $siswa->siswaDetail->nama_lengkap : $siswa->name,
+                        'avatar' => $siswa->getAvatarUrl(),
+                        'rata_rata' => number_format($rataRata, 1),
+                        'status' => $status,
+                        'chart_ujian' => $chartUjian,
+                        'table_data' => $tableData
+                    ];
+                }
+            }
+            
+            usort($kelasData, function($a, $b) {
+                return (float)$b['rata_rata'] <=> (float)$a['rata_rata'];
+            });
+            
+            if (!empty($kelasData)) {
+                $result[$kelas->nama] = $kelasData;
             }
         }
-        usort($result, function($a, $b) {
-            return (float)$b['rata_rata'] <=> (float)$a['rata_rata'];
-        });
         
         return $result;
     }
 
-    private function getStatusPerubahan($hasilUjians) {
+    private function getStatusPerubahan($hasilUjians)
+    {
         if ($hasilUjians->count() < 2) {
             return "Data ujian belum mencukupi untuk analisis perubahan";
         }

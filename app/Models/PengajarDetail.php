@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class PengajarDetail extends Model
 {
@@ -21,8 +22,14 @@ class PengajarDetail extends Model
         return $this->belongsTo(User::class, 'pengajar_id');
     }
 
-    public function kelas(): BelongsTo
+    public function kelas(): BelongsToMany
     {
-        return $this->belongsTo(Kelas::class, 'kelas_id');
+        return $this->belongsToMany(
+            Kelas::class,
+            'pengajar_kelas',
+            'pengajar_detail_id',
+            'kelas_id'
+        );
     }
+
 }

@@ -12,16 +12,15 @@ return new class extends Migration
     public function up(): void
     {
         
-           Schema::create('siswa_details', function (Blueprint $table) {
+        Schema::create('siswa_details', function (Blueprint $table) {
             $table->id();
             $table->foreignId('siswa_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('kelas_id')
-                ->nullable() 
-                ->constrained('kelas')
-                ->onDelete('set null');
+            $table->foreignId('kelas_id')->nullable()->constrained('kelas')->onDelete('set null');
+            $table->foreignId('batch_id')->nullable()->constrained('batches')->onDelete('set null'); 
             $table->string('nama_lengkap')->nullable();
             $table->timestamps();
         });
+
 
     }
 

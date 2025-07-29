@@ -13,64 +13,85 @@ use Illuminate\Support\Str;
 
 class UjianController extends Controller
 {
-    public function index()
+     public function index()
     {
         if (Auth::user()->role !== "siswa") {
             return redirect()->back()->with('error', 'Akses ditolak');
         }
 
+        $siswaDetail = Auth::user()->siswaDetail;
+        if (!$siswaDetail || !$siswaDetail->batch_id) {
+            return redirect()->back()->with('alert', [
+                'type' => 'error',
+                'title' => 'Data Tidak Lengkap',
+                'message' => 'Anda belum terdaftar di batch manapun.'
+            ]);
+        }
+
         $ujians = Ujian::with([
             'kelas',
             'soals',
-            'hasilUjians' => function($query) {
+            'batch',
+            'hasilUjians' => function ($query) {
                 $query->where('siswa_id', Auth::id());
             }
         ])
         ->where('status', 'active')
-        ->where('kelas_id', optional(Auth::user()->siswaDetail)->kelas_id)
+        ->where('kelas_id', $siswaDetail->kelas_id)
+        ->where('batch_id', $siswaDetail->batch_id)
         ->orderBy('created_at', 'desc')
         ->get();
 
         return view('Dashboard.Ujian', compact('ujians'));
     }
 
-    public function mulai($slug) {
-    
-    $ujian = Ujian::with(['soals.jawabans', 'kelas'])
-        ->where('status', 'active')
-        ->where('kelas_id', optional(Auth::user()->siswaDetail)->kelas_id)
-        ->get()
-        ->first(function ($item) use ($slug) {
-            return Str::slug($item->judul) === $slug;
-        });
+    public function mulai($slug)
+    {
+        $siswaDetail = Auth::user()->siswaDetail;
+        if (!$siswaDetail || !$siswaDetail->batch_id) {
+            return redirect()->route('ujian.index')->with('alert', [
+                'type' => 'error',
+                'title' => 'Data Tidak Lengkap',
+                'message' => 'Anda belum terdaftar di batch manapun.'
+            ]);
+        }
 
-    if (!$ujian) {
-        return redirect()->route('ujian.index')->with('alert', [
-            'type' => 'error',
-            'title' => 'Ujian Tidak Ditemukan',
-            'message' => 'Ujian yang Anda cari tidak tersedia.'
-        ]);
-    }
+        $ujian = Ujian::with(['soals.jawabans', 'kelas', 'batch'])
+            ->where('status', 'active')
+            ->where('kelas_id', $siswaDetail->kelas_id)
+            ->where('batch_id', $siswaDetail->batch_id)
+            ->get()
+            ->first(function ($item) use ($slug) {
+                return Str::slug($item->judul) === $slug;
+            });
 
-    $isCompleted = HasilUjian::where('siswa_id', Auth::id())
-        ->where('ujian_id', $ujian->id)
-        ->exists();
+        if (!$ujian) {
+            return redirect()->route('ujian.index')->with('alert', [
+                'type' => 'error',
+                'title' => 'Ujian Tidak Ditemukan',
+                'message' => 'Ujian yang Anda cari tidak tersedia atau tidak sesuai dengan batch Anda.'
+            ]);
+        }
+
+        $isCompleted = HasilUjian::where('siswa_id', Auth::id())
+            ->where('ujian_id', $ujian->id)
+            ->exists();
         
-    if ($isCompleted) {
-        return redirect()->route('ujian.selesai', $slug)->with('alert', [
-            'type' => 'info', 
-            'title' => 'Ujian Sudah Selesai',
-            'message' => 'Anda sudah menyelesaikan ujian ini.'
-        ]);
+        if ($isCompleted) {
+            return redirect()->route('ujian.selesai', $slug)->with('alert', [
+                'type' => 'info', 
+                'title' => 'Ujian Sudah Selesai',
+                'message' => 'Anda sudah menyelesaikan ujian ini.'
+            ]);
+        }
+
+        $existingAnswers = JawabanSiswa::where('siswa_id', Auth::id())
+            ->where('ujian_id', $ujian->id)
+            ->pluck('jawaban_pilihan', 'soal_id')
+            ->toArray();
+
+        return view('Dashboard.ujian-mulai', compact('ujian', 'existingAnswers'));
     }
-
-    $existingAnswers = JawabanSiswa::where('siswa_id', Auth::id())
-        ->where('ujian_id', $ujian->id)
-        ->pluck('jawaban_pilihan', 'soal_id')
-        ->toArray();
-
-    return view('Dashboard.ujian-mulai', compact('ujian', 'existingAnswers'));
-}
 
     public function store(Request $request, $slug)
     {
