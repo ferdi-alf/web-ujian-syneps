@@ -5,6 +5,7 @@
     'options' => [],
     'value' => '',
     'required' => false,
+    'isDisabled' => false,
 ])
 
 @php

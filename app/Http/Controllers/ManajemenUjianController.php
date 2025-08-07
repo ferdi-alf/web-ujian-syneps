@@ -36,10 +36,10 @@ class ManajemenUjianController extends Controller
                 'status' => [
                     'text' => $ujian->status,
                     'badge' => match ($ujian->status) {
-                        'pending' => 'bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded-sm border border-gray-400',
-                        'active' => 'bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-sm border border-green-400',
-                        'finished' => 'bg-purple-100 text-purple-800 text-xs font-medium px-2.5 py-0.5 rounded-sm border border-purple-400',
-                        default => 'bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded-sm border border-gray-400',
+                        'pending' => 'bg-gray-100 text-gray-800 text-xs  font-medium px-2.5 rounded-sm border border-gray-400',
+                        'active' => 'bg-green-100 text-green-800 text-xs  font-medium px-2.5 rounded-sm border border-green-400',
+                        'finished' => 'bg-purple-100 text-purple-800 text-xs  font-medium px-2.5 rounded-sm border border-purple-400',
+                        default => 'bg-gray-100 text-gray-800 text-xs  font-medium px-2.5 rounded-sm border border-gray-400',
                     }
                 ],
                 'total_soal' => $ujian->soals->count(),

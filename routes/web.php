@@ -17,13 +17,21 @@ use App\Http\Controllers\KelasController;
 use Illuminate\Support\Facades\Auth;
 
 
-Route::middleware(['guest'])->group(function () {
+
+
+Route::middleware(['web', 'guest'])->group(function () {
     Route::get('/', function () {
+        return view('welcome');
+    })->name('login');
+    Route::get('/login', function () {
         return view('welcome');
     })->name('login');
 
     Route::post('/', [AuthenticationController::class, 'store'])->name('store.login');
 });
+
+
+
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');

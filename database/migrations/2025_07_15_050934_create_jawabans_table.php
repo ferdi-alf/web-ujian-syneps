@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('soal_id')->constrained('soals')->onDelete('cascade');
             $table->enum('pilihan', ['A', 'B', 'C', 'D']);
             $table->text('teks');
-            $table->boolean('benar')->default(false); // apakah ini jawaban benar
+            $table->boolean('benar')->default(false);
             $table->timestamps();
         });
     }

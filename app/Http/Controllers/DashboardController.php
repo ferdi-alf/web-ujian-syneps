@@ -18,14 +18,16 @@ class DashboardController extends Controller {
         $data = ['user' => $user];
         
         if (in_array($user->role, ['admin', 'pengajar'])) {
+
             $data['cardData'] = $this->getCardData($user);
             $data['chartData'] = $this->getStackedBarChartData($user);
             $data['recentSubmissions'] = $this->getRecentExamSubmissions($user);
             $data['activeExamData'] = $this->getActiveExamData($user);
             if ($user->role === 'admin') {
+                $kelas = Kelas::select('id', 'nama')->get();
+                $data['kelas'] = $kelas;
                 $batchData = $this->getBatchData();
                 $data['batchData'] = $batchData;
-                // Debugging: Log batchData to verify contents
                 Log::info('Batch Data: ', $batchData->toArray());
             }
         } else {
@@ -36,24 +38,65 @@ class DashboardController extends Controller {
         return view('Dashboard.Dashboard', $data);
     }
 
-    private function getBatchData()
-    {
-        return Batches::withCount('siswaDetails')
-            ->orderBy('created_at', 'desc')
-            ->get()
-            ->map(function ($batch) {
-                return [
-                    'id' => $batch->id,
-                    'nama' => $batch->nama,
-                    'status' => $batch->status,
-                    'status_badge' => $batch->status === 'active'
-                        ? '<span class="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">Active</span>'
-                        : '<span class="px-2 py-1 bg-gray-100 text-gray-800 text-xs font-medium rounded-full">Inactive</span>',
-                    'jumlah_peserta' => $batch->siswa_details_count . ' siswa',
-                    'created_at' => $batch->created_at->format('d M Y'),
-                ];
-            });
+private function getBatchData()
+{
+    return Batches::withCount('siswaDetails')
+        ->with('kelas')
+        ->get()
+        ->map(function ($batch) {
+            // Ekstrak nomor dari nama batch
+            $batchNumber = $this->extractBatchNumber($batch->nama);
+            
+            return [
+                'id' => $batch->id,
+                'nama' => $batch->nama,
+                'status' => $batch->status,
+                'kelas' => $batch->kelas->nama,
+                'kelas_id' => $batch->kelas_id,
+                'batch_number' => $batchNumber,
+                'status_badge' => match ($batch->status) {
+                    'active' => '<span class="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">Active</span>',
+                    'finished' => '<span class="px-2 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded-full">Finished</span>',
+                    default => '<span class="px-2 py-1 bg-gray-100 text-gray-800 text-xs font-medium rounded-full">Inactive</span>',
+                },
+                'jumlah_peserta' => $batch->siswa_details_count . ' siswa',
+                'created_at' => $batch->created_at->format('d M Y'),
+            ];
+        })
+        ->sortBy([
+            // Prioritas 1: Status active selalu di atas
+            fn ($batch) => $batch['status'] !== 'active', // false (0) untuk active, true (1) untuk lainnya
+            // Prioritas 2: Urutkan berdasarkan kelas_id
+            fn ($batch) => $batch['kelas_id'],
+            // Prioritas 3: Dalam kelas_id yang sama, inactive di atas finished
+            fn ($batch) => match ($batch['status']) {
+                'inactive' => 0,
+                'finished' => 1,
+                default => 2 // active sudah di-filter di prioritas 1
+            },
+            // Prioritas 4: Urutkan nomor batch secara descending
+            fn ($batch) => -$batch['batch_number']
+        ])
+        ->values();
+}
+
+/**
+ * Ekstrak nomor batch dari nama batch
+ * Contoh: "batch 34" -> 34, "Batch ke-25" -> 25
+ */
+private function extractBatchNumber($batchName)
+{
+    // Mencari semua angka dalam string
+    preg_match_all('/\d+/', $batchName, $matches);
+    
+    if (!empty($matches[0])) {
+        // Ambil angka terakhir yang ditemukan (biasanya nomor batch)
+        return (int) end($matches[0]);
     }
+    
+    // Jika tidak ada angka ditemukan, return 0
+    return 0;
+}
 
     private function getCardData($user) {
         $data = [];

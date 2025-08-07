@@ -341,10 +341,11 @@
                         </x-fragments.modal-button>
                     </div>
 
-                    <x-reusable-table :searchBar="true" :truncate="true" :headers="['No', 'Nama Batch', 'Status', 'Jumlah Peserta', 'Dibuat']" :data="$batchData" :columns="[
+                    <x-reusable-table :searchBar="true" :truncate="true" :headers="['No', 'Nama Batch', 'Status', 'kelas', 'Jumlah Peserta', 'Dibuat']" :data="$batchData" :columns="[
                         fn($row, $i) => $i + 1,
                         fn($row) => $row['nama'],
                         fn($row) => $row['status_badge'],
+                        fn($row) => $row['kelas'],
                         fn($row) => $row['jumlah_peserta'],
                         fn($row) => $row['created_at'],
                     ]"
@@ -352,6 +353,8 @@
                             'modalId' => 'modal-edit-batch-' . $row['id'],
                             'updateRoute' => route('batch.update', $row['id']),
                             'deleteRoute' => route('batch.destroy', $row['id']),
+                            'deleteMessage' =>
+                                'Menghapus batch ini juga akan menghapus seluruh data peserta dan ujian terkait. Yakin?',
                         ])" />
                 </div>
 
@@ -363,6 +366,8 @@
                             'active' => 'Active',
                         ]" required />
                     </div>
+                    <x-fragments.select-field required label="Pilih Kelas" name="kelas_id" :options="$kelas->pluck('nama', 'id')->toArray()" />
+
                 </x-fragments.form-modal>
 
                 @if (isset($batchData))
@@ -375,9 +380,15 @@
                                 <x-fragments.select-field label="Status" name="status" :options="[
                                     'inactive' => 'Inactive',
                                     'active' => 'Active',
+                                    'finished' => 'finished',
                                 ]"
                                     value="{{ $batch['status'] }}" required />
                             </div>
+                            <div class="">
+
+                            </div>
+                            <x-fragments.select-field label="Kelas" name="kelas_id" :options="$kelas->pluck('nama', 'id')->toArray()"
+                                value="{{ $batch['kelas_id'] }}" required disabled />
                         </x-fragments.form-modal>
                     @endforeach
                 @endif
@@ -523,7 +534,61 @@
                 document.addEventListener('DOMContentLoaded', function() {
                     const ctx = document.getElementById('stackedBarChart').getContext('2d');
                     const chartData = @json($chartData);
+                    const editForms = document.querySelectorAll('[id^="modal-edit-batch-"]');
 
+                    editForms.forEach(form => {
+                        const selectStatus = form.querySelector('select[name="status"]');
+                        const formElement = form.querySelector('form');
+
+                        if (selectStatus && formElement) {
+                            selectStatus.addEventListener('change', function() {
+                                if (this.value === 'finished') {
+                                    event.preventDefault();
+
+                                    Swal.fire({
+                                        title: 'Apakah Anda yakin?',
+                                        text: 'Apakah Anda yakin ingin mengubah batch ini menjadi finished? Jika diubah jadi finished maka semua peserta statusnya akan berubah jadi alumni.',
+                                        icon: 'warning',
+                                        showCancelButton: true,
+                                        confirmButtonColor: '#3085d6',
+                                        cancelButtonColor: '#d33',
+                                        confirmButtonText: 'Ya, ubah ke finished!',
+                                        cancelButtonText: 'Batal',
+                                        reverseButtons: true
+                                    }).then((result) => {
+                                        if (!result.isConfirmed) {
+                                            selectStatus.value = selectStatus.getAttribute(
+                                                'data-original-value') || 'active';
+                                        }
+                                    });
+                                }
+                            });
+
+                            selectStatus.setAttribute('data-original-value', selectStatus.value);
+                            formElement.addEventListener('submit', function(e) {
+                                const currentStatus = selectStatus.value;
+
+                                if (currentStatus === 'finished') {
+                                    e.preventDefault();
+
+                                    Swal.fire({
+                                        title: 'Konfirmasi Perubahan Status',
+                                        text: 'Apakah Anda yakin ingin mengubah batch ini menjadi finished? Semua peserta akan menjadi alumni.',
+                                        icon: 'question',
+                                        showCancelButton: true,
+                                        confirmButtonColor: '#28a745',
+                                        cancelButtonColor: '#dc3545',
+                                        confirmButtonText: 'Ya, Finished!',
+                                        cancelButtonText: 'Batal'
+                                    }).then((result) => {
+                                        if (result.isConfirmed) {
+                                            this.submit();
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                    });
                     new Chart(ctx, {
                         type: 'bar',
                         data: {

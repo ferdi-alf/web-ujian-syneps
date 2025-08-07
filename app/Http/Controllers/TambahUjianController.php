@@ -97,13 +97,19 @@ class TambahUjianController extends Controller
             sleep(0.5);
 
             $this->updateProgress(37, 'Memeriksa batch aktif...');
-            $activeBatch = Batches::aktif()->first();
+            $kelas = Kelas::find($request->kelas_id);
+
+            $activeBatch = Batches::where('kelas_id', $request->kelas_id)
+                ->where('status', 'active')
+                ->first();
+
             if (!$activeBatch) {
-                $this->updateProgress(0, 'Error: Tidak ada batch aktif');
-                Log::error('❌ Tidak ada batch aktif ditemukan');
+                $message = "Kelas {$kelas->nama} belum memiliki batch aktif. Silakan aktifkan batch terlebih dahulu.";
+                Log::error("❌ $message");
+
                 return response()->json([
                     'success' => false,
-                    'message' => 'Tidak ada batch yang aktif saat ini'
+                    'message' => $message
                 ], 400);
             }
             Log::info('✅ Batch aktif ditemukan', ['batch_id' => $activeBatch->id]);

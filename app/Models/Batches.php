@@ -13,6 +13,7 @@ class Batches extends Model
     protected $fillable = [
         'nama',
         'status',
+        'kelas_id'
     ];
 
     /**
@@ -38,4 +39,10 @@ class Batches extends Model
     {
         return $query->where('status', 'active');
     }
+
+    public function kelas()
+{
+    return $this->belongsTo(Kelas::class, 'kelas_id');
+}
+
 }

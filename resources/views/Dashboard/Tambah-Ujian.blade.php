@@ -79,9 +79,9 @@
                     </div>
                 </div>
             </div>
-            <div class="flex fixed bottom-0 md:w-5/6 w-11/12 z-30 bg-white justify-end p-3">
+            <div class="flex fixed bottom-0 md:w-5/6 w-11/12 z-30  justify-end p-3">
                 <button type="submit"
-                    class="px-6 py-2 font-semibold bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                    class="px-6 py-2 mr-10 font-semibold bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
                     Simpan Ujian
                 </button>
             </div>

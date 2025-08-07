@@ -3,6 +3,7 @@
     'drawerId' => null,
     'deleteRoute' => null,
     'viewAction' => null,
+    'deleteMessage' => null,
     'showView' => true,
 ])
 
@@ -28,6 +29,7 @@
     @endif
 
     @if ($deleteRoute)
-        <x-fragments.delete-button :url="$deleteRoute" title="Hapus Data" message="Yakin ingin menghapus data ini?" />
+        <x-fragments.delete-button :url="$deleteRoute" title="Hapus Data" :message="$deleteMessage ?? 'Yakin ingin menghapus data ini?'" />
     @endif
+
 </div>

@@ -11,6 +11,7 @@ use App\Models\Kelas;
 use App\Models\SiswaDetail;
 use App\Models\Batches;
 use App\Helpers\AlertHelper;
+use Illuminate\Support\Facades\Log;
 
 class PesertaController extends Controller
 {
@@ -40,6 +41,19 @@ class PesertaController extends Controller
             $siswas = collect();
         }
 
+        $siswas = $siswas->sortByDesc(function ($siswa) {
+            $siswaDetail = $siswa->siswaDetail;
+            $batch = $siswaDetail?->batches;
+
+            if (!$batch || $batch->status !== 'active') {
+                return -1; 
+            }
+
+            preg_match('/\d+/', $batch->nama, $matches);
+            return isset($matches[0]) ? (int) $matches[0] : 0;
+        })->values();
+
+
         $pesertaData = $siswas->map(function ($siswa) {
             return [
                 'id' => $siswa->id,
@@ -47,9 +61,14 @@ class PesertaController extends Controller
                 'name' => $siswa->name,
                 'email' => $siswa->email,
                 'nama_lengkap' => $siswa->siswaDetail->nama_lengkap ?? '-',
-                'kelas' => optional($siswa->siswaDetail->kelas)->nama ?? '-',
+                'kelas' => $siswa->siswaDetail?->kelas?->nama ?? '-',
                 'kelas_id' => $siswa->siswaDetail->kelas_id ?? null,
-                'batch' => optional($siswa->siswaDetail->batches)->nama ?? '-',
+                'batch' => $siswa->siswaDetail?->batches?->nama ?? '-',
+                'status' => match ($siswa->siswaDetail?->status) {
+                    'active' => '<span class="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">Active</span>',
+                    'alumni' => '<span class="px-2 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded-full">Alumni</span>',
+                     default => '<span class="px-2 py-1 bg-gray-100 text-gray-800 text-xs font-medium rounded-full">Inactive</span>',
+                },
                 'batch_id' => $siswa->siswaDetail->batch_id ?? null,
                 'hasil' => $siswa->hasilUjian->map(function ($hasil) {
                     return [
@@ -64,13 +83,19 @@ class PesertaController extends Controller
             ];
         });
 
-        // Get active batch untuk form
-        $activeBatch = Batches::aktif()->first();
-        
-        // Get all batches untuk filter
-        $allBatches = Batches::orderBy('nama')->get()->pluck('nama', 'nama')->toArray();
+      $activeBatch = Batches::with('kelas')
+        ->where('status', 'active')
+        ->get()
+        ->map(function ($batch) {
+            return (object)[
+                'display_name' => $batch->nama . ' - ' . $batch->kelas->nama
+            ];
+        });
 
-        return view('Dashboard.Peserta', compact('pesertaData', 'kelas', 'activeBatch', 'allBatches'));
+            Log::info($activeBatch);
+        
+
+        return view('Dashboard.Peserta', compact('pesertaData', 'kelas', 'activeBatch'));
     }
 
     private function formatWaktuPengerjaanDetik($waktuDetik) {
@@ -124,10 +149,18 @@ class PesertaController extends Controller
                 }
             }
 
-            // Get active batch
-            $activeBatch = Batches::aktif()->first();
-            if (!$activeBatch) {
-                throw new \Exception('Tidak ada batch yang aktif. Harap aktifkan batch terlebih dahulu.');
+            if($request->kelas_id) {
+
+              $activeBatch = Batches::where('kelas_id', $request->kelas_id)
+                      ->where('status', 'active')
+                      ->first();
+
+              if (!$activeBatch) {
+                    $kelas = Kelas::find($request->kelas_id);
+                    $namaKelas = $kelas ? $kelas->nama : 'Kelas tidak ditemukan';
+                    throw new \Exception("Kelas $namaKelas belum memiliki batch yang aktif. Harap aktifkan batch terlebih dahulu.");
+                }
+
             }
 
             $avatar = 'avatar-' . rand(1, 10) . '.png';
@@ -143,12 +176,12 @@ class PesertaController extends Controller
                 'siswa_id' => $newUser->id,
                 'nama_lengkap' => $request->nama_lengkap,
                 'kelas_id' => $request->kelas_id,
-                'batch_id' => $activeBatch->id, // Otomatis assign ke active batch
+                'batch_id' => $activeBatch->id,
             ]);
 
             DB::commit();
             
-            return redirect()->back()->with(AlertHelper::success('Peserta berhasil ditambahkan ke batch: ' . $activeBatch->nama, 'Success'));
+            return redirect()->back()->with(AlertHelper::success('Peserta berhasil ditambahkan ke batch: ' . $activeBatch->nama . ' kelas '. $activeBatch->kelas->nama, 'Success'));
             
         } catch (\Exception $e) {
             DB::rollBack();
@@ -156,84 +189,67 @@ class PesertaController extends Controller
         }
     }
 
-    public function update(Request $request, $id) {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $id,
-            'kelas_id' => 'required_if:admin_role,true|exists:kelas,id'
+   public function update(Request $request, $id)
+{
+    $request->validate([
+        'name' => 'required|string|max:255',
+        'email' => 'required|email|unique:users,email,' . $id,
+        'nama_lengkap' => 'required|string|max:255',
+        'password' => 'nullable|string|min:6',
+    ]);
+
+    DB::beginTransaction();
+
+    try {
+        $user = Auth::user(); 
+        $siswa = User::siswa()->findOrFail($id); 
+
+        if ($user->role === 'pengajar') {
+            $pengajarDetail = $user->pengajarDetail;
+            $kelasIds = $pengajarDetail ? $pengajarDetail->kelas()->pluck('kelas.id')->toArray() : [];
+            $siswaKelasId = $siswa->siswaDetail->kelas_id ?? null;
+
+            if (!in_array($siswaKelasId, $kelasIds)) {
+                throw new \Exception('Anda tidak memiliki akses untuk mengubah peserta ini.');
+            }
+        }
+
+        $siswa->update([
+            'name' => $request->name,
+            'email' => $request->email,
         ]);
 
-        DB::beginTransaction();
-        
-        try {
-            $user = Auth::user();
-            $siswa = User::siswa()->findOrFail($id);
-            
-            if ($user->role === 'pengajar') {
-                $pengajarDetail = $user->pengajarDetail;
-                $kelasIds = $pengajarDetail ? $pengajarDetail->kelas()->pluck('kelas.id')->toArray() : [];
-                $siswaKelasId = $siswa->siswaDetail->kelas_id ?? null;
-                
-                if (!in_array($siswaKelasId, $kelasIds)) {
-                    throw new \Exception('Anda tidak memiliki akses untuk mengubah peserta ini');
-                }
-            }
-
+        if ($request->filled('password')) {
             $siswa->update([
-                'name' => $request->name,
-                'email' => $request->email,
+                'password' => Hash::make($request->password),
             ]);
-
-            if ($request->filled('password')) {
-                $siswa->update([
-                    'password' => Hash::make($request->password)
-                ]);
-            }
-
-            $siswaDetail = $siswa->siswaDetail;
-            if ($siswaDetail) {
-                $updateData = ['nama_lengkap' => $request->nama_lengkap];
-                
-                if ($user->role === 'admin' && $request->filled('kelas_id')) {
-                    $updateData['kelas_id'] = $request->kelas_id;
-                } elseif ($user->role === 'pengajar' && $request->filled('kelas_id')) {
-                    if (!in_array($request->kelas_id, $kelasIds)) {
-                        throw new \Exception('Anda tidak memiliki akses untuk mengubah kelas peserta ke kelas ini');
-                    }
-                    $updateData['kelas_id'] = $request->kelas_id;
-                }
-                
-                $siswaDetail->update($updateData);
-            } else {
-                $kelasId = $user->role === 'admin' ? $request->kelas_id : ($pengajarDetail->kelas()->first()->id ?? null);
-                
-                if (!$kelasId) {
-                    throw new \Exception('Pengajar belum memiliki kelas yang ditugaskan');
-                }
-
-                // Get active batch untuk siswa detail baru
-                $activeBatch = Batches::aktif()->first();
-                if (!$activeBatch) {
-                    throw new \Exception('Tidak ada batch yang aktif.');
-                }
-                
-                SiswaDetail::create([
-                    'siswa_id' => $siswa->id,
-                    'nama_lengkap' => $request->nama_lengkap,
-                    'kelas_id' => $kelasId,
-                    'batch_id' => $activeBatch->id,
-                ]);
-            }
-
-            DB::commit();
-            
-            return redirect()->back()->with(AlertHelper::success('Data peserta berhasil diupdate', 'Success'));
-            
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return redirect()->back()->with(AlertHelper::error('Gagal mengupdate peserta: ' . $e->getMessage(), 'Error'));
         }
+
+        $siswaDetail = $siswa->siswaDetail;
+        if ($siswaDetail) {
+            $siswaDetail->update([
+                'nama_lengkap' => $request->nama_lengkap,
+            ]);
+        } else {
+            SiswaDetail::create([
+                'siswa_id' => $siswa->id,
+                'nama_lengkap' => $request->nama_lengkap,
+            ]);
+        }
+
+        DB::commit();
+
+        return redirect()->back()->with(AlertHelper::success('Data peserta berhasil diupdate.', 'Success'));
+    } catch (\Exception $e) {
+        DB::rollBack();
+
+        return redirect()->back()->with(AlertHelper::error(
+            'Gagal mengupdate peserta: ' . $e->getMessage(),
+            'Error'
+        ));
     }
+}
+
 
     public function destroy($id) {
         DB::beginTransaction();

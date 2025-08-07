@@ -59,4 +59,10 @@ class Kelas extends Model
             'pengajar_id'
         );
     }
+
+    public function batches(): HasMany
+{
+    return $this->hasMany(Batches::class, 'kelas_id');
+}
+
 }

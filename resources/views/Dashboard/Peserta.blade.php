@@ -6,23 +6,29 @@
     <div class="">
         <h1 class="text-2xl font-bold text-gray-800 mb-2 text-center sm:hidden block">Manajemen Peserta</h1>
 
-        <div class="flex mb-4 items-center justify-between gap-2">
-            <div class="flex items-center gap-4">
-                {{-- Info Active Batch --}}
-                @if (isset($activeBatch))
-                    <div class="bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+        <div class="flex mb-4 md:flex-row flex-col md:items-center items-end justify-between gap-2">
+            <div class="flex items-center gap-4 md:w-auto w-full">
+
+                @if ($activeBatch->isNotEmpty())
+                    <div class="bg-green-50 border md:w-auto w-full border-green-200 rounded-lg px-3 py-2">
                         <div class="flex items-center">
                             <i class="fas fa-layer-group text-green-600 mr-2"></i>
                             <span class="text-sm text-green-800">
-                                <strong>Batch Aktif:</strong> {{ $activeBatch->nama }}
+                                <strong>Batch Aktif:</strong>
                             </span>
                         </div>
+                        <ul class="space-y-1 list-disc text-green-800 ml-6">
+                            @foreach ($activeBatch as $batch)
+                                <li>{{ $batch->display_name }}</li>
+                            @endforeach
+                        </ul>
+
                     </div>
                 @else
-                    <div class="bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2">
                         <div class="flex items-center">
-                            <i class="fas fa-exclamation-triangle text-red-600 mr-2"></i>
-                            <span class="text-sm text-red-800">
+                            <i class="fas fa-exclamation-triangle text-yellow-600 mr-2"></i>
+                            <span class="text-sm text-yellow-800">
                                 <strong>Peringatan:</strong> Tidak ada batch aktif
                             </span>
                         </div>
@@ -36,13 +42,14 @@
             </x-fragments.modal-button>
         </div>
 
-        <x-reusable-table :searchBar="true" :truncate="true" :headers="['No', 'Avatar', 'Nama Lengkap', 'Email', 'Kelas', 'Batch', 'Hasil Ujian']" :data="$pesertaData" :columns="[
+        <x-reusable-table :searchBar="true" :truncate="true" :headers="['No', 'Avatar', 'Nama Lengkap', 'Email', 'Kelas', 'Batch', 'Status', 'Hasil Ujian']" :data="$pesertaData" :columns="[
             fn($row, $i) => $i + 1,
             fn($row) => $row['avatar'],
             fn($row) => $row['nama_lengkap'],
             fn($row) => $row['email'],
             fn($row) => $row['kelas'],
             fn($row) => $row['batch'],
+            fn($row) => $row['status'],
             fn($row) => count($row['hasil']) . ' ujian',
         ]"
             :showActions="true" :actionButtons="fn($row) => view('components.action-buttons', [
@@ -55,17 +62,24 @@
             ]" :filterPlaceholder="'Semua'" />
     </div>
 
+
     <x-fragments.form-modal id="modal-add-peserta" title="Tambah Peserta Baru" action="{{ route('peserta.store') }}">
-        @if (isset($activeBatch))
+        @if ($activeBatch->isNotEmpty())
             <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
                 <div class="flex items-center">
                     <i class="fas fa-info-circle text-blue-600 mr-2"></i>
                     <span class="text-sm text-blue-800">
-                        Peserta akan ditambahkan ke batch: <strong>{{ $activeBatch->nama }}</strong>
+                        Batch yang aktif:
                     </span>
                 </div>
+                <ul class="list-disc ml-10">
+                    @foreach ($activeBatch as $batch)
+                        <li class="text-sm text-blue-800"><strong>{{ $batch->display_name }}</strong></li>
+                    @endforeach
+                </ul>
             </div>
         @endif
+
 
         <div class="grid grid-cols-2 gap-4">
             <x-fragments.text-field label="Nama User" name="name" placeholder="Masukkan nama untuk login peserta"
@@ -81,7 +95,7 @@
         </div>
     </x-fragments.form-modal>
 
-    {{-- Modal Edit Peserta --}}
+
     @foreach ($pesertaData as $peserta)
         <x-fragments.form-modal id="modal-edit-peserta-{{ $peserta['id'] }}" title="Edit Peserta"
             action="{{ route('peserta.update', $peserta['id']) }}" method="PUT">
@@ -100,19 +114,19 @@
                     value="{{ $peserta['kelas_id'] }}" required />
             </div>
 
-            {{-- Info Current Batch --}}
+
             <div class="bg-gray-50 border border-gray-200 rounded-lg p-3 mt-4">
                 <div class="flex items-center">
                     <i class="fas fa-layer-group text-gray-600 mr-2"></i>
                     <span class="text-sm text-gray-700">
-                        <strong>Batch saat ini:</strong> {{ $peserta['batch'] }}
+                        <strong>Batch:</strong> {{ $peserta['batch'] }}
                     </span>
                 </div>
             </div>
         </x-fragments.form-modal>
     @endforeach
 
-    {{-- Drawer Detail tetap sama --}}
+
     @foreach ($pesertaData as $peserta)
         <x-drawer-layout id="drawer-detail-peserta-{{ $peserta['id'] }}"
             title="Detail Hasil Ujian: {{ $peserta['name'] }}"
@@ -141,10 +155,13 @@
                             <p class="text-sm text-gray-600">Batch:</p>
                             <p class="font-medium">{{ $peserta['batch'] }}</p>
                         </div>
+                        <div>
+                            <p class="text-sm text-gray-600">Status:</p>
+                            <p class="font-medium"> {!! Str::of($peserta['status'])->stripTags('<span>')->toString() !!}</p>
+                        </div>
                     </div>
                 </div>
 
-                {{-- Riwayat Hasil Ujian sama seperti sebelumnya --}}
                 <div class="bg-gray-50 p-4 rounded-lg">
                     <h3 class="text-lg font-semibold mb-4">Riwayat Hasil Ujian</h3>
                     @if (count($peserta['hasil']) > 0)
