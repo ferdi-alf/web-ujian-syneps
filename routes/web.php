@@ -6,6 +6,7 @@ use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\AdminResetController;
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\BatchController;
+use App\Http\Controllers\ForumAlumniController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UjianController;
 use App\Http\Controllers\UserController;
@@ -14,20 +15,32 @@ use App\Http\Controllers\NilaiController;
 use App\Http\Controllers\TambahUjianController;
 use App\Http\Controllers\PesertaController;
 use App\Http\Controllers\KelasController;
+use App\Http\Controllers\RegisterController;
 use Illuminate\Support\Facades\Auth;
 
 
 
+Route::get('/', function () {
+    return view('welcome');
+})->name('index');
 
 Route::middleware(['web', 'guest'])->group(function () {
-    Route::get('/', function () {
-        return view('welcome');
-    })->name('login');
-    Route::get('/login', function () {
-        return view('welcome');
-    })->name('login');
+    Route::controller(RegisterController::class)->prefix('register')->name('register.')->group(function () {
+        Route::get('/', function () {
+            return view('auth.register');
+        })->name('index');
+    
+        Route::post('/', [RegisterController::class, 'regsiter'])->name('store');
+    });
 
-    Route::post('/', [AuthenticationController::class, 'store'])->name('store.login');
+    // jangan di kucak login
+    Route::controller(AuthenticationController::class)->prefix('login')->name('login.')->group(function () {
+        Route::get('/', function () {
+            return view('auth.login');
+        })->name('index');
+    
+        Route::post('/', [AuthenticationController::class, 'store'])->name('store');
+    });
 });
 
 
@@ -48,6 +61,12 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/{slug}/store', 'store')->name('store');
         Route::post('/{slug}/save-progress', 'saveProgress')->name('save-progress');
         Route::get('/{slug}/selesai', 'selesai')->name('selesai');
+    });
+    Route::controller(ForumAlumniController::class)->prefix('forum-alumni')->name('forum-alumni.')->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::post('/', 'store')->name('store');
+        Route::post('/{id}', 'balasan')->name('balasan');
+        Route::delete('/{id}', 'delete')->name('delete');
     });
 
     Route::controller(NilaiController::class)->prefix('nilai')->name('nilai.')->group(function () {
@@ -80,6 +99,7 @@ Route::middleware(['auth'])->group(function () {
 
         Route::controller(PesertaController::class)->prefix('peserta')->name('peserta.')->group(function () {
             Route::get('/', 'index')->name('index');
+            Route::get('/approval', 'approval')->name('approval');
             Route::post('/', 'store')->name('store');
             Route::put('/{id}', 'update')->name('update');
             Route::delete('/{id}', 'destroy')->name('destroy');

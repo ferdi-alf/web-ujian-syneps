@@ -5,7 +5,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Syneps Academy</title>
+    <title>Syneps Academy - @yield('title')</title>
+
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
@@ -19,8 +20,37 @@
 </head>
 
 <body class="bg-[#FDFDFC] ">
-    <h1 class="text-center text-5xl font-bold text-orange-700">Hello Word</h1>
+    @yield('content')
     <script src="https://cdn.jsdelivr.net/npm/flowbite@3.1.2/dist/flowbite.min.js"></script>
-</body>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        @if (session('alert'))
+            @php $alert = session('alert'); @endphp
+
+            Swal.fire({
+                icon: '{{ $alert['type'] }}',
+                title: '{{ $alert['title'] }}',
+                text: '{{ $alert['message'] }}',
+                confirmButtonColor: '#991b1b',
+                timer: 3000,
+                timerProgressBar: true
+            });
+        @endif
+
+        @if ($errors->any())
+            let errorMessages = '';
+            @foreach ($errors->all() as $error)
+                errorMessages += '• {{ $error }}\n';
+            @endforeach
+
+            Swal.fire({
+                icon: 'error',
+                title: 'Validation Error',
+                text: errorMessages,
+                confirmButtonColor: '#991b1b'
+            });
+        @endif
+    </script>
 
 </html>

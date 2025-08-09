@@ -19,13 +19,13 @@ class DenyRolesMiddleware
     public function handle(Request $request, Closure $next, ...$deniedRoles)
     {
         if (!Auth::check()) {
-            return redirect('/')->with(AlertHelper::error('You must be logged in to access this page.', 'Authentication Required'));
+            return redirect('/login')->with(AlertHelper::error('You must be logged in to access this page.', 'Authentication Required'));
         }
 
         $userRole = Auth::user()->role;
 
         if (in_array($userRole, $deniedRoles)) {
-            return redirect('/')->with(AlertHelper::error('Access denied for role: ' . $userRole, 'Access Forbidden'));
+            return redirect('/login')->with(AlertHelper::error('Access denied for role: ' . $userRole, 'Access Forbidden'));
         }
 
         return $next($request);

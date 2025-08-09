@@ -20,7 +20,7 @@ class BatchController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'nama' => 'required|string|max:255',
-            'status' => 'required|in:active,inactive',
+            'status' => 'required|in:active,inactive,registration',
             'kelas_id' => 'required|exists:kelas,id'
 
         ]);
@@ -31,6 +31,22 @@ class BatchController extends Controller
                 ->withErrors($validator)
                 ->withInput();
         }
+
+      if($request->status === 'registration') {
+        $registrationBatch =  Batches::where('status', 'registration')
+            ->where('kelas_id', $request->kelas_id)
+            ->first();
+        $kelas = Kelas::where('id', $request->kelas_id)->first();
+        $namaKelas = $kelas ? $kelas->nama : 'Kelas tidak ditemukan';
+        if ($registrationBatch) {
+            return redirect()->back()
+                 ->with(AlertHelper::error(
+                        'Gagal menambahkan batch. Sudah ada batch yang aktif untuk kelas: ' . $namaKelas,
+                        'Error'
+                    ))
+                    ->withInput();;
+        }
+      }
 
       if ($request->status === 'active') {
             $activeBatch = Batches::where('status', 'active')
@@ -71,7 +87,7 @@ class BatchController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'nama' => 'required|string|max:255',
-            'status' => 'required|in:active,inactive,finished',
+            'status' => 'required|in:active,inactive,finished, registration',
      
         ]);
          if ($request->kelas_id) {

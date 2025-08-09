@@ -31,22 +31,39 @@
                 <x-fragments.sidebar-item route="users.index" icon="user"
                     colors="emerald">Users</x-fragments.sidebar-item>
             @endif
-            @if (Auth::user()->role === 'admin' || Auth::user()->role === 'pengajar')
-                <x-fragments.sidebar-item route="peserta.index" icon="users"
-                    colors="emerald">Peserta</x-fragments.sidebar-item>
+            @if (Auth::user()->role === 'admin')
+                <x-sidebar-dropdown id="peserta" title="Manajemen Peserta" icon="users-cog" routes="peserta"
+                    color="emerald">
+                    <x-fragments.sidebar-item route="peserta.approval" icon="user-check" colors="emerald">
+                        Approval Peserta
+                    </x-fragments.sidebar-item>
+
+                    <x-fragments.sidebar-item route="peserta.index" icon="users" colors="emerald">
+                        Peserta
+                    </x-fragments.sidebar-item>
+
+                </x-sidebar-dropdown>
+            @elseif(Auth::user()->role === 'pengajar')
+                <x-fragments.sidebar-item route="peserta.index" icon="users" colors="emerald">
+                    Peserta
+                </x-fragments.sidebar-item>
             @endif
             @if (Auth::user()->role === 'admin')
                 <x-fragments.sidebar-item route="kelas.index" icon="code-branch"
                     colors="emerald">Kelas</x-fragments.sidebar-item>
             @endif
             @if (Auth::user()->role === 'admin' || Auth::user()->role === 'pengajar')
-                <x-fragments.sidebar-item route="manajemen-ujian.index" icon="book" colors="emerald">Manajemen
-                    Ujian</x-fragments.sidebar-item>
-                <x-fragments.sidebar-item route="tambah-ujian.index" icon="plus" colors="emerald">Tambah
-                    ujian</x-fragments.sidebar-item>
-                <x-fragments.sidebar-item route="leaderboard" icon="chart-simple" colors="emerald">Leaderboard
-                    Member
-                </x-fragments.sidebar-item>
+                <x-sidebar-dropdown id="ujian" title="Setting Ujian" icon="cog"
+                    routes="manajemen-ujian,tambah-ujian" color="emerald">
+
+                    <x-fragments.sidebar-item route="manajemen-ujian.index" icon="book" colors="emerald">
+                        Manajemen Ujian
+                    </x-fragments.sidebar-item>
+
+                    <x-fragments.sidebar-item route="tambah-ujian.index" icon="plus" colors="emerald">
+                        Tambah Ujian
+                    </x-fragments.sidebar-item>
+                </x-sidebar-dropdown>
             @endif
             @if (Auth::user()->role === 'siswa')
                 <x-fragments.sidebar-item route="ujian.index" icon="book" colors="emerald">
@@ -54,6 +71,8 @@
             @endif
             <x-fragments.sidebar-item route="nilai.index" icon="fa-solid fa-square-poll-horizontal"
                 colors="emerald">Nilai
+            </x-fragments.sidebar-item>
+            <x-fragments.sidebar-item route="nilai.index" icon="fa-solid fa-user-graduate" colors="emerald">Forum Alumni
             </x-fragments.sidebar-item>
         </ul>
     </div>

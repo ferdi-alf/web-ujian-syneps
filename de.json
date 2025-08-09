@@ -1,88 +1,97 @@
 [
-    // data admin (semua data)
-        "Fullstack Web Dev": [
-        {
-            "id": 1,
-            "nama": "Fahri Saputra",
-            "rata_rata": "84,2",
-            "status": "Mengalami peningkatan dari materi nilai dari materi sebelumnya", // di cek dari table ujians appakah data ujian itu sudah pebih dari dari 1? jika tidak jangan return jika sudah ada baru kita bandiongkan data ujian users role siswa terbaru dengan data sebelumnya!,
-            "chart_ujian": [
-                {
-                    "judul": "HTML dan CSS",
-                    "nilai": 80,
-                },
-                 {
-                    "judul": "Semantic HTML",
-                    "nilai": 83,
-                }
-            ],
-            "table_data": [
-                {
-                    "id": 1,
-                    "judul": "HTML dan CSS",
-                    "nilai": 80,
-                    "benar": 8,
-                    "salah": 2
-                }
-            ]
-        }
-    ],
-    "Fullstack Andorid Dev": [
-        {
-             "id": 3,
-            "nama": "Riski",
-            "rata_rata": "84,2",
-            "status": "Mengalami peningkatan dari materi nilai dari materi sebelumnya", 
-            "chart_ujian": [
-                {
-                    "judul": "Dart",
-                    "nilai": 80,
-                },
-                 {
-                    "judul": "Dasar fultter",
-                    "nilai": 83,
-                }
-            ],
-            "table_data": [
-                {
-                    "id": 1,
-                    "judul": "Dart",
-                    "nilai": 80,
-                    "benar": 8,
-                    "salah": 2
-                }
-            ]
-        }
-    ],
+    // yanga active selalu menjadi utama
+    {
+        "id": 7,
+        "nama": "Batch 52",
+        "status": "active",
+        "kelas": "Fullstack Android Developer",
+        "kelas_id": 2,
+        "batch_number": 52,
+        "status_badge": "<span class=\"px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full\">Active</span>",
+        "jumlah_peserta": "0 siswa",
+        "created_at": "07 Aug 2025"
+    },
+    {
+        "id": 10,
+        "nama": "Batch 7",
+        "status": "active",
+        "kelas": "Fullstack Web developer",
+        "kelas_id": 1,
+        "batch_number": 7,
+        "status_badge": "<span class=\"px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full\">Active</span>",
+        "jumlah_peserta": "0 siswa",
+        "created_at": "07 Aug 2025"
+    },
 
-    
-=   // data yang di return ke users role pelajaran hanya data ujian dan siswa siswa yang sama kelas_id nya di users->kelas_id ->kelas->id. menampilkan:
-    [
-       {
-             "id": 3,
-            "nama": "Riski",
-            "rata_rata": "82,2",
-            "status": "Mengalami Penurunan dari materi nilai dari materi sebelumnya", 
-            "chart_ujian": [
-                {
-                    "judul": "Dart",
-                    "nilai": 80,
-                },
-                 {
-                    "judul": "Dasar fultter",
-                    "nilai": 78,
-                }
-            ],
-            "table_data": [
-                {
-                    "id": 1,
-                    "judul": "Dart",
-                    "nilai": 80,
-                    "benar": 8,
-                    "salah": 2
-                }
-            ]
-        }
-    ],
-   
+    // diklasifikasikan dengan kelas atau kelas_id
+    //setelah diklasifikasikan berdasarkan kelas lalu:
+    // clasifikasikan berdasarkan urutan inactice, registraion, lalu terakhir finished
+    {
+        "id": 20,
+        "nama": "Batch 10",
+        "status": "inactive",
+        "kelas": "Fullstack Web developer",
+        "kelas_id": 1,
+        "batch_number": 10,
+        "status_badge": "<span class=\"px-2 py-1 bg-gray-100 text-gray-800 text-xs font-medium rounded-full\">Inactive</span>",
+        "jumlah_peserta": "0 siswa",
+        "created_at": "07 Aug 2025"
+    },
+    {
+        "id": 18,
+        "nama": "Batch 9",
+        "status": "inactive",
+        "kelas": "Fullstack Web developer",
+        "kelas_id": 1,
+        "batch_number": 9,
+        "status_badge": "<span class=\"px-2 py-1 bg-gray-100 text-gray-800 text-xs font-medium rounded-full\">Inactive</span>",
+        "jumlah_peserta": "0 siswa",
+        "created_at": "07 Aug 2025"
+    },
+    {
+        "id": 17,
+        "nama": "Batch 8",
+        "status": "registration",
+        "kelas": "Fullstack Web developer",
+        "kelas_id": 1,
+        "batch_number": 8,
+        "status_badge": "<span class=\"px-2 py-1 bg-orange-100 text-orange-800 text-xs font-medium rounded-full\">Registration</span>",
+        "jumlah_peserta": "0 siswa",
+        "created_at": "07 Aug 2025"
+    },
+    {
+        "id": 1,
+        "nama": "Batch 6",
+        "status": "finished",
+        "kelas": "Fullstack Web developer",
+        "kelas_id": 1,
+        "batch_number": 6,
+        "status_badge": "<span class=\"px-2 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded-full\">Finished</span>",
+        "jumlah_peserta": "2 siswa",
+        "created_at": "27 Jul 2025"
+    },
+
+    {
+        "id": 19,
+        "nama": "Batch 53",
+        "status": "inactive",
+        "kelas": "Fullstack Android Developer",
+        "kelas_id": 2,
+        "batch_number": 53,
+        "status_badge": "<span class=\"px-2 py-1 bg-gray-100 text-gray-800 text-xs font-medium rounded-full\">Inactive</span>",
+        "jumlah_peserta": "0 siswa",
+        "created_at": "07 Aug 2025"
+    },
+
+    {
+        "id": 6,
+        "nama": "Batch 51",
+        "status": "finished",
+        "kelas": "Fullstack Android Developer",
+        "kelas_id": 2,
+        "batch_number": 51,
+        "status_badge": "<span class=\"px-2 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded-full\">Finished</span>",
+        "jumlah_peserta": "1 siswa",
+        "created_at": "07 Aug 2025"
+    }
 ]

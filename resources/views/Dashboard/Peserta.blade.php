@@ -58,7 +58,7 @@
                 'updateRoute' => route('peserta.update', $row['id']),
                 'deleteRoute' => route('peserta.destroy', $row['id']),
             ])" :autoFilter="[
-                5 => 'Batch', // Filter by column index 5 (Batch)
+                4 => 'Batch', // Filter by column index 5 (Batch)
             ]" :filterPlaceholder="'Semua'" />
     </div>
 

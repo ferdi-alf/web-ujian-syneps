@@ -295,19 +295,19 @@
                 </div>
 
                 @if (count($activeExamData) > 0)
-                    <x-reusable-table :searchBar="true" :truncate="true" :headers="['No', 'Judul Ujian', 'Waktu Pengerjaan', 'Status', 'Kelas', 'Total Hasil']" :data="$activeExamData" :columns="[
-                        fn($row) => $row['no'],
-                        fn($row) => $row['judul'],
-                        fn($row) => $row['waktu_pengerjaan'],
-                        fn(
-                            $row,
-                        ) => '<span class=\'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800\'>' .
-                            $row['status'] .
-                            '</span>',
-                        fn($row) => $row['kelas'],
-                        fn($row) => $row['total_hasil'],
-                    ]"
-                        :showActions="true"
+                    <x-reusable-table tableId="active-exams" :searchBar="true" :truncate="true" :headers="['No', 'Judul Ujian', 'Waktu Pengerjaan', 'Status', 'Kelas', 'Total Hasil']"
+                        :data="$activeExamData" :columns="[
+                            fn($row) => $row['no'],
+                            fn($row) => $row['judul'],
+                            fn($row) => $row['waktu_pengerjaan'],
+                            fn(
+                                $row,
+                            ) => '<span class=\'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800\'>' .
+                                $row['status'] .
+                                '</span>',
+                            fn($row) => $row['kelas'],
+                            fn($row) => $row['total_hasil'],
+                        ]" :showActions="true"
                         :actionButtons="fn($row) => view('components.action-buttons', [
                             'drawerId' => 'drawer-detail-active-exam-'.$row['id'],
                             'hideEdit' => true,
@@ -331,31 +331,32 @@
             </div>
 
             @if (Auth::user()->role === 'admin')
-                <div class="mt-8">
+                <div class="mt-8 p-6 bg-white rounded-lg shadow-md">
                     <h2 class="text-2xl font-bold text-gray-800 mb-2 text-center sm:hidden block">Manajemen Batch</h2>
 
-                    <div class="flex mb-4 items-center justify-end gap-2">
+                    <div class="flex  items-center justify-end gap-2">
                         <x-fragments.modal-button target="modal-add-batch" variant="emerald">
                             <i class="fa-solid fa-plus mr-2"></i>
                             Tambah Batch
                         </x-fragments.modal-button>
                     </div>
 
-                    <x-reusable-table :searchBar="true" :truncate="true" :headers="['No', 'Nama Batch', 'Status', 'kelas', 'Jumlah Peserta', 'Dibuat']" :data="$batchData" :columns="[
-                        fn($row, $i) => $i + 1,
-                        fn($row) => $row['nama'],
-                        fn($row) => $row['status_badge'],
-                        fn($row) => $row['kelas'],
-                        fn($row) => $row['jumlah_peserta'],
-                        fn($row) => $row['created_at'],
-                    ]"
-                        :showActions="true" :actionButtons="fn($row) => view('components.action-buttons', [
+                    <x-reusable-table tableId="batch-management" :searchBar="true" :truncate="true" :headers="['No', 'Nama Batch', 'Status', 'kelas', 'Jumlah Peserta', 'Dibuat']"
+                        :data="$batchData" :columns="[
+                            fn($row, $i) => $i + 1,
+                            fn($row) => $row['nama'],
+                            fn($row) => $row['status_badge'],
+                            fn($row) => $row['kelas'],
+                            fn($row) => $row['jumlah_peserta'],
+                            fn($row) => $row['created_at'],
+                        ]" :showActions="true" :actionButtons="fn($row) => view('components.action-buttons', [
                             'modalId' => 'modal-edit-batch-' . $row['id'],
                             'updateRoute' => route('batch.update', $row['id']),
                             'deleteRoute' => route('batch.destroy', $row['id']),
                             'deleteMessage' =>
                                 'Menghapus batch ini juga akan menghapus seluruh data peserta dan ujian terkait. Yakin?',
                         ])" />
+
                 </div>
 
                 <x-fragments.form-modal id="modal-add-batch" title="Tambah Batch Baru" action="{{ route('batch.store') }}">
@@ -363,6 +364,7 @@
                     <div class="mt-4">
                         <x-fragments.select-field label="Status" name="status" :options="[
                             'inactive' => 'Inactive',
+                            'registration' => 'Registration',
                             'active' => 'Active',
                         ]" required />
                     </div>
@@ -379,6 +381,7 @@
                             <div class="mt-4">
                                 <x-fragments.select-field label="Status" name="status" :options="[
                                     'inactive' => 'Inactive',
+                                    'registration' => 'Registration',
                                     'active' => 'Active',
                                     'finished' => 'finished',
                                 ]"

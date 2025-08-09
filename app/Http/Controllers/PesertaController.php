@@ -98,6 +98,11 @@ class PesertaController extends Controller
         return view('Dashboard.Peserta', compact('pesertaData', 'kelas', 'activeBatch'));
     }
 
+    public function approval()
+    {
+        return view('Dashboard.Approval');
+    }
+
     private function formatWaktuPengerjaanDetik($waktuDetik) {
         if ($waktuDetik < 60) {
             return $waktuDetik . ' detik';
@@ -189,66 +194,65 @@ class PesertaController extends Controller
         }
     }
 
-   public function update(Request $request, $id)
-{
-    $request->validate([
-        'name' => 'required|string|max:255',
-        'email' => 'required|email|unique:users,email,' . $id,
-        'nama_lengkap' => 'required|string|max:255',
-        'password' => 'nullable|string|min:6',
-    ]);
-
-    DB::beginTransaction();
-
-    try {
-        $user = Auth::user(); 
-        $siswa = User::siswa()->findOrFail($id); 
-
-        if ($user->role === 'pengajar') {
-            $pengajarDetail = $user->pengajarDetail;
-            $kelasIds = $pengajarDetail ? $pengajarDetail->kelas()->pluck('kelas.id')->toArray() : [];
-            $siswaKelasId = $siswa->siswaDetail->kelas_id ?? null;
-
-            if (!in_array($siswaKelasId, $kelasIds)) {
-                throw new \Exception('Anda tidak memiliki akses untuk mengubah peserta ini.');
-            }
-        }
-
-        $siswa->update([
-            'name' => $request->name,
-            'email' => $request->email,
+    public function update(Request $request, $id) {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,' . $id,
+            'nama_lengkap' => 'required|string|max:255',
+            'password' => 'nullable|string|min:6',
         ]);
 
-        if ($request->filled('password')) {
+        DB::beginTransaction();
+
+        try {
+            $user = Auth::user(); 
+            $siswa = User::siswa()->findOrFail($id); 
+
+            if ($user->role === 'pengajar') {
+                $pengajarDetail = $user->pengajarDetail;
+                $kelasIds = $pengajarDetail ? $pengajarDetail->kelas()->pluck('kelas.id')->toArray() : [];
+                $siswaKelasId = $siswa->siswaDetail->kelas_id ?? null;
+
+                if (!in_array($siswaKelasId, $kelasIds)) {
+                    throw new \Exception('Anda tidak memiliki akses untuk mengubah peserta ini.');
+                }
+            }
+
             $siswa->update([
-                'password' => Hash::make($request->password),
+                'name' => $request->name,
+                'email' => $request->email,
             ]);
+
+            if ($request->filled('password')) {
+                $siswa->update([
+                    'password' => Hash::make($request->password),
+                ]);
+            }
+
+            $siswaDetail = $siswa->siswaDetail;
+            if ($siswaDetail) {
+                $siswaDetail->update([
+                    'nama_lengkap' => $request->nama_lengkap,
+                ]);
+            } else {
+                SiswaDetail::create([
+                    'siswa_id' => $siswa->id,
+                    'nama_lengkap' => $request->nama_lengkap,
+                ]);
+            }
+
+            DB::commit();
+
+            return redirect()->back()->with(AlertHelper::success('Data peserta berhasil diupdate.', 'Success'));
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return redirect()->back()->with(AlertHelper::error(
+                'Gagal mengupdate peserta: ' . $e->getMessage(),
+                'Error'
+            ));
         }
-
-        $siswaDetail = $siswa->siswaDetail;
-        if ($siswaDetail) {
-            $siswaDetail->update([
-                'nama_lengkap' => $request->nama_lengkap,
-            ]);
-        } else {
-            SiswaDetail::create([
-                'siswa_id' => $siswa->id,
-                'nama_lengkap' => $request->nama_lengkap,
-            ]);
-        }
-
-        DB::commit();
-
-        return redirect()->back()->with(AlertHelper::success('Data peserta berhasil diupdate.', 'Success'));
-    } catch (\Exception $e) {
-        DB::rollBack();
-
-        return redirect()->back()->with(AlertHelper::error(
-            'Gagal mengupdate peserta: ' . $e->getMessage(),
-            'Error'
-        ));
     }
-}
 
 
     public function destroy($id) {

@@ -38,15 +38,13 @@ class DashboardController extends Controller {
         return view('Dashboard.Dashboard', $data);
     }
 
-private function getBatchData()
-{
+private function getBatchData() {
     return Batches::withCount('siswaDetails')
         ->with('kelas')
         ->get()
         ->map(function ($batch) {
-            // Ekstrak nomor dari nama batch
             $batchNumber = $this->extractBatchNumber($batch->nama);
-            
+                         
             return [
                 'id' => $batch->id,
                 'nama' => $batch->nama,
@@ -54,8 +52,9 @@ private function getBatchData()
                 'kelas' => $batch->kelas->nama,
                 'kelas_id' => $batch->kelas_id,
                 'batch_number' => $batchNumber,
-                'status_badge' => match ($batch->status) {
+                'status_badge' => match (strtolower($batch->status)) {
                     'active' => '<span class="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">Active</span>',
+                    'registration' => '<span class="px-2 py-1 bg-orange-100 text-orange-800 text-xs font-medium rounded-full">Registration</span>',
                     'finished' => '<span class="px-2 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded-full">Finished</span>',
                     default => '<span class="px-2 py-1 bg-gray-100 text-gray-800 text-xs font-medium rounded-full">Inactive</span>',
                 },
@@ -63,38 +62,50 @@ private function getBatchData()
                 'created_at' => $batch->created_at->format('d M Y'),
             ];
         })
-        ->sortBy([
-            // Prioritas 1: Status active selalu di atas
-            fn ($batch) => $batch['status'] !== 'active', // false (0) untuk active, true (1) untuk lainnya
-            // Prioritas 2: Urutkan berdasarkan kelas_id
-            fn ($batch) => $batch['kelas_id'],
-            // Prioritas 3: Dalam kelas_id yang sama, inactive di atas finished
-            fn ($batch) => match ($batch['status']) {
-                'inactive' => 0,
-                'finished' => 1,
-                default => 2 // active sudah di-filter di prioritas 1
-            },
-            // Prioritas 4: Urutkan nomor batch secara descending
-            fn ($batch) => -$batch['batch_number']
-        ])
+        ->sort(function ($a, $b) {
+            // Prioritas 1: Active selalu di atas
+            $aIsActive = strtolower($a['status']) === 'active';
+            $bIsActive = strtolower($b['status']) === 'active';
+            
+            if ($aIsActive && !$bIsActive) return -1;
+            if (!$aIsActive && $bIsActive) return 1;
+            
+            // Jika keduanya active, urutkan berdasarkan kelas_id
+            if ($aIsActive && $bIsActive) {
+                return $a['kelas_id'] <=> $b['kelas_id'];
+            }
+            
+            // Untuk non-active, urutkan berdasarkan kelas_id dulu
+            if ($a['kelas_id'] !== $b['kelas_id']) {
+                return $a['kelas_id'] <=> $b['kelas_id'];
+            }
+            
+            // Dalam kelas_id yang sama, urutkan berdasarkan status
+            $statusOrder = [
+                'inactive' => 1,
+                'registration' => 2,
+                'finished' => 3
+            ];
+            
+            $aStatusOrder = $statusOrder[strtolower($a['status'])] ?? 4;
+            $bStatusOrder = $statusOrder[strtolower($b['status'])] ?? 4;
+            
+            if ($aStatusOrder !== $bStatusOrder) {
+                return $aStatusOrder <=> $bStatusOrder;
+            }
+            
+            return $b['batch_number'] <=> $a['batch_number'];
+        })
         ->values();
 }
 
-/**
- * Ekstrak nomor batch dari nama batch
- * Contoh: "batch 34" -> 34, "Batch ke-25" -> 25
- */
-private function extractBatchNumber($batchName)
-{
-    // Mencari semua angka dalam string
+private function extractBatchNumber($batchName) {
     preg_match_all('/\d+/', $batchName, $matches);
-    
+         
     if (!empty($matches[0])) {
-        // Ambil angka terakhir yang ditemukan (biasanya nomor batch)
         return (int) end($matches[0]);
     }
-    
-    // Jika tidak ada angka ditemukan, return 0
+         
     return 0;
 }
 

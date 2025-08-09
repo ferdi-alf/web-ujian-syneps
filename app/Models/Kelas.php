@@ -13,7 +13,75 @@ class Kelas extends Model
 
     protected $fillable = [
         'nama',
+        'harga',
+        'type',
+        'dp_persen',
+        'durasi_belajar',
+        'waktu_magang'
     ];
+
+    public function getFormattedTypeAttribute()
+    {
+        return $this->type ? ucfirst($this->type) : '-';
+    }
+
+    public function getFormattedDurationAttribute()
+    {
+        $result = '';
+        
+        if ($this->durasi_belajar) {
+            $result = $this->durasi_belajar . ' bulan';
+            
+            if ($this->waktu_magang && $this->waktu_magang > 0) {
+                $result .= ' + ' . $this->waktu_magang . ' bulan magang';
+            }
+        }
+        
+        return $result ?: '-';
+    }
+
+
+    public function getTypeAndDurationAttribute() {
+        $result = '';
+        
+        if ($this->type) {
+            $result .= ucfirst($this->type);
+        } else {
+            $result .= '-';
+        }
+
+        if ($this->durasi_belajar) {
+            if ($result !== '-') {
+                $result .= ' (' . $this->durasi_belajar . ' bulan';
+                } else {
+                    $result = $this->durasi_belajar . ' bulan';
+                }
+                
+                if ($this->waktu_magang && $this->waktu_magang > 0) {
+                    $result .= ' + ' . $this->waktu_magang . ' bulan magang';
+                }
+                
+                if ($result !== '-' && strpos($result, '(') !== false) {
+                    $result .= ')';
+            }
+        }
+
+        return $result;
+    }
+
+    public function getTotalDpAttribute() {
+        return ($this->harga * $this->dp_persen) / 100;
+    }
+
+    public function getFormattedHargaAttribute()
+    {
+        return 'Rp ' . number_format($this->harga, 0, ',', '.');
+    }
+
+    public function getFormattedDpAttribute()
+    {
+        return 'Rp ' . number_format($this->total_dp, 0, ',', '.');
+    }
 
     public function siswaDetails(): HasMany
     {

@@ -18,7 +18,7 @@ class DatabaseSeeder extends Seeder
 
         User::create([
             'avatar' => 'avatar-1.png',
-            'name' => 'Ferdi-alf',
+            'name' => 'admin',
             'email' => 'admin@example.com',
             'role' => 'admin',
             'password' => Hash::make('adminpass')

@@ -18,7 +18,7 @@
 
 <li>
     <a href="{{ $href }}"
-        class="flex items-center p-2 rounded-lg group {{ $isActive ? $activeClasses : 'text-gray-500 hover:bg-gray-100' }}">
+        class="flex items-center p-2 rounded-lg group {{ $isActive ? $activeClasses : 'text-gray-500 hover:text-emerald-500 hover:bg-emerald-50' }}">
         <i class="fa-solid fa-{{ $icon }} text-xl w-6 text-center"></i>
         <span class="flex-1 ms-3 whitespace-nowrap">{{ $slot }}</span>
     </a>

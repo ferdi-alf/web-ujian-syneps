@@ -1,61 +1,195 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Syneps Academy — LMS untuk PKL
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+**Deskripsi Singkat**  
+Syneps Academy platform Learning Management System (LMS). Fitur dirancang untuk manajemen peserta, ujian, pembayaran, monitoring, serta komunitas alumni. Beberapa fitur masih dalam pengembangan.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Fitur Utama
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+-   **Manajemen Batch** peserta (kelompok berdasarkan periode)
+-   **Manajemen Peserta** (pendaftaran, status: pending/active/alumni)
+-   **Multi-kelas & Pengajar** — tiap kelas bisa punya pengajar/mentor berbeda
+-   **Deteksi kecurangan saat ujian** (proctoring)
+-   **Manajemen Pembayaran** — _(dalam pengembangan)_
+-   **Leaderboard** peserta berdasarkan skor ujian
+-   **Forum Alumni** _(dalam pengembangan)_
+-   **Backup data per-batch** _(dalam pengembangan)_
+-   **Cron job tagihan per bulan** _(dalam pengembangan)_
+-   **Download nilai PDF** — batch aktif atau semua batch
+-   **Tambah/Hapus Ujian** dengan form dinamis + export Excel
+-   **Pendaftaran peserta dengan auto-email akun** _(dalam pengembangan)_
+-   **Chart Analytics** nilai (Chart.js)
+-   Reset data untuk **pengajar/mentor** dan **peserta**
+-   Multi-role: `admin`, `pengajar` (mentor), `peserta`
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+> Fitur yang sedang dikembangkan ditandai _(dalam pengembangan)_.
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Tech Stack
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+-   **Laravel** (PHP)
+-   **Blade** + **Tailwind CSS**
+-   **Flowbite** (UI Components)
+-   **SweetAlert2** (Notifikasi)
+-   **Chart.js** (Chart & Analytics)
+-   **PDF & Excel Export** (Laravel packages)
+-   **Laravel Scheduler / cron** (Task Automation)
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-## Laravel Sponsors
+## Instalasi (Local Development)
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### 1. Clone Repository
 
-### Premium Partners
+```bash
+git clone <repo-url>
+cd <repo-folder>
+```
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+### 2. Install Dependencies
+
+```bash
+composer install
+npm install
+```
+
+### 3. Setup Environment
+
+```bash
+cp .env.example .env
+```
+
+Edit file `.env` sesuai konfigurasi database & app kamu.
+
+**Contoh `.env` minimal:**
+
+```env
+APP_NAME="Syneps Academy"
+APP_ENV=local
+APP_KEY=
+APP_DEBUG=true
+APP_URL=http://localhost
+
+LOG_CHANNEL=stack
+LOG_DEPRECATIONS_CHANNEL=null
+LOG_LEVEL=debug
+
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=syneps_academy
+DB_USERNAME=root
+DB_PASSWORD=
+
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.mailtrap.io
+MAIL_PORT=2525
+MAIL_USERNAME=null
+MAIL_PASSWORD=null
+MAIL_ENCRYPTION=null
+MAIL_FROM_ADDRESS="no-reply@synepsacademy.com"
+MAIL_FROM_NAME="${APP_NAME}"
+```
+
+### 4. Generate App Key
+
+```bash
+php artisan key:generate
+```
+
+### 5. Migrasi Database
+
+```bash
+php artisan migrate
+```
+
+### 6. Jalankan Seeder (opsional, untuk data awal)
+
+```bash
+php artisan db:seed
+```
+
+Seeder utama menggunakan **`DatabaseSeeder`**.  
+Jika ingin jalankan seeder tertentu:
+
+```bash
+php artisan db:seed --class=NamaSeeder
+```
+
+### 7. Jalankan Server
+
+```bash
+php artisan serve
+```
+
+### 8. Jalankan Frontend (Vite)
+
+```bash
+npm run dev
+```
+
+---
+
+## Perintah Penting
+
+| Perintah                   | Keterangan                     |
+| -------------------------- | ------------------------------ |
+| `composer install`         | Install dependency PHP         |
+| `npm install`              | Install dependency Node        |
+| `php artisan migrate`      | Migrasi database               |
+| `php artisan db:seed`      | Jalankan seeder DatabaseSeeder |
+| `php artisan serve`        | Jalankan server Laravel        |
+| `npm run dev`              | Compile dan watch asset        |
+| `php artisan schedule:run` | Tes scheduler                  |
+| `php artisan queue:work`   | Jalankan queue worker          |
+
+---
+
+## Alur Pendaftaran & Akun
+
+1. Peserta daftar lewat form pendaftaran.
+2. Admin verifikasi data peserta.
+3. Jika diterima, sistem akan **otomatis kirim email** untuk membuat akun _(dalam pengembangan)_.
+4. Status peserta: `pending` → `active` → `alumni`.
+
+---
+
+## Struktur Role
+
+-   **Admin** → akses penuh (batch, peserta, pengajar, ujian, laporan, backup)
+-   **Pengajar/Mentor** → manajemen soal, penilaian, kelas terkait
+-   **Peserta** → akses materi, ujian, leaderboard
+
+---
+
+## Export & Backup
+
+-   **PDF** — nilai per batch (aktif/semua batch)
+-   **Excel** — data ujian
+-   **Backup Per-batch** — _(dalam pengembangan)_
+
+---
 
 ## Contributing
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+1. Buat branch baru:
 
-## Code of Conduct
+```bash
+git checkout -b feature/nama-fitur
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+2. Commit perubahan:
 
-## Security Vulnerabilities
+```bash
+git commit -m "Menambahkan fitur X"
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+3. Push ke repo:
 
-## License
+```bash
+git push origin feature/nama-fitur
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+4. Buat Pull Request.
