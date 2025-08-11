@@ -13,7 +13,9 @@ class Batches extends Model
     protected $fillable = [
         'nama',
         'status',
-        'kelas_id'
+        'tanggal_mulai',
+        'tanggal_selesai',
+        'kelas_id',
     ];
 
     /**
