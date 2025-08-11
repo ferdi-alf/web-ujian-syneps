@@ -21,6 +21,10 @@ class SiswaDetail extends Model
     'pendidikan_terakhir',
     'jenis_kelamin',
     'mengetahui_program_dari',
+    'total_tagihan',
+    'jumlah_cicilan',
+    'tagihan_per_bulan',
+    'ikut_magang',
     'link_tiktok',
     'link_instagram',
     'link_x',
@@ -44,5 +48,10 @@ public function batches(): BelongsTo
     public function kelas(): BelongsTo
     {
         return $this->belongsTo(Kelas::class, 'kelas_id');
+    }
+
+     public function tagihans()
+    {
+        return $this->hasMany(Tagihan::class, 'siswa_id');
     }
 }

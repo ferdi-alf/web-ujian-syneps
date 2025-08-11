@@ -24,10 +24,12 @@ return new class extends Migration
          * Update table pendaftaran_peserta
          */
         Schema::table('pendaftaran_peserta', function (Blueprint $table) {
-            $table->boolean('ikut_magang')->default(false)->after('status'); // ikut magang atau tidak
-            $table->decimal('total_tagihan', 15, 2)->nullable()->after('ikut_magang'); // total tagihan setelah DP
-            $table->integer('jumlah_cicilan')->nullable()->after('total_tagihan'); // jumlah kali cicilan
+            $table->decimal('total_tagihan', 15, 2)->nullable()->after('status'); // hasil hitung backend
+            $table->integer('jumlah_cicilan')->nullable()->after('total_tagihan');
+            $table->string('bukti_pembayaran_dp')->nullable()->after('jumlah_cicilan');
         });
+       
+
 
         /**
          * Update table siswa_details
@@ -35,8 +37,10 @@ return new class extends Migration
         Schema::table('siswa_details', function (Blueprint $table) {
             $table->decimal('total_tagihan', 15, 2)->nullable()->after('siswa_id');
             $table->integer('jumlah_cicilan')->nullable()->after('total_tagihan');
-            $table->boolean('ikut_magang')->default(false)->after('jumlah_cicilan');
+            $table->decimal('tagihan_per_bulan', 15, 2)->nullable()->after('jumlah_cicilan');
+            $table->boolean('ikut_magang')->default(true)->after('tagihan_per_bulan');
         });
+
     }
 
     public function down(): void
