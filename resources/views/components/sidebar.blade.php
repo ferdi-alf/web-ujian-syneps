@@ -43,6 +43,19 @@
                     </x-fragments.sidebar-item>
 
                 </x-sidebar-dropdown>
+                <x-sidebar-dropdown id="pembayaran" title="Pembayaran" icon="fa-solid fa-money-bill-transfer"
+                    routes="pembayaran,pemabayaran/history" color="emerald">
+
+                    <x-fragments.sidebar-item route="pembayaran.index" icon="fa-solid fa-money-bill-trend-up"
+                        colors="emerald">
+                        Masuk
+                    </x-fragments.sidebar-item>
+
+                    <x-fragments.sidebar-item route="pembayaran.history" icon="fa-solid fa-clock-rotate-left"
+                        colors="emerald">
+                        History
+                    </x-fragments.sidebar-item>
+                </x-sidebar-dropdown>
             @elseif(Auth::user()->role === 'pengajar')
                 <x-fragments.sidebar-item route="peserta.index" icon="users" colors="emerald">
                     Peserta
@@ -72,8 +85,14 @@
             <x-fragments.sidebar-item route="nilai.index" icon="fa-solid fa-square-poll-horizontal"
                 colors="emerald">Nilai
             </x-fragments.sidebar-item>
-            <x-fragments.sidebar-item route="nilai.index" icon="fa-solid fa-user-graduate" colors="emerald">Forum Alumni
-            </x-fragments.sidebar-item>
+            @if (
+                (Auth::user()->role === 'siswa' && Auth::user()->siswaDetail && Auth::user()->siswaDetail->status === 'alumni') ||
+                    Auth::user()->role === 'admin')
+                <x-fragments.sidebar-item route="forum-alumni.index" icon="fa-solid fa-users" colors="emerald">
+                    Forum Alumni
+                </x-fragments.sidebar-item>
+            @endif
+
         </ul>
     </div>
 </aside>
