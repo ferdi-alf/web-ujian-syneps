@@ -8,9 +8,9 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 lg:pt-28 lg:pb-24">
             <div class="grid md:grid-cols-2 gap-12 items-center">
 
-                
+
                 <div data-aos="fade-right">
-                    
+
                     <div
                         class="inline-flex items-center px-4 py-1 bg-gradient-to-r from-teal-300 via-emerald-300 to-emerald-400 
                             rounded-full mb-5 border border-white shadow gap-2">
@@ -34,16 +34,16 @@
                     <div class="mt-6">
                         <a href="{{ route('kelas.index') }}"
                             class="group relative px-6 py-3 rounded-lg bg-gradient-to-r from-teal-300 via-emerald-300 to-emerald-400 
-                              text-gray-900 font-semibold shadow border border-white
-                              transition-all duration-300 ease-out
-                              hover:scale-105 hover:shadow-xl hover:shadow-emerald-200">
+                                text-gray-900 font-semibold shadow border border-white
+                                transition-all duration-300 ease-out
+                                hover:scale-105 hover:shadow-xl hover:shadow-emerald-200">
                             <span class="relative z-10">Lihat Kelas</span>
                             <span
                                 class="absolute inset-0 rounded-lg bg-white opacity-0 group-hover:opacity-10 transition"></span>
                         </a>
                     </div>
 
-                  
+
                     <div class="mt-8 flex items-center gap-8">
                         <div class="text-center">
                             <p class="text-2xl font-bold text-gray-900">500+</p>
@@ -60,9 +60,9 @@
                     </div>
                 </div>
 
-            
+
                 <div data-aos="fade-left" class="flex justify-center">
-                    <img src="{{ asset('images/syn-logo-ori.png') }}" alt="Syneps Academy Logo"
+                    <img src="{{ asset('images/hero.png') }}" alt="Syneps Academy Logo"
                         class="w-full max-w-sm drop-shadow-lg border border-white rounded-xl">
                 </div>
             </div>
@@ -71,277 +71,199 @@
 
     {{-- PROGRAM UNGGULAN --}}
 
-<section class="bg-white py-20">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section class="bg-white py-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-    
-        <div class="text-center mb-12" data-aos="fade-up">
-            <h2 class="text-sm font-semibold tracking-wide text-emerald-500 uppercase">
-                Program Unggulan
-            </h2>
-            <h3 class="mt-2 text-3xl sm:text-4xl font-extrabold text-gray-900">
-                Kami Membantu Menemukan <br>
-                <span class="bg-gradient-to-r from-teal-300 via-emerald-300 to-emerald-400 bg-clip-text text-transparent">
-                    Passionmu di Bidang Digital
-                </span>
-            </h3>
-        </div>
 
-    
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
-            
-            {{-- Card 1 --}}
-            <div class="bg-white rounded-xl overflow-hidden shadow-md border border-white 
+            <div class="text-center mb-12" data-aos="fade-up">
+                <h2 class="text-sm font-semibold tracking-wide text-emerald-500 uppercase">
+                    Program Unggulan
+                </h2>
+                <h3 class="mt-2 text-3xl sm:text-4xl font-extrabold text-gray-900">
+                    Kami Membantu Menemukan <br>
+                    <span
+                        class="bg-gradient-to-r from-teal-300 via-emerald-300 to-emerald-400 bg-clip-text text-transparent">
+                        Passionmu di Bidang Digital
+                    </span>
+                </h3>
+            </div>
+
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+
+                {{-- Card 1 --}}
+                <div class="bg-white rounded-xl overflow-hidden shadow-md border border-white 
                         hover:shadow-xl hover:scale-105 transition transform duration-300 ease-out"
-                        data-aos="fade-up" data-aos-delay="100">
-                <img src="{{ asset('images/Project-Based-Learning.jpg') }}" alt="Project Based Learning"
-                    class="w-full h-52 object-cover">
-                <div class="p-6">
-                    <h4 class="text-lg font-semibold text-gray-900 mb-2">
-                        Project Based Learning
-                    </h4>
-                    <p class="text-gray-600 text-sm leading-relaxed">
-                        Konsultasikan skill yang ingin kamu pelajari. Manfaatkan bimbingan untuk skripsi, penelitian,
-                        dan proyek teknologi lainnya.
-                    </p>
-                </div>
-            </div>
-
-            {{-- Card 2 --}}
-            <div class="bg-white rounded-xl overflow-hidden shadow-md border border-white 
-                        hover:shadow-xl hover:scale-105 transition transform duration-300 ease-out"
-                        data-aos="fade-up" data-aos-delay="200">
-                <img src="{{ asset('images/Full-Stack-Developer.jpg') }}" alt="Fullstack Development"
-                    class="w-full h-52 object-cover">
-                <div class="p-6">
-                    <h4 class="text-lg font-semibold text-gray-900 mb-2">
-                        Fullstack Development
-                    </h4>
-                    <p class="text-gray-600 text-sm leading-relaxed">
-                        Pelajari skill programming dari Front-End hingga Back-End untuk web dan mobile development.
-                    </p>
-                </div>
-            </div>
-
-            {{-- Card 3 --}}
-            <div class="bg-white rounded-xl overflow-hidden shadow-md border border-white 
-                        hover:shadow-xl hover:scale-105 transition transform duration-300 ease-out"
-                 data-aos="fade-up" data-aos-delay="300">
-                <img src="{{ asset('images/elearning.jpg') }}" alt="Fundamental Learning"
-                    class="w-full h-52 object-cover">
-                <div class="p-6">
-                    <h4 class="text-lg font-semibold text-gray-900 mb-2">
-                        Fundamental Learning
-                    </h4>
-                    <p class="text-gray-600 text-sm leading-relaxed">
-                        Kuasai dasar UI/UX dan Web Design sebelum melangkah ke tingkat advance dengan biaya terjangkau.
-                    </p>
-                </div>
-            </div>
-
-        </div>
-    </div>
-</section>
-
-{{-- AOS Animation --}}
-<link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet">
-<script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
-<script>
-    AOS.init({
-        duration: 800,
-        once: true
-    });
-</script>
-
-    <!-- FAQ Section -->
-<section class="bg-white py-20" x-data="{ open: null }">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
-        <!-- Heading -->
-        <div class="text-center mb-12">
-            <h2 class="text-sm font-semibold tracking-wide text-emerald-500 uppercase">
-                Frequently Asked Questions
-            </h2>
-            <h3 class="mt-2 text-3xl sm:text-4xl font-extrabold text-gray-900">
-                Pertanyaan yang Sering Diajukan
-            </h3>
-        </div>
-
-        <!-- FAQ Grid -->
-        <div class="grid md:grid-cols-2 gap-6">
-            
-            <!-- FAQ Item -->
-            <div class="bg-gray-50 rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition">
-                <button 
-                    class="flex justify-between w-full text-left text-lg font-semibold text-gray-800"
-                    @click="open === 1 ? open = null : open = 1">
-                    Program apa saja yang ada di <span class="bg-gradient-to-r from-teal-300 via-emerald-300 to-emerald-400 bg-clip-text text-transparent">SYDEMY</span>?
-                    <span class="text-emerald-500 transition-transform" :class="open === 1 ? 'rotate-45' : ''">+</span>
-                </button>
-                <div x-show="open === 1" x-transition.duration.300ms class="mt-3 text-gray-600 text-sm leading-relaxed">
-                    Tersedia Program Kelas Intensif, Part-Time, Private dan Project (Studi Kasus).
-                </div>
-            </div>
-
-            <!-- FAQ Item -->
-            <div class="bg-gray-50 rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition">
-                <button 
-                    class="flex justify-between w-full text-left text-lg font-semibold text-gray-800"
-                    @click="open === 2 ? open = null : open = 2">
-                    Tidak punya background IT, apakah bisa gabung kelas?
-                    <span class="text-emerald-500 transition-transform" :class="open === 2 ? 'rotate-45' : ''">+</span>
-                </button>
-                <div x-show="open === 2" x-transition.duration.300ms class="mt-3 text-gray-600 text-sm leading-relaxed">
-                    Tentu saja! Materi akan disesuaikan untuk pemula hingga tingkat lanjut.
-                </div>
-            </div>
-
-            <!-- FAQ Item -->
-            <div class="bg-gray-50 rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition">
-                <button 
-                    class="flex justify-between w-full text-left text-lg font-semibold text-gray-800"
-                    @click="open === 3 ? open = null : open = 3">
-                    Apakah perlu membawa laptop sendiri?
-                    <span class="text-emerald-500 transition-transform" :class="open === 3 ? 'rotate-45' : ''">+</span>
-                </button>
-                <div x-show="open === 3" x-transition.duration.300ms class="mt-3 text-gray-600 text-sm leading-relaxed">
-                    Disarankan membawa laptop sendiri untuk memaksimalkan proses belajar.
-                </div>
-            </div>
-
-            <!-- FAQ Item -->
-            <div class="bg-gray-50 rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition">
-                <button 
-                    class="flex justify-between w-full text-left text-lg font-semibold text-gray-800"
-                    @click="open === 4 ? open = null : open = 4">
-                    Apakah bisa mempelajari skill digital lainnya selain programming?
-                    <span class="text-emerald-500 transition-transform" :class="open === 4 ? 'rotate-45' : ''">+</span>
-                </button>
-                <div x-show="open === 4" x-transition.duration.300ms class="mt-3 text-gray-600 text-sm leading-relaxed">
-                    Tentu! Konsultasikan kebutuhan skill sesuai minat kamu, seperti UI/UX, desain grafis, dan lainnya.
-                </div>
-            </div>
-
-        </div>
-    </div>
-</section>
-
-<!-- Swiper CSS -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
-
-<style>
-    .swiper-slide {
-        transition: all 0.3s ease;
-        filter: blur(4px);
-        transform: scale(0.85);
-    }
-    .swiper-slide-active {
-        filter: blur(0);
-        transform: scale(1);
-    }
-</style>
-
-<section class="bg-white py-20">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
-        <!-- Heading -->
-        <div class="text-center mb-12">
-            <h2 class="text-sm font-semibold tracking-wide text-emerald-500 uppercase">
-                Program Unggulan
-            </h2>
-            <h3 class="mt-2 text-3xl sm:text-4xl font-extrabold text-gray-900">
-                Kami Membantu Menemukan <br>
-                <span class="bg-gradient-to-r from-teal-300 via-emerald-300 to-emerald-400 bg-clip-text text-transparent">
-                    Passionmu di Bidang Digital
-                </span>
-            </h3>
-        </div>
-
-        <!-- Swiper Carousel -->
-        <div class="swiper mySwiper">
-            <div class="swiper-wrapper">
-
-                <!-- Card 1 -->
-                <div class="swiper-slide bg-white rounded-xl overflow-hidden shadow-md border border-white">
-                    <img src="{{ asset('images/Project-Based-Learning.jpg') }}" alt="Project Based Learning" class="w-full h-52 object-cover">
+                    data-aos="fade-up" data-aos-delay="100">
+                    <img src="{{ asset('images/PBL.jpg') }}" alt="Project Based Learning" class="w-full h-52 object-cover">
                     <div class="p-6">
-                        <h4 class="text-lg font-semibold text-gray-900 mb-2">Project Based Learning</h4>
+                        <h4 class="text-lg font-semibold text-gray-900 mb-2">
+                            Project Based Learning
+                        </h4>
                         <p class="text-gray-600 text-sm leading-relaxed">
-                            Konsultasikan skill yang ingin kamu pelajari. Manfaatkan bimbingan untuk skripsi, penelitian, dan proyek teknologi lainnya.
+                            Konsultasikan skill yang ingin kamu pelajari. Manfaatkan bimbingan untuk skripsi, penelitian,
+                            dan proyek teknologi lainnya.
                         </p>
                     </div>
                 </div>
 
-                <!-- Card 2 -->
-                <div class="swiper-slide bg-white rounded-xl overflow-hidden shadow-md border border-white">
-                    <img src="{{ asset('images/Full-Stack-Developer.jpg') }}" alt="Fullstack Development" class="w-full h-52 object-cover">
+                {{-- Card 2 --}}
+                <div class="bg-white rounded-xl overflow-hidden shadow-md border border-white 
+                        hover:shadow-xl hover:scale-105 transition transform duration-300 ease-out"
+                    data-aos="fade-up" data-aos-delay="200">
+                    <img src="{{ asset('images/FSD.jpg') }}" alt="Fullstack Development" class="w-full h-52 object-cover">
                     <div class="p-6">
-                        <h4 class="text-lg font-semibold text-gray-900 mb-2">Fullstack Development</h4>
+                        <h4 class="text-lg font-semibold text-gray-900 mb-2">
+                            Fullstack Development
+                        </h4>
                         <p class="text-gray-600 text-sm leading-relaxed">
                             Pelajari skill programming dari Front-End hingga Back-End untuk web dan mobile development.
                         </p>
                     </div>
                 </div>
 
-                <!-- Card 3 -->
-                <div class="swiper-slide bg-white rounded-xl overflow-hidden shadow-md border border-white">
-                    <img src="{{ asset('images/elearning.jpg') }}" alt="Fundamental Learning" class="w-full h-52 object-cover">
+                {{-- Card 3 --}}
+                <div class="bg-white rounded-xl overflow-hidden shadow-md border border-white 
+                        hover:shadow-xl hover:scale-105 transition transform duration-300 ease-out"
+                    data-aos="fade-up" data-aos-delay="300">
+                    <img src="{{ asset('images/FL.jpg') }}" alt="Fundamental Learning" class="w-full h-52 object-cover">
                     <div class="p-6">
-                        <h4 class="text-lg font-semibold text-gray-900 mb-2">Fundamental Learning</h4>
+                        <h4 class="text-lg font-semibold text-gray-900 mb-2">
+                            Fundamental Learning
+                        </h4>
                         <p class="text-gray-600 text-sm leading-relaxed">
                             Kuasai dasar UI/UX dan Web Design sebelum melangkah ke tingkat advance dengan biaya terjangkau.
                         </p>
                     </div>
                 </div>
 
-                <!-- Card 4 (duplikat sementara) -->
-                <div class="swiper-slide bg-white rounded-xl overflow-hidden shadow-md border border-white">
-                    <img src="{{ asset('images/Full-Stack-Developer.jpg') }}" alt="Mobile Development" class="w-full h-52 object-cover">
-                    <div class="p-6">
-                        <h4 class="text-lg font-semibold text-gray-900 mb-2">Mobile Development</h4>
-                        <p class="text-gray-600 text-sm leading-relaxed">
-                            Belajar membuat aplikasi Android dan iOS dengan teknologi modern.
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Card 5 (duplikat sementara) -->
-                <div class="swiper-slide bg-white rounded-xl overflow-hidden shadow-md border border-white">
-                    <img src="{{ asset('images/Project-Based-Learning.jpg') }}" alt="UI/UX Masterclass" class="w-full h-52 object-cover">
-                    <div class="p-6">
-                        <h4 class="text-lg font-semibold text-gray-900 mb-2">UI/UX Masterclass</h4>
-                        <p class="text-gray-600 text-sm leading-relaxed">
-                            Tingkatkan kemampuan desain agar produk digitalmu memikat pengguna.
-                        </p>
-                    </div>
-                </div>
-
             </div>
         </div>
+    </section>
+
+    {{-- Kelas Section dengan Carousel --}}
+    @include('components.kelas-carousel')
+
+    {{-- AOS Animation --}}
+    <link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet">
+    <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+    <script>
+        AOS.init({
+            duration: 800,
+            once: true
+        });
+    </script>
+
+    <section class="bg-gray-50 py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Kampus Partner -->
+        <div class="text-center mb-12">
+            <h2 class="text-2xl font-bold text-gray-800">Kampus <span class="text-emerald-500">Partner</span></h2>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-8 items-center justify-items-center mb-16">
+            <div class="bg-white rounded-lg shadow hover:shadow-lg p-4 flex items-center justify-center transition">
+                <img src="images/partner/kampus1.png" alt="Partner 1" class="max-h-16 object-contain">
+            </div>
+            <div class="bg-white rounded-lg shadow hover:shadow-lg p-4 flex items-center justify-center transition">
+                <img src="images/partner/kampus2.png" alt="Partner 2" class="max-h-16 object-contain">
+            </div>
+            <div class="bg-white rounded-lg shadow hover:shadow-lg p-4 flex items-center justify-center transition">
+                <img src="images/partner/kampus3.png" alt="Partner 3" class="max-h-16 object-contain">
+            </div>
+            <div class="bg-white rounded-lg shadow hover:shadow-lg p-4 flex items-center justify-center transition">
+                <img src="images/partner/kampus4.png" alt="Partner 4" class="max-h-16 object-contain">
+            </div>
+            <div class="bg-white rounded-lg shadow hover:shadow-lg p-4 flex items-center justify-center transition">
+                <img src="images/partner/kampus5.png" alt="Partner 5" class="max-h-16 object-contain">
+            </div>
+        </div>
+
+        <!-- Partner Industry -->
+        <div class="text-center mb-12">
+            <h2 class="text-2xl font-bold text-gray-800">Partner <span class="text-emerald-500">Industry</span></h2>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-8 items-center justify-items-center">
+            <div class="bg-white rounded-lg shadow hover:shadow-lg p-4 flex items-center justify-center transition">
+                <img src="images/partner/industri1.png" alt="Industry 1" class="max-h-16 object-contain">
+            </div>
+            <div class="bg-white rounded-lg shadow hover:shadow-lg p-4 flex items-center justify-center transition">
+                <img src="images/partner/industri2.png" alt="Industry 2" class="max-h-16 object-contain">
+            </div>
+            <div class="bg-white rounded-lg shadow hover:shadow-lg p-4 flex items-center justify-center transition">
+                <img src="images/partner/industri3.png" alt="Industry 3" class="max-h-16 object-contain">
+            </div>
+            <div class="bg-white rounded-lg shadow hover:shadow-lg p-4 flex items-center justify-center transition">
+                <img src="images/partner/industri4.png" alt="Industry 4" class="max-h-16 object-contain">
+            </div>
+            <div class="bg-white rounded-lg shadow hover:shadow-lg p-4 flex items-center justify-center transition">
+                <img src="images/partner/industri5.png" alt="Industry 5" class="max-h-16 object-contain">
+            </div>
+        </div>
+
     </div>
 </section>
 
-<!-- Swiper JS -->
-<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
-<script>
-    var swiper = new Swiper(".mySwiper", {
-        loop: true,
-        centeredSlides: true,
-        slidesPerView: "auto",
-        spaceBetween: 20,
-        grabCursor: true,
-        mousewheel: true,
-        breakpoints: {
-            640: { slidesPerView: 1.5 },
-            1024: { slidesPerView: 3 }
-        }
-    });
-</script>
 
+    <!-- FAQ Section -->
+    <section class="bg-white py-20" x-data="{ open: null }">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid lg:grid-cols-3 gap-12">
 
-<!-- Alpine.js -->
-<script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+                <!-- Left Column -->
+                <div class="lg:col-span-1">
+                    <h2 class="text-3xl sm:text-4xl font-extrabold text-gray-900">
+                        Frequently Asked
+                        <span
+                            class="bg-gradient-to-r from-teal-400 to-emerald-500 bg-clip-text text-transparent">Questions</span>
+                    </h2>
+                    <p class="mt-4 text-gray-600">
+                        Tidak menemukan jawaban yang Anda cari? Hubungi tim kami untuk informasi lebih lanjut.
+                    </p>
+                    <a href="https://wa.me/6283178569163?text=Halo%20saya%20ingin%20bertanya%20tentang%20kelas"
+                        target="_blank"
+                        class="mt-6 inline-block bg-gradient-to-r from-teal-400 to-emerald-500 text-white font-semibold px-6 py-3 rounded-lg hover:opacity-90 transition-transform transform hover:scale-105">
+                        Hubungi Kami
+                    </a>
 
+                </div>
+
+                <!-- Right Column: Accordion -->
+                <div class="lg:col-span-2 space-y-2">
+
+                    <!-- FAQ Item -->
+                    <template
+                        x-for="(item, index) in [
+                    {q: 'Bagaimana Sistem Belajarnya?', a: 'Sistem belajar kami berbasis proyek (project-based learning) dengan sesi mentoring rutin. Anda akan mengerjakan proyek nyata untuk membangun portofolio yang kuat.'},
+                    {q: 'Apakah Ini Berlangganan?', a: 'Tidak, program kami adalah pembayaran sekali untuk satu batch kelas. Tidak ada biaya berlangganan bulanan. Anda juga bisa membayar dengan sistem DP.'},
+                    {q: 'Apakah Saya Boleh Mendownload Videonya?', a: 'Untuk melindungi hak cipta, video materi tidak dapat di-download. Namun, Anda akan memiliki akses selamanya ke materi tersebut melalui platform kami.'},
+                    {q: 'Apakah Ada Jaminan Kerja?', a: 'Kami tidak memberikan jaminan kerja, namun kami memiliki program penyaluran karir yang akan menghubungkan lulusan terbaik kami dengan perusahaan rekanan.'}
+                ]"
+                        :key="index">
+                        <div class="rounded-lg transition-all duration-300"
+                            :class="{
+                                'bg-emerald-50 border border-emerald-200': open ===
+                                    index,
+                                'border-b border-gray-200': open !== index
+                            }">
+                            <button @click="open = (open === index ? null : index)"
+                                class="flex items-center justify-between w-full text-left p-4">
+                                <span class="font-semibold text-lg text-gray-800" x-text="item.q"></span>
+                                <i class="fas fa-chevron-down text-emerald-500 transition-transform duration-300"
+                                    :class="{ 'rotate-180': open === index }"></i>
+                            </button>
+                            <div x-show="open === index" x-collapse class="px-4 pb-4 text-gray-600" x-text="item.a"></div>
+                        </div>
+                    </template>
+
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pastikan FontAwesome & Alpine.js -->
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script src="https://kit.fontawesome.com/your-fontawesome-kit.js" crossorigin="anonymous"></script>
 
 
 @endsection
