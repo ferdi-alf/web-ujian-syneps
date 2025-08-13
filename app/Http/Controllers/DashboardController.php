@@ -24,8 +24,28 @@ class DashboardController extends Controller {
             $data['recentSubmissions'] = $this->getRecentExamSubmissions($user);
             $data['activeExamData'] = $this->getActiveExamData($user);
             if ($user->role === 'admin') {
-                $kelas = Kelas::select('id', 'nama')->get();
-                $data['kelas'] = $kelas;
+                $kelas = Kelas::select('id', 'nama', 'type', 'waktu_magang', 'durasi_belajar')->get();
+                
+                $kelasOptions = $kelas->mapWithKeys(function ($item) {
+                    $displayName = $item->nama;
+                    if (!empty($item->type)) {
+                        $displayName .= ' - ' . ucfirst($item->type);
+                    }
+                    return [$item->id => $displayName];
+                })->toArray();
+                
+                $kelasData = $kelas->mapWithKeys(function ($item) {
+                    return [$item->id => [
+                        'nama' => $item->nama,
+                        'type' => $item->type,
+                        'durasi_belajar' => $item->durasi_belajar,
+                        'waktu_magang' => $item->waktu_magang
+                    ]];
+                })->toArray();
+                
+                $data['kelas'] = $kelasOptions;
+                $data['kelasData'] = $kelasData; 
+                
                 $batchData = $this->getBatchData();
                 $data['batchData'] = $batchData;
                 Log::info('Batch Data: ', $batchData->toArray());
@@ -38,75 +58,74 @@ class DashboardController extends Controller {
         return view('Dashboard.Dashboard', $data);
     }
 
-private function getBatchData() {
-    return Batches::withCount('siswaDetails')
-        ->with('kelas')
-        ->get()
-        ->map(function ($batch) {
-            $batchNumber = $this->extractBatchNumber($batch->nama);
-                         
-            return [
-                'id' => $batch->id,
-                'nama' => $batch->nama,
-                'status' => $batch->status,
-                'kelas' => $batch->kelas->nama,
-                'kelas_id' => $batch->kelas_id,
-                'batch_number' => $batchNumber,
-                'status_badge' => match (strtolower($batch->status)) {
-                    'active' => '<span class="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">Active</span>',
-                    'registration' => '<span class="px-2 py-1 bg-orange-100 text-orange-800 text-xs font-medium rounded-full">Registration</span>',
-                    'finished' => '<span class="px-2 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded-full">Finished</span>',
-                    default => '<span class="px-2 py-1 bg-gray-100 text-gray-800 text-xs font-medium rounded-full">Inactive</span>',
-                },
-                'jumlah_peserta' => $batch->siswa_details_count . ' siswa',
-                'created_at' => $batch->created_at->format('d M Y'),
-            ];
-        })
-        ->sort(function ($a, $b) {
-            // Prioritas 1: Active selalu di atas
-            $aIsActive = strtolower($a['status']) === 'active';
-            $bIsActive = strtolower($b['status']) === 'active';
-            
-            if ($aIsActive && !$bIsActive) return -1;
-            if (!$aIsActive && $bIsActive) return 1;
-            
-            // Jika keduanya active, urutkan berdasarkan kelas_id
-            if ($aIsActive && $bIsActive) {
-                return $a['kelas_id'] <=> $b['kelas_id'];
-            }
-            
-            // Untuk non-active, urutkan berdasarkan kelas_id dulu
-            if ($a['kelas_id'] !== $b['kelas_id']) {
-                return $a['kelas_id'] <=> $b['kelas_id'];
-            }
-            
-            // Dalam kelas_id yang sama, urutkan berdasarkan status
-            $statusOrder = [
-                'inactive' => 1,
-                'registration' => 2,
-                'finished' => 3
-            ];
-            
-            $aStatusOrder = $statusOrder[strtolower($a['status'])] ?? 4;
-            $bStatusOrder = $statusOrder[strtolower($b['status'])] ?? 4;
-            
-            if ($aStatusOrder !== $bStatusOrder) {
-                return $aStatusOrder <=> $bStatusOrder;
-            }
-            
-            return $b['batch_number'] <=> $a['batch_number'];
-        })
-        ->values();
-}
-
-private function extractBatchNumber($batchName) {
-    preg_match_all('/\d+/', $batchName, $matches);
-         
-    if (!empty($matches[0])) {
-        return (int) end($matches[0]);
+    private function getBatchData() {
+        return Batches::withCount('siswaDetails')
+            ->with('kelas')
+            ->get()
+            ->map(function ($batch) {
+                $batchNumber = $this->extractBatchNumber($batch->nama);
+                            
+                return [
+                    'id' => $batch->id,
+                    'nama' => $batch->nama,
+                    'status' => $batch->status,
+                    'kelas' => $batch->kelas->nama,
+                    'kelas_id' => $batch->kelas_id,
+                    'batch_number' => $batchNumber,
+                    'status_badge' => match (strtolower($batch->status)) {
+                        'active' => '<span class="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">Active</span>',
+                        'registration' => '<span class="px-2 py-1 bg-orange-100 text-orange-800 text-xs font-medium rounded-full">Registration</span>',
+                        'finished' => '<span class="px-2 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded-full">Finished</span>',
+                        default => '<span class="px-2 py-1 bg-gray-100 text-gray-800 text-xs font-medium rounded-full">Inactive</span>',
+                    },
+                    'jumlah_peserta' => $batch->siswa_details_count . ' siswa',
+                    'created_at' => $batch->created_at->format('d M Y'),
+                    'tanggal_mulai' => $batch->tanggal_mulai ,
+                    'tanggal_selesai' => $batch->tanggal_selesai,
+                    'periode' => \Carbon\Carbon::parse($batch->tanggal_mulai)->format('d M Y') . ' - ' . \Carbon\Carbon::parse($batch->tanggal_selesai)->format('d M Y'),
+                ];
+            })
+            ->sort(function ($a, $b) {
+                $aIsActive = strtolower($a['status']) === 'active';
+                $bIsActive = strtolower($b['status']) === 'active';
+                
+                if ($aIsActive && !$bIsActive) return -1;
+                if (!$aIsActive && $bIsActive) return 1;
+                
+                if ($aIsActive && $bIsActive) {
+                    return $a['kelas_id'] <=> $b['kelas_id'];
+                }
+                
+                if ($a['kelas_id'] !== $b['kelas_id']) {
+                    return $a['kelas_id'] <=> $b['kelas_id'];
+                }
+                
+                $statusOrder = [
+                    'inactive' => 1,
+                    'registration' => 2,
+                    'finished' => 3
+                ];
+                
+                $aStatusOrder = $statusOrder[strtolower($a['status'])] ?? 4;
+                $bStatusOrder = $statusOrder[strtolower($b['status'])] ?? 4;
+                
+                if ($aStatusOrder !== $bStatusOrder) {
+                    return $aStatusOrder <=> $bStatusOrder;
+                }
+                
+                return $b['batch_number'] <=> $a['batch_number'];
+            })
+            ->values();
     }
-         
-    return 0;
+
+    private function extractBatchNumber($batchName) {
+        preg_match_all('/\d+/', $batchName, $matches);
+            
+        if (!empty($matches[0])) {
+            return (int) end($matches[0]);
+        }
+            
+        return 0;
 }
 
     private function getCardData($user) {

@@ -84,7 +84,7 @@ class PesertaController extends Controller
         });
 
       $activeBatch = Batches::with('kelas')
-        ->where('status', 'active')
+        ->where('status', 'registration')
         ->get()
         ->map(function ($batch) {
             return (object)[
@@ -157,13 +157,13 @@ class PesertaController extends Controller
             if($request->kelas_id) {
 
               $activeBatch = Batches::where('kelas_id', $request->kelas_id)
-                      ->where('status', 'active')
+                      ->where('status', 'registration')
                       ->first();
 
               if (!$activeBatch) {
                     $kelas = Kelas::find($request->kelas_id);
                     $namaKelas = $kelas ? $kelas->nama : 'Kelas tidak ditemukan';
-                    throw new \Exception("Kelas $namaKelas belum memiliki batch yang aktif. Harap aktifkan batch terlebih dahulu.");
+                    throw new \Exception("Kelas $namaKelas belum memiliki batch yang statusnya Register. Harap ubah status batch menjadi register jika ingin menambahkan peserta pada batch tertentu terlebih dahulu.");
                 }
 
             }
