@@ -112,7 +112,7 @@
         </div>
     </section>
 
-    {{-- ORIGINAL Kelas Section --}}
+                                                                        
     @include('components.kelas-carousel')
 
     {{-- ORIGINAL Partner Section - MEMPERTAHANKAN SEMUA MARQUEE --}}

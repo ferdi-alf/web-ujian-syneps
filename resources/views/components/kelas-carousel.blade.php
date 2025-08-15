@@ -156,63 +156,120 @@
 
                 @foreach ($kelasData as $kelasItem)
                     <div class="swiper-slide" data-kelas-id="{{ $kelasItem['id'] ?? 'temp-' . $loop->index }}">
-                        <div
-                            class="kelas-card border border-orange-500 rounded-lg overflow-hidden bg-gray-50 shadow-md h-full">
-                            {{-- Header Card --}}
-                            <div class="bg-orange-100 p-3 sm:p-4">
-                                <h4 class="text-sm sm:text-base lg:text-lg font-semibold leading-tight">
-                                    {{ $kelasItem['nama'] }}</h4>
-                                <p class="text-xs sm:text-sm text-gray-700 mb-2 mt-1">{{ $kelasItem['tipe'] ?? 'Regular' }}
-                                    Class</p>
-
-                                {{-- Harga dan DP --}}
-                                <div class="flex items-center gap-2 mb-1 flex-wrap">
-                                    @if (is_numeric($kelasItem['harga']))
-                                        <span class="line-through text-gray-500 text-xs sm:text-sm">Rp
-                                            {{ number_format($kelasItem['harga'] + 500000, 0, ',', '.') }}</span>
-                                    @endif
-                                    <span
-                                        class="bg-emerald-500 text-white text-xs font-semibold px-2 py-1 rounded whitespace-nowrap">
-                                        {{ $kelasItem['dp'] ?? '0' }}% DP
+                        <div class="kelas-card group relative bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 h-full border border-gray-100">
+                            
+                            {{-- Background Gradient Overlay --}}
+                            <div class="absolute inset-0 bg-gradient-to-br from-blue-50 via-white to-emerald-50 opacity-60"></div>
+                            
+                            {{-- Popular Badge (if applicable) --}}
+                            @if($kelasItem['tipe'] === 'Intensif')
+                                <div class="absolute top-4 right-4 z-10">
+                                    <span class="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
+                                        🔥 POPULAR
                                     </span>
                                 </div>
-                                <p class="text-lg sm:text-xl font-bold text-gray-900">
-                                    {{ is_numeric($kelasItem['harga']) ? 'Rp ' . number_format($kelasItem['harga'], 0, ',', '.') : $kelasItem['harga'] }}
-                                </p>
-                            </div>
+                            @endif
 
-                            {{-- Detail Info --}}
-                            <div class="p-3 sm:p-4 space-y-2 flex-grow">
-                                <div class="flex items-start text-xs sm:text-sm text-gray-700 gap-2">
-                                    <i class="fa-solid fa-check text-emerald-500 mt-0.5 flex-shrink-0"></i>
-                                    <span>Durasi Belajar: {{ $kelasItem['durasiBelajar'] ?? '0' }} bulan</span>
-                                </div>
-                                @if (isset($kelasItem['durasiMagang']) && $kelasItem['durasiMagang'])
-                                    <div class="flex items-start text-xs sm:text-sm text-gray-700 gap-2">
-                                        <i class="fa-solid fa-check text-emerald-500 mt-0.5 flex-shrink-0"></i>
-                                        <span>Durasi Magang: {{ $kelasItem['durasiMagang'] }} bulan</span>
+                            {{-- Card Content --}}
+                            <div class="relative z-10 h-full flex flex-col">
+                                
+                                {{-- Header with Icon --}}
+                                <div class="p-4 sm:p-6">
+                                    <div class="flex items-start justify-between mb-3">
+                                        <div class="flex-1">
+                                            <div class="flex items-center gap-2 mb-2">
+                                                <div class="w-8 h-8 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-lg flex items-center justify-center">
+                                                    <i class="fas fa-code text-white text-sm"></i>
+                                                </div>
+                                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+                                                    {{ $kelasItem['tipe'] ?? 'Regular' }}
+                                                </span>
+                                            </div>
+                                            <h4 class="text-base sm:text-lg font-bold text-gray-900 leading-tight mb-2 group-hover:text-emerald-600 transition-colors">
+                                                {{ $kelasItem['nama'] }}
+                                            </h4>
+                                        </div>
                                     </div>
-                                @endif
-                            </div>
 
-                            {{-- Action Buttons --}}
-                            <div class="p-3 sm:p-4 text-center mt-auto space-y-2">
-                                <a href="{{ route('kelas.detail', $kelasItem['id']) }}"
-                                    class="inline-block bg-gradient-to-br from-red-600 to-orange-500 text-white px-3 sm:px-4 py-2 rounded-md font-semibold hover:opacity-90 transition text-sm sm:text-base w-full sm:w-auto">
-                                    Lihat Detail
-                                </a>
+                                    {{-- Pricing Section --}}
+                                    <div class="bg-gradient-to-r from-gray-50 to-emerald-50 rounded-xl p-4 mb-4">
+                                        <div class="flex items-center justify-between mb-2">
+                                            @if (is_numeric($kelasItem['harga']))
+                                                <span class="text-sm text-gray-500 line-through">
+                                                    Rp {{ number_format($kelasItem['harga'] + 500000, 0, ',', '.') }}
+                                                </span>
+                                            @endif
+                                            @if($kelasItem['dp'] > 0)
+                                                <span class="bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md">
+                                                    DP {{ $kelasItem['dp'] }}%
+                                                </span>
+                                            @endif
+                                        </div>
+                                        <div class="flex items-baseline gap-1">
+                                            <span class="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+                                                {{ is_numeric($kelasItem['harga']) ? 'Rp ' . number_format($kelasItem['harga'], 0, ',', '.') : $kelasItem['harga'] }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
 
-                                {{-- Admin CRUD Buttons (akan muncul jika user adalah admin) --}}
-                                <div class="admin-actions hidden" data-admin-actions>
-                                    <div class="flex gap-2 mt-2 justify-center">
-                                        <button onclick="editKelas('{{ $kelasItem['id'] ?? 'temp-' . $loop->index }}')"
-                                            class="bg-blue-500 text-white px-3 py-1 rounded text-xs hover:bg-blue-600 transition">
-                                            <i class="fas fa-edit mr-1"></i>Edit
-                                        </button>
-                                        <button onclick="deleteKelas('{{ $kelasItem['id'] ?? 'temp-' . $loop->index }}')"
-                                            class="bg-red-500 text-white px-3 py-1 rounded text-xs hover:bg-red-600 transition">
-                                            <i class="fas fa-trash mr-1"></i>Hapus
-                                        </button>
+                                {{-- Features List --}}
+                                <div class="px-4 sm:px-6 flex-grow">
+                                    <div class="space-y-3">
+                                        <div class="flex items-center gap-3 text-sm text-gray-700">
+                                            <div class="w-6 h-6 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                                <i class="fas fa-clock text-emerald-600 text-xs"></i>
+                                            </div>
+                                            <span class="font-medium">{{ $kelasItem['durasiBelajar'] ?? '0' }} bulan pembelajaran</span>
+                                        </div>
+                                        
+                                        @if (isset($kelasItem['durasiMagang']) && $kelasItem['durasiMagang'])
+                                            <div class="flex items-center gap-3 text-sm text-gray-700">
+                                                <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                                    <i class="fas fa-briefcase text-blue-600 text-xs"></i>
+                                                </div>
+                                                <span class="font-medium">{{ $kelasItem['durasiMagang'] }} bulan magang</span>
+                                            </div>
+                                        @endif
+
+                                        <div class="flex items-center gap-3 text-sm text-gray-700">
+                                            <div class="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                                <i class="fas fa-certificate text-purple-600 text-xs"></i>
+                                            </div>
+                                            <span class="font-medium">Sertifikat resmi</span>
+                                        </div>
+
+                                        <div class="flex items-center gap-3 text-sm text-gray-700">
+                                            <div class="w-6 h-6 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                                <i class="fas fa-users text-orange-600 text-xs"></i>
+                                            </div>
+                                            <span class="font-medium">Mentoring 1-on-1</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Action Button --}}
+                                <div class="p-4 sm:p-6 mt-auto">
+                                    <a href="{{ route('kelas.detail', $kelasItem['id']) }}"
+                                        class="block w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white text-center py-3 px-4 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg group">
+                                        <span class="flex items-center justify-center gap-2">
+                                            Lihat Detail
+                                            <i class="fas fa-arrow-right text-sm group-hover:translate-x-1 transition-transform"></i>
+                                        </span>
+                                    </a>
+
+                                    {{-- Admin CRUD Buttons (functionality tetap sama) --}}
+                                    <div class="admin-actions hidden mt-3" data-admin-actions>
+                                        <div class="flex gap-2">
+                                            <button onclick="editKelas('{{ $kelasItem['id'] ?? 'temp-' . $loop->index }}')"
+                                                class="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg text-xs font-medium transition-colors">
+                                                <i class="fas fa-edit mr-1"></i>Edit
+                                            </button>
+                                            <button onclick="deleteKelas('{{ $kelasItem['id'] ?? 'temp-' . $loop->index }}')"
+                                                class="flex-1 bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-xs font-medium transition-colors">
+                                                <i class="fas fa-trash mr-1"></i>Hapus
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -237,35 +294,35 @@
             disableOnInteraction: false,
         },
         breakpoints: {
-            // Mobile first approach
+            // Fokus 1 card di tengah dengan blur di samping
             320: {
-                slidesPerView: 1.2,
-                spaceBetween: 16,
+                slidesPerView: 1.4,
+                spaceBetween: 20,
                 centeredSlides: true,
             },
             480: {
-                slidesPerView: 1.5,
-                spaceBetween: 20,
+                slidesPerView: 1.6,
+                spaceBetween: 24,
                 centeredSlides: true,
             },
             640: {
                 slidesPerView: 2.2,
-                spaceBetween: 20,
+                spaceBetween: 28,
                 centeredSlides: true,
             },
             768: {
-                slidesPerView: 2.5,
-                spaceBetween: 24,
+                slidesPerView: 2.6,
+                spaceBetween: 32,
                 centeredSlides: true,
             },
             1024: {
                 slidesPerView: 3,
-                spaceBetween: 24,
+                spaceBetween: 36,
                 centeredSlides: true,
             },
             1280: {
-                slidesPerView: 3.5,
-                spaceBetween: 24,
+                slidesPerView: 3.4,
+                spaceBetween: 40,
                 centeredSlides: true,
             }
         },
