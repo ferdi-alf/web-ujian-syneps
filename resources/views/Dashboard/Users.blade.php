@@ -22,9 +22,6 @@
                     ->toArray()"
                     placeholder="Pilih kelas untuk pengajar" required />
             </div>
-            <script>
-                console.log(@json($kelas));
-            </script>
             <x-fragments.text-field label="Password" name="password" type="password" required />
         </x-fragments.form-modal>
 

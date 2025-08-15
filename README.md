@@ -169,3 +169,8 @@ npm run dev
 -   **PDF** — nilai per batch (aktif/semua batch)
 -   **Excel** — data ujian
 -   **Backup Per-batch** — _(dalam pengembangan)_
+<<<<<<< HEAD
+=======
+
+---
+>>>>>>> recovery

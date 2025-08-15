@@ -14,7 +14,7 @@
                         <div class="flex items-center">
                             <i class="fas fa-layer-group text-green-600 mr-2"></i>
                             <span class="text-sm text-green-800">
-                                <strong>Batch Aktif:</strong>
+                                <strong>Registration Batch:</strong>
                             </span>
                         </div>
                         <ul class="space-y-1 list-disc text-green-800 ml-6">
@@ -29,7 +29,7 @@
                         <div class="flex items-center">
                             <i class="fas fa-exclamation-triangle text-yellow-600 mr-2"></i>
                             <span class="text-sm text-yellow-800">
-                                <strong>Peringatan:</strong> Tidak ada batch aktif
+                                <strong>Peringatan:</strong> Tidak ada batch dalam status "Registration"
                             </span>
                         </div>
                     </div>
@@ -69,7 +69,7 @@
                 <div class="flex items-center">
                     <i class="fas fa-info-circle text-blue-600 mr-2"></i>
                     <span class="text-sm text-blue-800">
-                        Batch yang aktif:
+                        Batch dalam status registration akan otomatis digunakan untuk peserta baru.
                     </span>
                 </div>
                 <ul class="list-disc ml-10">

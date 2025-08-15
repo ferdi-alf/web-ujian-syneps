@@ -7,8 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Kelas extends Model
-{
+class Kelas extends Model {
     use HasFactory;
 
     protected $fillable = [
@@ -129,8 +128,8 @@ class Kelas extends Model
     }
 
     public function batches(): HasMany
-{
-    return $this->hasMany(Batches::class, 'kelas_id');
-}
+    {
+        return $this->hasMany(Batches::class, 'kelas_id');
+    }
 
 }

@@ -110,13 +110,13 @@
             <div class="hidden md:block">
                 @auth
                     <a href="{{ route('dashboard') }}"
-                        class="bg-gradient-to-r from-teal-300 via-emerald-300 to-emerald-400 text-gray-900 px-6 py-2 rounded-lg text-sm font-medium hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-300">
+                        class="bg-gradient-to-r from-teal-300 via-emerald-300 to-emerald-400 text-white px-6 py-2 rounded-lg text-sm font-medium hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-300">
                         Dashboard
                     </a>
                 @endauth
                 @guest
                     <a href="{{ route('login.index') }}"
-                        class="bg-gradient-to-r from-teal-300 via-emerald-300 to-emerald-400 text-gray-900 px-6 py-2 rounded-lg text-sm font-medium hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-300">
+                        class="bg-gradient-to-r from-teal-300 via-emerald-300 to-emerald-400 text-white px-6 py-2 rounded-lg text-sm font-medium hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-300">
                         Login
                     </a>
                 @endguest

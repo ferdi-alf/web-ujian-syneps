@@ -15,11 +15,19 @@ use App\Http\Controllers\NilaiController;
 use App\Http\Controllers\TambahUjianController;
 use App\Http\Controllers\PesertaController;
 use App\Http\Controllers\KelasController;
+use App\Http\Controllers\PembayaranController;
 use App\Http\Controllers\RegisterController;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
+use App\Http\Controllers\LandingController;
 
 
+//fatih - DISABLED SEMENTARA MENUNGGU PERSETUJUAN BACKEND
+// Route::get('/', [LandingController::class, 'index'])->name('index');
+// Route::get('/kelas/{id}', [LandingController::class, 'kelasDetail'])->name('kelas.detail');
+// Route::post('/daftar', [LandingController::class, 'daftar'])->name('daftar.store');
 
+// Sementara gunakan route lama
 Route::get('/', function () {
     return view('welcome');
 })->name('index');
@@ -62,6 +70,9 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/{slug}/save-progress', 'saveProgress')->name('save-progress');
         Route::get('/{slug}/selesai', 'selesai')->name('selesai');
     });
+
+
+
     Route::controller(ForumAlumniController::class)->prefix('forum-alumni')->name('forum-alumni.')->group(function () {
         Route::get('/', 'index')->name('index');
         Route::post('/', 'store')->name('store');
@@ -69,6 +80,7 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/{id}', 'delete')->name('delete');
     });
 
+  
     Route::controller(NilaiController::class)->prefix('nilai')->name('nilai.')->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/download', 'download')->name('download');
@@ -106,7 +118,6 @@ Route::middleware(['auth'])->group(function () {
         });
     });
 
-    // Routes accessible by admin only (deny siswa and pengajar)
     Route::middleware(['deny.roles:siswa,pengajar'])->group(function () {
         Route::controller(UserController::class)->prefix('users')->name('users.')->group(function () {
             Route::get('/', 'index')->name('index');
@@ -114,6 +125,13 @@ Route::middleware(['auth'])->group(function () {
             Route::put('/{id}', 'update')->name('update');
             Route::delete('/{id}', 'destroy')->name('destroy');
         });
+
+        Route::controller(PembayaranController::class)->prefix('pembayaran')->name('pembayaran.')->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/history', 'history')->name('history');
+            Route::put('/{id}', 'store')->name('store');
+        });
+
 
         Route::controller(KelasController::class)->prefix('kelas')->name('kelas.')->group(function () {
             Route::get('/', 'index')->name('index');

@@ -334,20 +334,21 @@
                 <div class="mt-8 p-6 bg-white rounded-lg shadow-md">
                     <h2 class="text-2xl font-bold text-gray-800 mb-2 text-center sm:hidden block">Manajemen Batch</h2>
 
-                    <div class="flex  items-center justify-end gap-2">
+                    <div class="flex items-center justify-end gap-2">
                         <x-fragments.modal-button target="modal-add-batch" variant="emerald">
                             <i class="fa-solid fa-plus mr-2"></i>
                             Tambah Batch
                         </x-fragments.modal-button>
                     </div>
 
-                    <x-reusable-table tableId="batch-management" :searchBar="true" :truncate="true" :headers="['No', 'Nama Batch', 'Status', 'kelas', 'Jumlah Peserta', 'Dibuat']"
+                    <x-reusable-table tableId="batch-management" :searchBar="true" :truncate="true" :headers="['No', 'Nama Batch', 'Status', 'kelas', 'Jumlah Peserta', 'Periode', 'Dibuat']"
                         :data="$batchData" :columns="[
                             fn($row, $i) => $i + 1,
                             fn($row) => $row['nama'],
                             fn($row) => $row['status_badge'],
                             fn($row) => $row['kelas'],
                             fn($row) => $row['jumlah_peserta'],
+                            fn($row) => $row['periode'],
                             fn($row) => $row['created_at'],
                         ]" :showActions="true" :actionButtons="fn($row) => view('components.action-buttons', [
                             'modalId' => 'modal-edit-batch-' . $row['id'],
@@ -368,8 +369,25 @@
                             'active' => 'Active',
                         ]" required />
                     </div>
-                    <x-fragments.select-field required label="Pilih Kelas" name="kelas_id" :options="$kelas->pluck('nama', 'id')->toArray()" />
-
+                    <x-fragments.select-field required label="Pilih Kelas" name="kelas_id" :options="$kelas" />
+                    <div class="hidden" id="periode-batch">
+                        <div class="grid grid-cols-2 gap-3">
+                            <x-fragments.text-field type="date" label="Tanggal Mulai" name="tanggal_mulai"
+                                placeholder="Masukkan tanggal mulai batch" required />
+                            <x-fragments.text-field type="date" label="Tanggal Selesai" name="tanggal_selesai"
+                                placeholder="Masukkan tanggal selesai batch" required />
+                        </div>
+                        <small id="periode-info">Harap set periode batch</small>
+                        <div id="kelas-duration-info" class="mt-2 hidden">
+                            <small>
+                                Harap set periode batch
+                                <span class="text-blue-500" id="duration-text"></span>
+                            </small>
+                        </div>
+                        <div id="duration-validation" class="mt-2 hidden">
+                            <small id="validation-message" class="text-red-500"></small>
+                        </div>
+                    </div>
                 </x-fragments.form-modal>
 
                 @if (isset($batchData))
@@ -387,14 +405,244 @@
                                 ]"
                                     value="{{ $batch['status'] }}" required />
                             </div>
-                            <div class="">
-
-                            </div>
-                            <x-fragments.select-field label="Kelas" name="kelas_id" :options="$kelas->pluck('nama', 'id')->toArray()"
+                            <x-fragments.select-field label="Kelas" name="kelas_id" :options="$kelas"
                                 value="{{ $batch['kelas_id'] }}" required disabled />
+                            <div class="hidden grid-cols-2 gap-3" id="periode-batch-edit-{{ $batch['id'] }}">
+                                <x-fragments.text-field type="date" label="Tanggal Mulai" name="tanggal_mulai"
+                                    value="{{ $batch['tanggal_mulai'] }}" placeholder="Masukkan tanggal mulai batch" required />
+                                <x-fragments.text-field type="date" label="Tanggal Selesai" name="tanggal_selesai"
+                                    value="{{ $batch['tanggal_selesai'] }}" placeholder="Masukkan tanggal selesai batch"
+                                    required />
+                            </div>
+                            <div id="kelas-duration-info-edit-{{ $batch['id'] }}" class="mt-2 hidden">
+                                <small>
+                                    Harap set periode batch
+                                    <span class="text-blue-500" id="duration-text-edit-{{ $batch['id'] }}"></span>
+                                </small>
+                            </div>
+                            <div id="duration-validation-edit-{{ $batch['id'] }}" class="mt-2 hidden">
+                                <small id="validation-message-edit-{{ $batch['id'] }}" class="text-red-500"></small>
+                            </div>
                         </x-fragments.form-modal>
                     @endforeach
                 @endif
+
+                <script>
+                    const kelasData = @json($kelasData ?? []);
+
+                    function generateDurationText(kelasId) {
+                        if (!kelasData[kelasId]) return '';
+
+                        const kelas = kelasData[kelasId];
+                        const namaKelas = kelas.nama;
+                        const typeKelas = kelas.type;
+                        const durasi = parseInt(kelas.durasi_belajar) + parseInt(kelas.waktu_magang)
+                        const durasiBelajar = parseInt(kelas.durasi_belajar) || 0;
+                        const waktuMagang = parseInt(kelas.waktu_magang) || 0;
+
+                        if (durasiBelajar === 0) return '';
+
+                        let durationText =
+                            `- periode kelas ${namaKelas} ${typeKelas !== null ? `- ${typeKelas}` : ''} sekitar ${durasi} bulan`;
+
+                        if (waktuMagang > 0) {
+                            durationText += ` (${durasiBelajar} bulan + ${waktuMagang} bulan magang)`;
+                        }
+
+                        return durationText;
+                    }
+
+                    function validateDuration(startDate, endDate, expectedDuration, validationElementId) {
+                        if (!startDate || !endDate || !expectedDuration) {
+                            document.getElementById(validationElementId)?.classList.add('hidden');
+                            return true;
+                        }
+
+                        const start = new Date(startDate);
+                        const end = new Date(endDate);
+
+                        let months = (end.getFullYear() - start.getFullYear()) * 12;
+                        months -= start.getMonth();
+                        months += end.getMonth();
+
+                        if (end.getDate() < start.getDate()) {
+                            months--;
+                        }
+
+                        const validationElement = document.getElementById(validationElementId);
+                        const validationMessage = validationElement?.querySelector('small');
+
+                        if (months !== expectedDuration || months > expectedDuration) {
+                            validationMessage.textContent =
+                                `Durasi tidak valid! Seharusnya ${expectedDuration} bulan, tapi yang diinput ${months} bulan`;
+                            validationElement?.classList.remove('hidden');
+                            return false;
+                        } else {
+                            validationMessage.textContent = `✓ Durasi valid: ${months} bulan`;
+                            validationMessage.className = 'text-green-500';
+                            validationElement?.classList.remove('hidden');
+                            return true;
+                        }
+                    }
+
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const statusSelect = document.querySelector('#modal-add-batch select[name="status"]');
+                        const kelasSelect = document.querySelector('#modal-add-batch select[name="kelas_id"]');
+                        const periodeBatch = document.querySelector('#periode-batch');
+                        const kelasDurationInfo = document.querySelector('#kelas-duration-info');
+                        const durationTextSpan = document.querySelector('#duration-text');
+                        const periodeInfo = document.querySelector('#periode-info');
+                        const tanggalMulaiInput = document.querySelector('#modal-add-batch input[name="tanggal_mulai"]');
+                        const tanggalSelesaiInput = document.querySelector('#modal-add-batch input[name="tanggal_selesai"]');
+
+                        function updateDurationDisplay() {
+                            const selectedStatus = statusSelect?.value;
+                            const selectedKelas = kelasSelect?.value;
+
+                            if (selectedStatus === 'active' && selectedKelas) {
+                                const durationText = generateDurationText(selectedKelas);
+                                if (durationText) {
+                                    durationTextSpan.textContent = durationText;
+                                    kelasDurationInfo.classList.remove('hidden');
+                                    periodeInfo.classList.add('hidden');
+                                } else {
+                                    kelasDurationInfo.classList.add('hidden');
+                                    periodeInfo.classList.remove('hidden');
+                                }
+                            } else if (selectedStatus === 'active') {
+                                kelasDurationInfo.classList.add('hidden');
+                                periodeInfo.classList.remove('hidden');
+                            } else {
+                                kelasDurationInfo.classList.add('hidden');
+                                periodeInfo.classList.remove('hidden');
+                                document.getElementById('duration-validation')?.classList.add('hidden');
+                            }
+                        }
+
+                        function validateAddBatch() {
+                            const selectedKelas = kelasSelect?.value;
+                            const startDate = tanggalMulaiInput?.value;
+                            const endDate = tanggalSelesaiInput?.value;
+
+                            if (selectedKelas && kelasData[selectedKelas]) {
+                                const expectedDuration = parseInt(kelasData[selectedKelas].durasi_belajar) +
+                                    parseInt(kelasData[selectedKelas].waktu_magang);
+                                validateDuration(startDate, endDate, expectedDuration, 'duration-validation');
+                            }
+                        }
+
+                        statusSelect?.addEventListener('change', function() {
+                            if (this.value === 'active') {
+                                periodeBatch?.classList.remove('hidden');
+                                periodeBatch?.classList.add('grid');
+                            } else {
+                                periodeBatch?.classList.add('hidden');
+                                periodeBatch?.classList.remove('grid');
+                            }
+                            updateDurationDisplay();
+                        });
+
+                        kelasSelect?.addEventListener('change', function() {
+                            updateDurationDisplay();
+                            validateAddBatch();
+                        });
+
+                        tanggalMulaiInput?.addEventListener('change', validateAddBatch);
+                        tanggalSelesaiInput?.addEventListener('change', validateAddBatch);
+
+                        @foreach ($batchData ?? [] as $batch)
+                            (function(batchId) {
+                                const editStatusSelect = document.querySelector(
+                                    `#modal-edit-batch-${batchId} select[name="status"]`);
+                                const editKelasSelect = document.querySelector(
+                                    `#modal-edit-batch-${batchId} select[name="kelas_id"]`);
+                                const editPeriodeBatch = document.querySelector(`#periode-batch-edit-${batchId}`);
+                                const editKelasDurationInfo = document.querySelector(
+                                    `#kelas-duration-info-edit-${batchId}`);
+                                const editDurationTextSpan = document.querySelector(`#duration-text-edit-${batchId}`);
+                                const editTanggalMulaiInput = document.querySelector(
+                                    `#modal-edit-batch-${batchId} input[name="tanggal_mulai"]`);
+                                const editTanggalSelesaiInput = document.querySelector(
+                                    `#modal-edit-batch-${batchId} input[name="tanggal_selesai"]`);
+
+                                function updateEditDurationDisplay() {
+                                    const selectedStatus = editStatusSelect?.value;
+                                    const selectedKelas = editKelasSelect?.value;
+
+                                    if (selectedStatus === 'active' && selectedKelas) {
+                                        const durationText = generateDurationText(selectedKelas);
+                                        if (durationText) {
+                                            editDurationTextSpan.textContent = durationText;
+                                            editKelasDurationInfo.classList.remove('hidden');
+                                        } else {
+                                            editKelasDurationInfo.classList.add('hidden');
+                                        }
+                                    } else {
+                                        editKelasDurationInfo.classList.add('hidden');
+                                        document.getElementById(`duration-validation-edit-${batchId}`)?.classList.add(
+                                            'hidden');
+                                    }
+                                }
+
+                                function validateEditBatch() {
+                                    const selectedKelas = editKelasSelect?.value;
+                                    const startDate = editTanggalMulaiInput?.value;
+                                    const endDate = editTanggalSelesaiInput?.value;
+
+                                    if (selectedKelas && kelasData[selectedKelas]) {
+                                        const expectedDuration = parseInt(kelasData[selectedKelas].durasi_belajar) +
+                                            parseInt(kelasData[selectedKelas].waktu_magang);
+                                        validateDuration(startDate, endDate, expectedDuration,
+                                            `duration-validation-edit-${batchId}`);
+                                    }
+                                }
+
+                                editStatusSelect?.addEventListener('change', function() {
+                                    if (this.value === 'active') {
+                                        editPeriodeBatch?.classList.remove('hidden');
+                                        editPeriodeBatch?.classList.add('grid');
+                                    } else {
+                                        editPeriodeBatch?.classList.add('hidden');
+                                        editPeriodeBatch?.classList.remove('grid');
+                                    }
+                                    updateEditDurationDisplay();
+                                });
+
+                                editKelasSelect?.addEventListener('change', function() {
+                                    updateEditDurationDisplay();
+                                    validateEditBatch();
+                                });
+
+                                editTanggalMulaiInput?.addEventListener('change', validateEditBatch);
+                                editTanggalSelesaiInput?.addEventListener('change', validateEditBatch);
+
+
+                                if (editStatusSelect?.value === 'active') {
+                                    editPeriodeBatch?.classList.remove('hidden');
+                                    editPeriodeBatch?.classList.add('grid');
+                                    updateEditDurationDisplay();
+                                    validateEditBatch();
+                                }
+                            })({{ $batch['id'] }});
+                        @endforeach
+
+
+                        @foreach ($batchData ?? [] as $batch)
+                            document.getElementById('modal-edit-batch-{{ $batch['id'] }}')?.addEventListener('shown.bs.modal',
+                                function() {
+                                    const editStatusSelect = document.querySelector(
+                                        `#modal-edit-batch-{{ $batch['id'] }} select[name="status"]`);
+                                    const editPeriodeBatch = document.querySelector(
+                                        `#periode-batch-edit-{{ $batch['id'] }}`);
+
+                                    if (editStatusSelect?.value === 'active') {
+                                        editPeriodeBatch?.classList.remove('hidden');
+                                        editPeriodeBatch?.classList.add('grid');
+                                    }
+                                });
+                        @endforeach
+                    });
+                </script>
             @endif
 
             @foreach ($activeExamData as $exam)
