@@ -32,9 +32,9 @@
                     colors="emerald">Users</x-fragments.sidebar-item>
             @endif
             @if (Auth::user()->role === 'admin')
-                <x-sidebar-dropdown id="peserta" title="Manajemen Peserta" icon="users-cog" routes="peserta"
+                <x-sidebar-dropdown id="peserta" title="Manajemen Peserta" icon="users-cog" routes="peserta,approval"
                     color="emerald">
-                    <x-fragments.sidebar-item route="peserta.approval" icon="user-check" colors="emerald">
+                    <x-fragments.sidebar-item route="approval.index" icon="user-check" colors="emerald">
                         Approval Peserta
                     </x-fragments.sidebar-item>
 

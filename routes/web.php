@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\AdminResetController;
+use App\Http\Controllers\ApprovalController;
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\BatchController;
 use App\Http\Controllers\ForumAlumniController;
@@ -123,6 +124,12 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/history', 'history')->name('history');
             Route::put('/{id}', 'store')->name('store');
+        });
+
+        Route::controller(ApprovalController::class)->prefix('approval')->name('approval.')->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::patch('/{id}', 'update')->name('update');
+            Route::post('/{id}', 'resend')->name('resend');
         });
 
 
