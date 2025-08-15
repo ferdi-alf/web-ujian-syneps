@@ -105,39 +105,53 @@
         <div class="swiper mySwiper">
             <div class="swiper-wrapper">
                 @php
-                    // SEMENTARA GUNAKAN DUMMY DATA - MENUNGGU PERSETUJUAN BACKEND
-                    $kelasData = [
-                        [
-                            'id' => 'temp-1',
-                            'nama' => 'Fullstack Android Development (Part-time)',
-                            'harga' => 5000000,
-                            'dp' => 30,
-                            'tipe' => 'Intensif',
-                            'durasiBelajar' => 6,
-                            'durasiMagang' => 2,
-                            'gambar' => asset('images/FSD.jpg'),
-                        ],
-                        [
-                            'id' => 'temp-2',
-                            'nama' => 'Fullstack Website Development (Part-time)',
-                            'harga' => 3500000,
-                            'dp' => 25,
-                            'tipe' => 'Regular',
-                            'durasiBelajar' => 4,
-                            'durasiMagang' => null,
-                            'gambar' => asset('images/FL.jpg'),
-                        ],
-                        [
-                            'id' => 'temp-3',
-                            'nama' => 'Fullstack Programming (Intensif)',
-                            'harga' => 4500000,
-                            'dp' => 20,
-                            'tipe' => 'Intensif',
-                            'durasiBelajar' => 5,
-                            'durasiMagang' => 1,
-                            'gambar' => asset('images/PBL.jpg'),
-                        ],
-                    ];
+                    // GUNAKAN DATA REAL DARI DATABASE DENGAN FALLBACK KE DUMMY
+                    $kelasData = isset($kelas) && $kelas->count() > 0 
+                        ? $kelas->map(function($item) {
+                            return [
+                                'id' => $item->id,
+                                'nama' => $item->nama,
+                                'harga' => $item->harga,
+                                'dp' => $item->dp_persen ?? 0,
+                                'tipe' => ucfirst($item->type ?? 'Regular'),
+                                'durasiBelajar' => $item->durasi_belajar ?? 0,
+                                'durasiMagang' => $item->waktu_magang,
+                                'gambar' => asset('images/default-kelas.jpg'), // Default image
+                            ];
+                        })->toArray()
+                        : [
+                            // Fallback dummy data jika database kosong
+                            [
+                                'id' => 'temp-1',
+                                'nama' => 'Fullstack Android Development (Part-time)',
+                                'harga' => 5000000,
+                                'dp' => 30,
+                                'tipe' => 'Intensif',
+                                'durasiBelajar' => 6,
+                                'durasiMagang' => 2,
+                                'gambar' => asset('images/FSD.jpg'),
+                            ],
+                            [
+                                'id' => 'temp-2',
+                                'nama' => 'Fullstack Website Development (Part-time)',
+                                'harga' => 3500000,
+                                'dp' => 25,
+                                'tipe' => 'Regular',
+                                'durasiBelajar' => 4,
+                                'durasiMagang' => null,
+                                'gambar' => asset('images/FL.jpg'),
+                            ],
+                            [
+                                'id' => 'temp-3',
+                                'nama' => 'Fullstack Programming (Intensif)',
+                                'harga' => 4500000,
+                                'dp' => 20,
+                                'tipe' => 'Intensif',
+                                'durasiBelajar' => 5,
+                                'durasiMagang' => 1,
+                                'gambar' => asset('images/PBL.jpg'),
+                            ],
+                        ];
                 @endphp
 
                 @foreach ($kelasData as $kelasItem)
@@ -183,7 +197,7 @@
 
                             {{-- Action Buttons --}}
                             <div class="p-3 sm:p-4 text-center mt-auto space-y-2">
-                                <a href="#" onclick="alert('Fitur detail kelas sedang dalam pengembangan. Menunggu persetujuan backend.')"
+                                <a href="{{ route('kelas.detail', $kelasItem['id']) }}"
                                     class="inline-block bg-gradient-to-br from-red-600 to-orange-500 text-white px-3 sm:px-4 py-2 rounded-md font-semibold hover:opacity-90 transition text-sm sm:text-base w-full sm:w-auto">
                                     Lihat Detail
                                 </a>

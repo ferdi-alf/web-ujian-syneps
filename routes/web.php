@@ -22,15 +22,10 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\LandingController;
 
 
-//fatih - DISABLED SEMENTARA MENUNGGU PERSETUJUAN BACKEND
-// Route::get('/', [LandingController::class, 'index'])->name('index');
-// Route::get('/kelas/{id}', [LandingController::class, 'kelasDetail'])->name('kelas.detail');
-// Route::post('/daftar', [LandingController::class, 'daftar'])->name('daftar.store');
-
-// Sementara gunakan route lama
-Route::get('/', function () {
-    return view('welcome');
-})->name('index');
+//fatih - LANDING PAGE INTEGRATION ACTIVATED
+Route::get('/', [LandingController::class, 'index'])->name('index');
+Route::get('/kelas/{id}', [LandingController::class, 'kelasDetail'])->name('kelas.detail');
+Route::post('/daftar', [LandingController::class, 'daftar'])->name('daftar.store');
 
 Route::middleware(['web', 'guest'])->group(function () {
     Route::controller(RegisterController::class)->prefix('register')->name('register.')->group(function () {
