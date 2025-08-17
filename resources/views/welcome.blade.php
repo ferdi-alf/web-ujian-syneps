@@ -14,6 +14,7 @@
                     <div
                         class="inline-flex items-center px-4 py-1 bg-gradient-to-r from-teal-300 via-emerald-300 to-emerald-400 
                             rounded-full mb-5 border border-white shadow gap-2">
+
                         <img src="{{ asset('images/logo.png') }}" alt="Sydemy Logo" class="w-5 h-5">
                         <span class="text-xs font-semibold text-gray-900">Sydemy</span>
                     </div>
@@ -155,54 +156,54 @@
     </script>
 
     <section class="bg-gray-50 py-16">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
-        <!-- Kampus Partner -->
-        <div class="text-center mb-12">
-            <h2 class="text-2xl font-bold text-gray-800">Kampus <span class="text-emerald-500">Partner</span></h2>
-        </div>
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-8 items-center justify-items-center mb-16">
-            <div class="bg-white rounded-lg shadow hover:shadow-lg p-4 flex items-center justify-center transition">
-                <img src="images/partner/kampus1.png" alt="Partner 1" class="max-h-16 object-contain">
-            </div>
-            <div class="bg-white rounded-lg shadow hover:shadow-lg p-4 flex items-center justify-center transition">
-                <img src="images/partner/kampus2.png" alt="Partner 2" class="max-h-16 object-contain">
-            </div>
-            <div class="bg-white rounded-lg shadow hover:shadow-lg p-4 flex items-center justify-center transition">
-                <img src="images/partner/kampus3.png" alt="Partner 3" class="max-h-16 object-contain">
-            </div>
-            <div class="bg-white rounded-lg shadow hover:shadow-lg p-4 flex items-center justify-center transition">
-                <img src="images/partner/kampus4.png" alt="Partner 4" class="max-h-16 object-contain">
-            </div>
-            <div class="bg-white rounded-lg shadow hover:shadow-lg p-4 flex items-center justify-center transition">
-                <img src="images/partner/kampus5.png" alt="Partner 5" class="max-h-16 object-contain">
-            </div>
-        </div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-        <!-- Partner Industry -->
-        <div class="text-center mb-12">
-            <h2 class="text-2xl font-bold text-gray-800">Partner <span class="text-emerald-500">Industry</span></h2>
-        </div>
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-8 items-center justify-items-center">
-            <div class="bg-white rounded-lg shadow hover:shadow-lg p-4 flex items-center justify-center transition">
-                <img src="images/partner/industri1.png" alt="Industry 1" class="max-h-16 object-contain">
+            <!-- Kampus Partner -->
+            <div class="text-center mb-12">
+                <h2 class="text-2xl font-bold text-gray-800">Kampus <span class="text-emerald-500">Partner</span></h2>
             </div>
-            <div class="bg-white rounded-lg shadow hover:shadow-lg p-4 flex items-center justify-center transition">
-                <img src="images/partner/industri2.png" alt="Industry 2" class="max-h-16 object-contain">
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-8 items-center justify-items-center mb-16">
+                <div class="bg-white rounded-lg shadow hover:shadow-lg p-4 flex items-center justify-center transition">
+                    <img src="images/partner/kampus1.png" alt="Partner 1" class="max-h-16 object-contain">
+                </div>
+                <div class="bg-white rounded-lg shadow hover:shadow-lg p-4 flex items-center justify-center transition">
+                    <img src="images/partner/kampus2.png" alt="Partner 2" class="max-h-16 object-contain">
+                </div>
+                <div class="bg-white rounded-lg shadow hover:shadow-lg p-4 flex items-center justify-center transition">
+                    <img src="images/partner/kampus3.png" alt="Partner 3" class="max-h-16 object-contain">
+                </div>
+                <div class="bg-white rounded-lg shadow hover:shadow-lg p-4 flex items-center justify-center transition">
+                    <img src="images/partner/kampus4.png" alt="Partner 4" class="max-h-16 object-contain">
+                </div>
+                <div class="bg-white rounded-lg shadow hover:shadow-lg p-4 flex items-center justify-center transition">
+                    <img src="images/partner/kampus5.png" alt="Partner 5" class="max-h-16 object-contain">
+                </div>
             </div>
-            <div class="bg-white rounded-lg shadow hover:shadow-lg p-4 flex items-center justify-center transition">
-                <img src="images/partner/industri3.png" alt="Industry 3" class="max-h-16 object-contain">
-            </div>
-            <div class="bg-white rounded-lg shadow hover:shadow-lg p-4 flex items-center justify-center transition">
-                <img src="images/partner/industri4.png" alt="Industry 4" class="max-h-16 object-contain">
-            </div>
-            <div class="bg-white rounded-lg shadow hover:shadow-lg p-4 flex items-center justify-center transition">
-                <img src="images/partner/industri5.png" alt="Industry 5" class="max-h-16 object-contain">
-            </div>
-        </div>
 
-    </div>
-</section>
+            <!-- Partner Industry -->
+            <div class="text-center mb-12">
+                <h2 class="text-2xl font-bold text-gray-800">Partner <span class="text-emerald-500">Industry</span></h2>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-8 items-center justify-items-center">
+                <div class="bg-white rounded-lg shadow hover:shadow-lg p-4 flex items-center justify-center transition">
+                    <img src="images/partner/industri1.png" alt="Industry 1" class="max-h-16 object-contain">
+                </div>
+                <div class="bg-white rounded-lg shadow hover:shadow-lg p-4 flex items-center justify-center transition">
+                    <img src="images/partner/industri2.png" alt="Industry 2" class="max-h-16 object-contain">
+                </div>
+                <div class="bg-white rounded-lg shadow hover:shadow-lg p-4 flex items-center justify-center transition">
+                    <img src="images/partner/industri3.png" alt="Industry 3" class="max-h-16 object-contain">
+                </div>
+                <div class="bg-white rounded-lg shadow hover:shadow-lg p-4 flex items-center justify-center transition">
+                    <img src="images/partner/industri4.png" alt="Industry 4" class="max-h-16 object-contain">
+                </div>
+                <div class="bg-white rounded-lg shadow hover:shadow-lg p-4 flex items-center justify-center transition">
+                    <img src="images/partner/industri5.png" alt="Industry 5" class="max-h-16 object-contain">
+                </div>
+            </div>
+
+        </div>
+    </section>
 
 
     <!-- FAQ Section -->
@@ -252,7 +253,8 @@
                                 <i class="fas fa-chevron-down text-emerald-500 transition-transform duration-300"
                                     :class="{ 'rotate-180': open === index }"></i>
                             </button>
-                            <div x-show="open === index" x-collapse class="px-4 pb-4 text-gray-600" x-text="item.a"></div>
+                            <div x-show="open === index" x-collapse class="px-4 pb-4 text-gray-600" x-text="item.a">
+                            </div>
                         </div>
                     </template>
 

@@ -149,7 +149,6 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const tableContainers = document.querySelectorAll('[data-table-container]');
-
         tableContainers.forEach(container => {
             const tableId = container.getAttribute('data-table-container');
             initializeTable(tableId);

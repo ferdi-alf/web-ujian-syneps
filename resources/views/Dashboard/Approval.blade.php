@@ -143,15 +143,15 @@
                             <td class="px-4 py-4 flex flex-nowrap gap-3">
                                 @switch ($p->status)
                                     @case('pending')
-                                        <form action="" method="POST">
+                                        <form action="{{ route('approval.update', $p->id) }}" method="POST">
                                             @csrf
-                                            @method('PUT')
+                                            @method('PATCH')
                                             <button type="button" onclick="confirmButton(this)"
                                                 class="text-blue-500 bg-blue-100 hover:bg-blue-200 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm p-3 text-center inline-flex items-center">
                                                 <i class="fas fa-check"></i>
                                             </button>
                                         </form>
-                                        <form action="" method="POST">
+                                        <form action="{{ route('approval.delete', $p->id) }}" method="POST">
                                             @csrf
                                             @method('DELETE')
                                             <button type="button" onclick="confirmDelete(this)"
@@ -162,15 +162,19 @@
                                     @break
 
                                     @case('confirmed')
-                                        <button type="button" data-tooltip-target="tooltip-default"
-                                            class="text-blue-500 bg-blue-100 hover:bg-blue-200 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm p-3 text-center inline-flex items-center">
-                                            <i class="fa-solid fa-repeat"></i>
-                                        </button>
-                                        <div id="tooltip-default" role="tooltip"
-                                            class="absolute z-10 invisible inline-block px-3 py-2 text-sm font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-xs opacity-0 tooltip ">
-                                            Kirim ulang Email
-                                            <div class="tooltip-arrow" data-popper-arrow></div>
-                                        </div>
+                                        <form action="{{ route('approval.resend', $p->id) }}" method="POST">
+                                            @csrf
+
+                                            <button type="button" data-tooltip-target="tooltip-default"
+                                                class="text-blue-500 bg-blue-100 hover:bg-blue-200 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm p-3 text-center inline-flex items-center">
+                                                <i class="fa-solid fa-repeat"></i>
+                                            </button>
+                                            <div id="tooltip-default" role="tooltip"
+                                                class="absolute z-10 invisible inline-block px-3 py-2 text-sm font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-xs opacity-0 tooltip ">
+                                                Kirim ulang Email
+                                                <div class="tooltip-arrow" data-popper-arrow></div>
+                                            </div>
+                                        </form>
                                     @break
 
                                     @default
@@ -236,6 +240,7 @@
                     cancelButtonText: 'Batal'
                 }).then((result) => {
                     if (result.isConfirmed) {
+                        console.log("form submit dijalankan");
                         form.submit();
                     }
                 })
