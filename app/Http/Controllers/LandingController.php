@@ -31,46 +31,40 @@ class LandingController extends Controller
         }
     }
     
-    /**
-     * Halaman detail kelas - Direct Layout Approach (Tanpa Navbar/Footer)
-     */
     public function kelasDetail($id)
     {
         try {
-            // Cari kelas berdasarkan ID
-            $kelas = Kelas::findOrFail($id);
+            Log::info('KelasDetail method called with ID: ' . $id);
             
-            // Cek batch yang sedang buka pendaftaran untuk kelas ini
+            $kelasDetail = Kelas::findOrFail($id);
+            Log::info('Kelas found: ' . $kelasDetail->nama);
+            
+            $kelas = Kelas::all();
+            Log::info('Total kelas for carousel: ' . $kelas->count());
+            
             $activeBatch = Batches::where('kelas_id', $id)
                                  ->where('status', 'registration')
                                  ->first();
             
-            Log::info('Kelas detail loaded: ' . $kelas->nama);
-            Log::info('Active batch for kelas ' . $id . ': ' . ($activeBatch ? $activeBatch->nama : 'TIDAK ADA'));
-            
-            // Jika tidak ada batch aktif, buat dummy batch untuk testing form
             if (!$activeBatch) {
-                Log::warning('No active batch found, creating dummy batch for testing');
                 $activeBatch = (object) [
                     'id' => 'dummy-batch-' . $id,
-                    'nama' => 'Batch Testing - ' . $kelas->nama,
+                    'nama' => 'Batch Testing - ' . $kelasDetail->nama,
                     'status' => 'registration',
                     'kelas_id' => $id
                 ];
+                Log::info('Created dummy batch: ' . $activeBatch->nama);
+            } else {
+                Log::info('Found active batch: ' . $activeBatch->nama);
             }
             
-            // Direct approach - render component dengan layout khusus (tanpa navbar/footer)
-            $componentContent = view('components.kelas-detail', compact('kelas', 'activeBatch'))->render();
+            $showKelasDetail = true;
+            Log::info('Rendering welcome view with showKelasDetail: ' . ($showKelasDetail ? 'true' : 'false'));
             
-            return response()->view('layouts.kelas-detail-layout', [
-                'content' => $componentContent,
-                'title' => $kelas->nama . ' - Detail Kelas'
-            ]);
+            return view('kelas-detail', compact('kelasDetail', 'activeBatch'));
             
         } catch (\Exception $e) {
             Log::error('Error loading kelas detail: ' . $e->getMessage());
-            
-            // Redirect ke homepage dengan error message
             return redirect()->route('index')->with('error', 'Kelas tidak ditemukan.');
         }
     }
