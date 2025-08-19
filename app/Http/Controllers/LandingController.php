@@ -59,9 +59,10 @@ class LandingController extends Controller
             }
             
             $showKelasDetail = true;
+            $hideNavFooter = true;
             Log::info('Rendering welcome view with showKelasDetail: ' . ($showKelasDetail ? 'true' : 'false'));
             
-            return view('kelas-detail', compact('kelasDetail', 'activeBatch'));
+            return view('welcome', compact('kelasDetail', 'activeBatch', 'showKelasDetail', 'hideNavFooter'));
             
         } catch (\Exception $e) {
             Log::error('Error loading kelas detail: ' . $e->getMessage());

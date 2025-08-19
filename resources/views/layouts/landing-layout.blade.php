@@ -13,6 +13,8 @@
         integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+
+    @stack('styles')
     @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     @endif
@@ -41,7 +43,9 @@
 </head>
 
 <body class="bg-[#FDFDFC] text-gray-800 antialiased">
-    <x-landing.navbar />
+    @if(empty($hideNavFooter))
+        <x-landing.navbar />
+    @endif
 
     <main>
         @if(isset($content))
@@ -51,7 +55,9 @@
         @endif
     </main>
 
-    <x-landing.footer />
+    @if(empty($hideNavFooter))
+        <x-landing.footer />
+    @endif
 
     <script src="https://cdn.jsdelivr.net/npm/flowbite@3.1.2/dist/flowbite.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
