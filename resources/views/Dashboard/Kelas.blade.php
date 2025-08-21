@@ -57,7 +57,7 @@
                     'modalId' => 'modal-update-kelas-' . $row->id,
                     'updateRoute' => route('kelas.update', $row->id),
                     'deleteRoute' => route('kelas.destroy', $row->id),
-                ])" :searchBar="true" :truncate="true" :rowPerPage="10" position="left" />
+                ])" :searchBar="true" :truncate="true" :rowPerPage="10"  position="left" />
 
         </div>
 

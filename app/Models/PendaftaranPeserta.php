@@ -2,7 +2,8 @@
 
 namespace App\Models;
 
-
+use App\Models\Batches;
+use App\Models\Kelas;
 use Illuminate\Database\Eloquent\Model;
 
 class PendaftaranPeserta extends Model {
