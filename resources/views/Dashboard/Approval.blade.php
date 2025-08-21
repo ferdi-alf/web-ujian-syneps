@@ -165,7 +165,7 @@
                                         <form action="{{ route('approval.resend', $p->id) }}" method="POST">
                                             @csrf
 
-                                            <button type="button" data-tooltip-target="tooltip-default"
+                                            <button type="submit" data-tooltip-target="tooltip-default"
                                                 class="text-blue-500 bg-blue-100 hover:bg-blue-200 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm p-3 text-center inline-flex items-center">
                                                 <i class="fa-solid fa-repeat"></i>
                                             </button>

@@ -63,7 +63,6 @@ class ApprovalController extends Controller
         Log::info('Token stored in cache with key: ' . $cacheKey);
         Log::info('Cache verification: ' . (cache()->has($cacheKey) ? 'SUCCESS' : 'FAILED'));
 
-        // Mail configuration check
         Log::info('Current mail configuration: ', [
             'mailer' => config('mail.default'),
             'host' => config('mail.mailers.smtp.host'),
@@ -74,11 +73,9 @@ class ApprovalController extends Controller
             'from_name' => config('mail.from.name')
         ]);
 
-        // Generate registration URL
         $registrationUrl = route('registration.form', $token);
         Log::info('Generated registration URL: ' . $registrationUrl);
 
-        // Send email
         Log::info('Attempting to send email to: ' . $peserta->email);
         
         try {
@@ -120,7 +117,7 @@ class ApprovalController extends Controller
             cache()->put("registration_token_{$token}", $peserta->id, now()->addHours(24));
             Mail::to($peserta->email)->send(new RegistrationLinkMail($peserta, $token));
 
-            return back()->with('success', 'Email registrasi berhasil dikirim ulang');
+            return back()->with(AlertHelper::success('Link registrasi telah dikirim ulang ke email peserta.', 'Success'));
             
         } catch (\Exception $e) {
             return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());

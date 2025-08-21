@@ -7,11 +7,15 @@ use App\Mail\VerificationCodeMail;
 use App\Models\PendaftaranPeserta;
 use App\Models\SiswaDetail;
 use App\Models\User;
+use Carbon\Carbon;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\Rules\Password;
 
 class RegisterController extends Controller
@@ -31,80 +35,155 @@ class RegisterController extends Controller
         return view('auth.register-form', compact('peserta', 'token'));
     }
 
-    public function processRegistration(Request $request, $token) {
-       $pesertaId = cache()->get("registration_token_{$token}");
+    public function processRegistration(Request $request, $token)
+    {
+        $pesertaId = cache()->get("registration_token_{$token}");
         
         if (!$pesertaId) {
             return back()->with('error', 'Link registrasi tidak valid atau sudah kedaluwarsa');
         }
-
+        
         $peserta = PendaftaranPeserta::find($pesertaId);
         
         if (!$peserta || $peserta->status !== 'confirmed') {
             return back()->with('error', 'Data pendaftaran tidak ditemukan');
         }
-
+        
         $request->validate([
             'name' => 'required|string|max:255|unique:users',
-            'password' => ['required', 'confirmed', Password::min(8)],
+            'password' => ['required', Password::min(8)],
+            'confirmPassword' => 'required|same:password',
         ]);
-
+        
         try {
             DB::beginTransaction();
-
+            
             $user = User::create([
                 'avatar' => 'avatar-' . rand(1, 10) . '.png',
                 'name' => $request->name,
                 'email' => $peserta->email,
                 'password' => Hash::make($request->password),
             ]);
-
-             $verificationCode = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-             cache()->put("verification_code_{$user->id}", $verificationCode, now()->addMinutes(10));
-             cache()->forget("registration_token_{$token}");
-             Mail::to($user->email)->send(new VerificationCodeMail($user, $verificationCode));
-             DB::commit();
             
-             return redirect()->route('verification.show', ['user' => $user->id])
+            // Generate secure verification token instead of using user ID
+            $verificationToken = Str::random(64);
+            $verificationCode = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+            
+            // Store verification data with token
+            cache()->put("verification_token_{$verificationToken}", [
+                'user_id' => $user->id,
+                'code' => $verificationCode,
+                'attempts' => 0,
+                'created_at' => now(),
+                'last_resend' => now(), // Track when code was first sent
+            ], now()->addMinutes(15)); // Longer expiry for token
+            
+            cache()->forget("registration_token_{$token}");
+            
+            Mail::to($user->email)->send(new VerificationCodeMail($user, $verificationCode));
+            
+            DB::commit();
+            
+            Log::info('Verification code sent to user email', [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'token' => $verificationToken, // Log token, not code
+            ]);
+            
+            // Redirect with secure token instead of user ID
+            return redirect()->route('verification.show', ['token' => $verificationToken])
                 ->with(AlertHelper::success('Registrasi berhasil! Silakan verifikasi email Anda.', 'Success'));
+                
         } catch (\Throwable $th) {
             DB::rollback();
+            Log::error('Registration process failed', [
+                'error' => $th->getMessage(),
+                'file' => $th->getFile(),
+                'line' => $th->getLine(),
+                'trace' => $th->getTraceAsString(),
+            ]);
             return back()->with(AlertHelper::error('Terjadi kesalahan saat proses registrasi: ' . $th->getMessage(), 'Error'));
         }
     }
+    
 
-    public function showVerificationForm($userId) {
-         $user = User::findOrFail($userId);
+     public function showVerificationForm($token)
+    {
+        $verificationData = cache()->get("verification_token_{$token}");
+        
+        if (!$verificationData) {
+            return redirect()->route('login')->with('error', 'Token verifikasi tidak valid atau sudah kedaluwarsa');
+        }
+        
+        $user = User::find($verificationData['user_id']);
+        
+        if (!$user) {
+            cache()->forget("verification_token_{$token}");
+            return redirect()->route('login')->with('error', 'User tidak ditemukan');
+        }
         
         if ($user->email_verified_at) {
-            return redirect()->route('dashboard')->with('info', 'Email sudah terverifikasi');
+            return redirect()->route('dashboard')->with('success', 'Email sudah terverifikasi');
         }
-
-        return view('auth.verification-form', compact('user'));
+        
+        $lastResend = Carbon::parse($verificationData['last_resend']);
+        $cooldownSeconds = 30;
+        $timePassed = $lastResend->diffInSeconds(now());
+        $remainingCooldown = max(0, (int) ($cooldownSeconds - $timePassed));
+        
+        return view('auth.verification-form', compact('user', 'token', 'remainingCooldown'));
     }
 
-    public function processVerification(Request $request, $userId) {
-         $request->validate([
+     public function processVerification(Request $request, $token)
+    {
+        $key = 'verify_attempts:' . request()->ip();
+        if (RateLimiter::tooManyAttempts($key, 5)) {
+            $seconds = RateLimiter::availableIn($key);
+            return back()->withErrors([
+                'verification_code' => "Terlalu banyak percobaan. Coba lagi dalam {$seconds} detik."
+            ]);
+        }
+        
+        $verificationData = cache()->get("verification_token_{$token}");
+        
+        if (!$verificationData) {
+            return redirect()->route('login')->with('error', 'Token verifikasi tidak valid atau sudah kedaluwarsa');
+        }
+        
+        $user = User::find($verificationData['user_id']);
+        
+        if (!$user) {
+            cache()->forget("verification_token_{$token}");
+            return redirect()->route('login')->with('error', 'User tidak ditemukan');
+        }
+        
+        $request->validate([
             'verification_code' => 'required|string|size:6',
         ]);
-
-        $user = User::findOrFail($userId);
         
-        if ($user->email_verified_at) {
-            return redirect()->route('dashboard')->with('info', 'Email sudah terverifikasi');
+        RateLimiter::hit($key);
+        $verificationData['attempts']++;
+        if ($verificationData['attempts'] > 3) {
+            cache()->forget("verification_token_{$token}");
+            return redirect()->route('login')->with('error', 'Terlalu banyak percobaan verifikasi. Silakan registrasi ulang.');
         }
-
-        $storedCode = cache()->get("verification_code_{$user->id}");
         
-        if (!$storedCode || $storedCode !== $request->verification_code) {
-            return back()->with('error', 'Kode verifikasi salah atau sudah kedaluwarsa');
+        if ($request->verification_code !== $verificationData['code']) {
+            cache()->put("verification_token_{$token}", $verificationData, now()->addMinutes(15));
+            
+            $remainingAttempts = 3 - $verificationData['attempts'];
+            return back()->withErrors([
+                'verification_code' => "Kode verifikasi salah. Sisa percobaan: {$remainingAttempts}"
+            ]);
         }
-
+        
         try {
             DB::beginTransaction();
-
-            $user->update(['email_verified_at' => now()]);
-            $peserta = PendaftaranPeserta::where('email', $user->email)->first();
+            
+            $user->update([
+                'email_verified_at' => now(),
+            ]);
+             $peserta = PendaftaranPeserta::where('email', $user->email)->first();
             
             if ($peserta) {
                 SiswaDetail::create([
@@ -128,28 +207,78 @@ class RegisterController extends Controller
             }
 
             cache()->forget("verification_code_{$user->id}");
-
+                        
+            RateLimiter::clear($key);
+            cache()->forget("verification_token_{$token}");
+            
             DB::commit();
             Auth::login($user);
-
-            return redirect()->route('dashboard')->with('success', 'Email berhasil diverifikasi! Selamat datang di platform kami.');
-
-        } catch (\Exception $e) {
+            
+            return redirect()->route('dashboard')
+                ->with(AlertHelper::success('Email berhasil diverifikasi!', 'Success'));
+                
+        } catch (\Throwable $th) {
             DB::rollback();
-            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+            Log::error('Email verification failed', [
+                'error' => $th->getMessage(),
+                'user_id' => $user->id,
+            ]);
+            return back()->with('error', 'Terjadi kesalahan saat verifikasi email');
         }
     }
-
-    public function resendVerificationCode($userId) {
-        $user = User::findOrFail($userId);
-          if ($user->email_verified_at) {
-            return back()->with('info', 'Email sudah terverifikasi');
+    
+    public function resendVerificationCode(Request $request, $token)
+    {
+        $resendKey = 'resend_code:' . request()->ip();
+        if (RateLimiter::tooManyAttempts($resendKey, 3)) {
+            $seconds = RateLimiter::availableIn($resendKey);
+            return back()->with('error', "Terlalu banyak permintaan kirim ulang. Coba lagi dalam {$seconds} detik.");
         }
-
-        $verificationCode = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-        cache()->put("verification_code_{$user->id}", $verificationCode, now()->addMinutes(10));
-
-        Mail::to($user->email)->send(new VerificationCodeMail($user, $verificationCode));
-         return back()->with('success', 'Kode verifikasi baru telah dikirim ke email Anda');
+        
+        $verificationData = cache()->get("verification_token_{$token}");
+        
+        if (!$verificationData) {
+            return redirect()->route('login')->with('error', 'Token verifikasi tidak valid atau sudah kedaluwarsa');
+        }
+        
+        $user = User::find($verificationData['user_id']);
+        
+        if (!$user) {
+            cache()->forget("verification_token_{$token}");
+            return redirect()->route('login')->with('error', 'User tidak ditemukan');
+        }
+        
+        $lastResend = Carbon::parse($verificationData['last_resend']);
+        if ($lastResend->diffInSeconds(now()) < 30) {
+            $remainingSeconds = 30 - $lastResend->diffInSeconds(now());
+            return back()->with('error', "Tunggu {$remainingSeconds} detik sebelum mengirim ulang kode.");
+        }
+        
+        $newVerificationCode = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $verificationData['code'] = $newVerificationCode;
+        $verificationData['last_resend'] = now();
+        $verificationData['attempts'] = 0; // Reset attempts on resend
+        
+        cache()->put("verification_token_{$token}", $verificationData, now()->addMinutes(15));
+        
+        try {
+            Mail::to($user->email)->send(new VerificationCodeMail($user, $newVerificationCode));
+            
+            RateLimiter::hit($resendKey);
+            
+            Log::info('Verification code resent', [
+                'user_id' => $user->id,
+                'email' => $user->email,
+            ]);
+            
+            return back()->with(AlertHelper::success('Kode verifikasi baru telah dikirim!', 'Success'));
+            
+        } catch (\Throwable $th) {
+            Log::error('Failed to resend verification code', [
+                'error' => $th->getMessage(),
+                'user_id' => $user->id,
+            ]);
+            return back()->with('error', 'Gagal mengirim kode verifikasi');
+        }
     }
 }

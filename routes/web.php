@@ -28,7 +28,7 @@ Route::get('/', function () {
 
 Route::get('/testroute', function () {
     $name = "Funny Coder";
-    Mail::to('ferdialfianferdi.08@gmail.com')->send(new MyTestEmail($name));
+    Mail::to('test.08@gmail.com')->send(new MyTestEmail($name));
 });
 
 Route::middleware(['web', 'guest'])->group(function () {
