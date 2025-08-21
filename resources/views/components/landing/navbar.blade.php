@@ -1,4 +1,4 @@
-<nav class="bg-white shadow-lg sticky top-0 z-50 border-b-2 border-teal-100">
+<nav id="main-navbar" class="bg-white/90 backdrop-blur sticky top-0 z-50 border-b border-teal-100 transition-shadow">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-16">
             <div class="flex-shrink-0">
@@ -110,13 +110,13 @@
             <div class="hidden md:block">
                 @auth
                     <a href="{{ route('dashboard') }}"
-                        class="bg-gradient-to-r from-teal-300 via-emerald-300 to-emerald-400 text-white px-6 py-2 rounded-lg text-sm font-medium hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-300">
+                        class="bg-gradient-to-r from-teal-300 via-emerald-300 to-emerald-400 text-gray-900 px-6 py-2 rounded-lg text-sm font-semibold hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-300">
                         Dashboard
                     </a>
                 @endauth
                 @guest
                     <a href="{{ route('login.index') }}"
-                        class="bg-gradient-to-r from-teal-300 via-emerald-300 to-emerald-400 text-white px-6 py-2 rounded-lg text-sm font-medium hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-300">
+                        class="bg-gradient-to-r from-teal-300 via-emerald-300 to-emerald-400 text-white px-6 py-2 rounded-lg text-sm font-semibold hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-300">
                         Login
                     </a>
                 @endguest
@@ -258,29 +258,38 @@
 </nav>
 
 <style>
-    nav {
-        border-bottom: 2px solid #e6fffa !important;
-    }
-
-
-    * {
-        border-color: transparent !important;
-    }
-
-    nav,
-    nav * {
-        border-color: #e6fffa !important;
-    }
-
-
-    .border-blue-500,
-    .border-blue-600,
-    .border-blue-700 {
-        border-color: transparent !important;
+    #main-navbar.nav-scrolled { box-shadow: 0 10px 30px rgba(0,0,0,.06); }
+    .nav-link { position: relative; }
+    .nav-link::after { content:''; position:absolute; left:0.75rem; right:0.75rem; bottom:.35rem; height:2px; background: linear-gradient(90deg, #5eead4, #6ee7b7, #34d399); transform: scaleX(0); transform-origin:left; transition: transform .25s ease; }
+    .nav-link:hover::after { transform: scaleX(1); }
+/* Gradient text hover/active for nav items (override) */
+    #main-navbar .ml-10 a:hover,
+    #main-navbar .ml-10 button:hover,
+    #mobile-menu a:hover,
+    #mobile-menu button:hover,
+    #main-navbar .nav-active,
+    #mobile-menu .nav-active {
+        background-image: linear-gradient(90deg, #5eead4, #6ee7b7, #34d399);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent !important;
+        background-color: transparent !important;
+        box-shadow: none !important;
     }
 </style>
 
 <script>
+    // Navbar shadow on scroll
+    (function(){
+        const nav = document.getElementById('main-navbar');
+        function onScroll(){
+            if (!nav) return;
+            if (window.scrollY > 4) nav.classList.add('nav-scrolled');
+            else nav.classList.remove('nav-scrolled');
+        }
+        onScroll();
+        window.addEventListener('scroll', onScroll, { passive: true });
+    })();
     const mobileMenuButton = document.getElementById('mobile-menu-button');
     const mobileMenu = document.getElementById('mobile-menu');
     const menuIcon = document.getElementById('menu-icon');

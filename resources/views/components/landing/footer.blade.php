@@ -10,7 +10,10 @@
                     dasar hingga mahir.
                 </p>
                 <div class="mt-6 flex space-x-3">
-                    <a href="#" class="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors">
+                    <a href="https://www.instagram.com/syn_academy?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" target="_blank" class="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors">
+                        <span class="sr-only">Instagram</span>
+
+
                         <!-- Instagram Icon -->
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <rect x="3" y="3" width="18" height="18" rx="5" ry="5"
@@ -19,14 +22,18 @@
                             <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
                         </svg>
                     </a>
-                    <a href="#" class="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors">
+                    <a href="https://www.tiktok.com/@syn_academy?is_from_webapp=1&sender_device=pc" target="_blank" class="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors">
+                        <span class="sr-only">TikTok</span>
+
                         <!-- TikTok Icon -->
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M12 3h3c.2 1.7 1.2 3.2 2.7 4.2A7 7 0 0021 8v3a9 9 0 01-5-1.7v6.2a5.5 5.5 0 11-5.5-5.5V12a2 2 0 102 2V3z" />
                         </svg>
                     </a>
-                    <a href="#" class="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors">
+                    <a href="https://www.facebook.com/sydemy" target="_blank" class="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors">
+                        <span class="sr-only">Facebook</span>
+
                         <!-- Facebook Icon -->
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
