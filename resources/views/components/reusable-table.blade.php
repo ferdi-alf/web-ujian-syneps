@@ -15,7 +15,6 @@
 ])
 
 @php
-
     $uniqueTableId = $tableId ?? 'table-' . uniqid();
 @endphp
 
@@ -99,6 +98,7 @@
 
     @if (!$disablePagination)
         <div class="flex overflow-x-auto items-center md:flex-row justify-between px-6 py-3 bg-white">
+
             <div class="flex flex-col space-y-1.5 md:flex-row items-center space-x-2">
                 <label for="rowsPerPage-{{ $uniqueTableId }}" class="text-sm text-gray-700">Rows per page:</label>
                 <select id="rowsPerPage-{{ $uniqueTableId }}"
@@ -149,7 +149,6 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const tableContainers = document.querySelectorAll('[data-table-container]');
-
         tableContainers.forEach(container => {
             const tableId = container.getAttribute('data-table-container');
             initializeTable(tableId);

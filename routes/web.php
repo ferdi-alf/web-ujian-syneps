@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\AdminResetController;
+use App\Http\Controllers\ApprovalController;
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\BatchController;
 use App\Http\Controllers\ForumAlumniController;
@@ -17,15 +18,21 @@ use App\Http\Controllers\PesertaController;
 use App\Http\Controllers\KelasController;
 use App\Http\Controllers\PembayaranController;
 use App\Http\Controllers\RegisterController;
+use App\Mail\MyTestEmail;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Http\Request;
+use Illuminate\Http\Request;    
 use App\Http\Controllers\LandingController;
-
+use Illuminate\Support\Facades\Mail;
 
 //fatih - LANDING PAGE INTEGRATION ACTIVATED
 Route::get('/', [LandingController::class, 'index'])->name('index');
 Route::get('/kelas/{id}', [LandingController::class, 'kelasDetail'])->name('kelas.detail');
 Route::post('/daftar', [LandingController::class, 'daftar'])->name('daftar.store');
+
+Route::get('/testroute', function () {
+    $name = "Funny Coder";
+    Mail::to('ferdialfianferdi.08@gmail.com')->send(new MyTestEmail($name));
+});
 
 Route::middleware(['web', 'guest'])->group(function () {
     Route::controller(RegisterController::class)->prefix('register')->name('register.')->group(function () {
@@ -36,6 +43,17 @@ Route::middleware(['web', 'guest'])->group(function () {
         Route::post('/', [RegisterController::class, 'regsiter'])->name('store');
     });
 
+    
+        Route::controller(RegisterController::class)->group(function () {
+            Route::get('/register/{token}', 'showRegistrationForm')->name('registration.form');
+            Route::post('/register/{token}', 'processRegistration')->name('registration.process');
+            
+            Route::get('/verify/{user}', 'showVerificationForm')->name('verification.show');
+            Route::post('/verify/{user}', 'processVerification')->name('verification.process');
+            Route::post('/verify/{user}/resend', 'resendVerificationCode')->name('verification.resend');
+        });
+
+
     // jangan di kucak login
     Route::controller(AuthenticationController::class)->prefix('login')->name('login.')->group(function () {
         Route::get('/', function () {
@@ -45,6 +63,7 @@ Route::middleware(['web', 'guest'])->group(function () {
         Route::post('/', [AuthenticationController::class, 'store'])->name('store');
     });
 });
+
 
 
 
@@ -125,6 +144,13 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/history', 'history')->name('history');
             Route::put('/{id}', 'store')->name('store');
+        });
+
+        Route::controller(ApprovalController::class)->prefix('approval')->name('approval.')->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::patch('/{id}', 'update')->name('update');
+            Route::post('/{id}/resend', 'resend')->name('resend');
+            Route::delete('/{id}', 'delete')->name('delete'); 
         });
 
 

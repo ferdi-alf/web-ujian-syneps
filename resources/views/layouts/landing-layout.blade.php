@@ -19,20 +19,20 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     @endif
     <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
-    
+
     <style>
-        /* Reset untuk memastikan tidak ada konflik dengan layout dashboard */
         body {
             margin: 0;
             padding: 0;
             background: #FDFDFC !important;
         }
-        
+
         /* Pastikan tidak ada sidebar yang muncul */
-        #logo-sidebar, .sm\:ml-64 {
+        #logo-sidebar,
+        .sm\:ml-64 {
             display: none !important;
         }
-        
+
         /* Reset main content */
         main {
             margin: 0 !important;
