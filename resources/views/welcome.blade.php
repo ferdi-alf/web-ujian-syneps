@@ -214,46 +214,51 @@
             </div>
         </section>
 
-        <section class="bg-white py-20" x-data="{ open: null }">
+        <section class="bg-white py-20 faq-section" x-data="{ open: null }">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="grid lg:grid-cols-3 gap-12">
                     <div class="lg:col-span-1">
                         <h2 class="text-3xl sm:text-4xl font-extrabold text-gray-900">
                             Frequently Asked
-                            <span
-                                class="bg-gradient-to-r from-teal-400 to-emerald-500 bg-clip-text text-transparent">Questions</span>
+                            <span class="bg-gradient-to-r from-teal-300 via-emerald-300 to-emerald-400 bg-clip-text text-transparent">Questions</span>
                         </h2>
                         <p class="mt-4 text-gray-600">
                             Tidak menemukan jawaban yang Anda cari? Hubungi tim kami untuk informasi lebih lanjut.
                         </p>
-                        <a href="https://wa.me/6283178569163?text=Halo%20saya%20ingin%20bertanya%20tentang%20kelas"
-                            target="_blank"
-                            class="mt-6 inline-block bg-gradient-to-r from-teal-400 to-emerald-500 text-white font-semibold px-6 py-3 rounded-lg hover:opacity-90 transition-transform transform hover:scale-105">
+                        <a href="https://wa.me/6283178569163?text=Halo%20saya%20ingin%20bertanya%20tentang%20kelas" target="_blank"
+                            class="mt-6 inline-flex items-center gap-2 bg-gradient-to-r from-teal-300 via-emerald-300 to-emerald-400 text-gray-900 font-semibold px-6 py-3 rounded-lg hover:shadow-lg transition-all">
+                            <i class="fab fa-whatsapp"></i>
                             Hubungi Kami
                         </a>
                     </div>
 
-                    <div class="lg:col-span-2 space-y-2">
-                        <template
-                            x-for="(item, index) in [
-                        {q: 'Bagaimana Sistem Belajarnya?', a: 'Sistem belajar kami berbasis proyek (project-based learning) dengan sesi mentoring rutin. Anda akan mengerjakan proyek nyata untuk membangun portofolio yang kuat.'},
-                        {q: 'Apakah Ini Berlangganan?', a: 'Tidak, program kami adalah pembayaran sekali untuk satu batch kelas. Tidak ada biaya berlangganan bulanan. Anda juga bisa membayar dengan sistem DP.'},
-                        {q: 'Apakah Saya Boleh Mendownload Videonya?', a: 'Untuk melindungi hak cipta, video materi tidak dapat di-download. Namun, Anda akan memiliki akses selamanya ke materi tersebut melalui platform kami.'},
-                        {q: 'Apakah Ada Jaminan Kerja?', a: 'Kami tidak memberikan jaminan kerja, namun kami memiliki program penyaluran karir yang akan menghubungkan lulusan terbaik kami dengan perusahaan rekanan.'}
-                    ]"
-                            :key="index">
-                            <div class="rounded-lg transition-all duration-300"
-                                :class="{
-                                    'bg-emerald-50 border border-emerald-200': open === index,
-                                    'border-b border-gray-200': open !== index
-                                }">
-                                <button @click="open = (open === index ? null : index)"
-                                    class="flex items-center justify-between w-full text-left p-4">
-                                    <span class="font-semibold text-lg text-gray-800" x-text="item.q"></span>
-                                    <i class="fas fa-chevron-down text-emerald-500 transition-transform duration-300"
-                                        :class="{ 'rotate-180': open === index }"></i>
+                    <div class="lg:col-span-2 space-y-3">
+                        <template x-for="(item, index) in [
+                            {q: 'Bagaimana Sistem Belajarnya?', a: 'Sistem belajar kami berbasis proyek (project-based learning) dengan sesi mentoring rutin. Anda akan mengerjakan proyek nyata untuk membangun portofolio yang kuat.'},
+                            {q: 'Apakah Ini Berlangganan?', a: 'Tidak, program kami adalah pembayaran sekali untuk satu batch kelas. Tidak ada biaya berlangganan bulanan. Anda juga bisa membayar dengan sistem DP.'},
+                            {q: 'Apakah Saya Boleh Mendownload Videonya?', a: 'Untuk melindungi hak cipta, video materi tidak dapat di-download. Namun, Anda akan memiliki akses selamanya ke materi tersebut melalui platform kami.'},
+                            {q: 'Apakah Ada Jaminan Kerja?', a: 'Kami tidak memberikan jaminan kerja, namun kami memiliki program penyaluran karir yang akan menghubungkan lulusan terbaik kami dengan perusahaan rekanan.'}
+                        ]" :key="index">
+                            <div class="rounded-xl border border-gray-200 bg-white/90 hover:border-gray-300 shadow-sm hover:shadow transition-all overflow-hidden">
+                                <button @click="open = (open === index ? null : index)" :aria-expanded="open === index"
+                                        class="flex items-center justify-between w-full text-left p-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center ring-1 ring-emerald-100">
+                                            <i class="fas fa-question text-emerald-500 text-sm"></i>
+                                        </div>
+                                        <span class="font-semibold text-gray-900" x-text="item.q"></span>
+                                    </div>
+                                    <i class="fas fa-chevron-down text-emerald-500 transition-transform duration-300" :class="{ 'rotate-180': open === index }"></i>
                                 </button>
-                                <div x-show="open === index" x-collapse class="px-4 pb-4 text-gray-600" x-text="item.a">
+                                <div x-show="open === index"
+                                        x-transition:enter="transition ease-out duration-300"
+                                        x-transition:enter-start="opacity-0 -translate-y-2"
+                                        x-transition:enter-end="opacity-100 translate-y-0"
+                                        x-transition:leave="transition ease-in duration-200"
+                                        x-transition:leave-start="opacity-100 translate-y-0"
+                                        x-transition:leave-end="opacity-0 -translate-y-2"
+                                            class="px-4 pb-5 text-gray-600">
+                                    <p x-text="item.a"></p>
                                 </div>
                             </div>
                         </template>
@@ -362,6 +367,12 @@
         a:focus {
             outline: 2px solid #10b981;
             outline-offset: 2px;
+        }
+
+        .faq-section button:focus,
+        .faq-section a:focus {
+            outline: none !important;
+            box-shadow: none !important;
         }
     </style>
 @endsection
