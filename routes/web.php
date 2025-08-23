@@ -20,11 +20,14 @@ use App\Http\Controllers\PembayaranController;
 use App\Http\Controllers\RegisterController;
 use App\Mail\MyTestEmail;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;    
+use App\Http\Controllers\LandingController;
 use Illuminate\Support\Facades\Mail;
 
-Route::get('/', function () {
-    return view('welcome');
-})->name('index');
+//fatih - LANDING PAGE INTEGRATION ACTIVATED
+Route::get('/', [LandingController::class, 'index'])->name('index');
+Route::get('/kelas/{id}', [LandingController::class, 'kelasDetail'])->name('kelas.detail');
+Route::post('/daftar', [LandingController::class, 'daftar'])->name('daftar.store');
 
 Route::get('/testroute', function () {
     $name = "Funny Coder";
