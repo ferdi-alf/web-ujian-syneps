@@ -57,6 +57,7 @@ class RegisterController extends Controller
         
         try {
             DB::beginTransaction();
+            $mode = env('REGISTER_SENDING_MODE', 'email');
             
             $user = User::create([
                 'avatar' => 'avatar-' . rand(1, 10) . '.png',
@@ -64,44 +65,83 @@ class RegisterController extends Controller
                 'email' => $peserta->email,
                 'password' => Hash::make($request->password),
             ]);
-            
-            // Generate secure verification token instead of using user ID
-            $verificationToken = Str::random(64);
-            $verificationCode = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-            
-            // Store verification data with token
-            cache()->put("verification_token_{$verificationToken}", [
-                'user_id' => $user->id,
-                'code' => $verificationCode,
-                'attempts' => 0,
-                'created_at' => now(),
-                'last_resend' => now(), // Track when code was first sent
-            ], now()->addMinutes(15)); // Longer expiry for token
-            
-            cache()->forget("registration_token_{$token}");
-            
-            Mail::to($user->email)->send(new VerificationCodeMail($user, $verificationCode));
-            
-            DB::commit();
-            
-            Log::info('Verification code sent to user email', [
-                'user_id' => $user->id,
-                'email' => $user->email,
-                'token' => $verificationToken, // Log token, not code
-            ]);
-            
-            // Redirect with secure token instead of user ID
-            return redirect()->route('verification.show', ['token' => $verificationToken])
-                ->with(AlertHelper::success('Registrasi berhasil! Silakan verifikasi email Anda.', 'Success'));
+
+            if ($mode === 'email') {
+                // MODE EMAIL - Kirim verification code
+                $verificationToken = Str::random(64);
+                $verificationCode = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
                 
+                cache()->put("verification_token_{$verificationToken}", [
+                    'user_id' => $user->id,
+                    'code' => $verificationCode,
+                    'attempts' => 0,
+                    'created_at' => now(),
+                    'last_resend' => now(), 
+                ], now()->addMinutes(15)); 
+                
+                cache()->forget("registration_token_{$token}");
+                
+                Mail::to($user->email)->send(new VerificationCodeMail($user, $verificationCode));
+                
+                DB::commit();
+                
+                Log::info('Verification code sent to user email', [
+                    'user_id' => $user->id,
+                    'email' => $user->email,
+                    'token' => $verificationToken, 
+                ]);
+                
+                return redirect()->route('verification.show', ['token' => $verificationToken])
+                    ->with(AlertHelper::success('Registrasi berhasil! Silakan verifikasi email Anda.', 'Success'));
+                    
+            } else {
+                // MODE WHATSAPP - Langsung create SiswaDetail dan login
+                SiswaDetail::create([
+                    'siswa_id' => $user->id,
+                    'kelas_id' => $peserta->kelas_id,
+                    'batch_id' => $peserta->batch_id,
+                    'nama_lengkap' => $peserta->nama_lengkap,
+                    'no_hp' => $peserta->no_hp,
+                    'status' => 'active',
+                    'alamat' => $peserta->alamat,
+                    'pendidikan_terakhir' => $peserta->pendidikan_terakhir,
+                    'jenis_kelamin' => $peserta->jenis_kelamin,
+                    'mengetahui_program_dari' => $peserta->mengetahui_program_dari,
+                    'total_tagihan' => $peserta->total_tagihan,
+                    'jumlah_cicilan' => $peserta->jumlah_cicilan,
+                    'tagihan_per_bulan' => $peserta->tagihan_per_bulan,
+                    'ikut_magang' => false,
+                ]);
+                
+                // Hapus data pendaftaran dan registration token
+                $peserta->delete();
+                cache()->forget("registration_token_{$token}");
+                
+                // Set email as verified (karena tidak perlu verifikasi)
+                $user->update(['email_verified_at' => now()]);
+                
+                DB::commit();
+                
+                // Login user dan redirect ke dashboard
+                Auth::login($user);
+                
+                Log::info('User registered successfully via WhatsApp mode', [
+                    'user_id' => $user->id,
+                    'email' => $user->email,
+                ]);
+                
+                return redirect()->route('dashboard')
+                    ->with(AlertHelper::success('Registrasi berhasil! Selamat datang.', 'Success'));
+            }
+            
         } catch (\Throwable $th) {
             DB::rollback();
+            
             Log::error('Registration process failed', [
                 'error' => $th->getMessage(),
-                'file' => $th->getFile(),
-                'line' => $th->getLine(),
-                'trace' => $th->getTraceAsString(),
+                'mode' => $mode ?? 'unknown',
             ]);
+            
             return back()->with(AlertHelper::error('Terjadi kesalahan saat proses registrasi: ' . $th->getMessage(), 'Error'));
         }
     }

@@ -171,7 +171,17 @@
                                             </button>
                                             <div id="tooltip-default" role="tooltip"
                                                 class="absolute z-10 invisible inline-block px-3 py-2 text-sm font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-xs opacity-0 tooltip ">
-                                                Kirim ulang Email
+                                                @php
+                                                    $mode = env('REGISTER_SENDING_MODE', 'email');
+                                                @endphp
+
+                                                @if ($mode === 'whatsapp')
+                                                    <p>Generate ulang link.</p>
+                                                @elseif ($mode === 'email')
+                                                    <p>Kirim ulang email.</p>
+                                                @else
+                                                    <p>Mode pengiriman tidak diketahui.</p>
+                                                @endif
                                                 <div class="tooltip-arrow" data-popper-arrow></div>
                                             </div>
                                         </form>
@@ -335,6 +345,7 @@
                                             </div>
                                         </div>
                                     </div>
+                                 
                                     <div class="col-span-9 p-6 shadow-lg rounded-md">
                                         <div class="grid grid-cols-3 gap-4 items-center-safe ">
                                             <div class="transform hover:scale-105 transition-transform duration-200">
@@ -457,6 +468,23 @@
                                                 </div>
                                             </div>
                                         </div>
+                                           ${pesertaData.link_register && 
+                                            `
+                                                                            <div class="mt-4 p-4 w-full">
+                                                                            <a 
+                                                                                  href="https://wa.me/${pesertaData.noHp.replace(/^0/, '62')}?text=${encodeURIComponent(
+                                                                                    `Halo ${pesertaData.nama},\n\n` +
+                                                                                    `Selamat! Anda telah diterima di kelas ${pesertaData.kelas} - Batch ${pesertaData.batch}.\n\n` +
+                                                                                    `Silakan selesaikan proses registrasi melalui link berikut (berlaku 24 jam):\n` +
+                                                                                    `${pesertaData.link_register}\n\n` +
+                                                                                    `Terima kasih`
+                                                                                )}" 
+                                                                                target="_blank" 
+                                                                                class="no-underline bg-green-500 rounded-lg shadow-md p-4 text-white font-semibold">
+                                                                                Kirim Melalui Whatsapp
+                                                                            </a>
+                                                                        </div>
+                                                                        `}
                                     </div>
                                 </div>
                         </div>
@@ -514,6 +542,7 @@
                         'Rp ' + Number(cells[row.rowIndex - 1].total_tagihan).toLocaleString('id-ID') : '-',
                     batch: cells[row.rowIndex - 1].batches.nama ?? '-',
                     jumlahCicilan: cells[row.rowIndex - 1].jumlah_cicilan ?? '-',
+                    link_register: cells[row.rowIndex - 1].link_register ?? ''
                 };
             }
         </script>
