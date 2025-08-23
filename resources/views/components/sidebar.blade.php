@@ -82,6 +82,10 @@
                 <x-fragments.sidebar-item route="ujian.index" icon="book" colors="emerald">
                     Ujian</x-fragments.sidebar-item>
             @endif
+            @if (Auth::user()->role !== 'siswa')
+                <x-fragments.sidebar-item route="leaderboard" icon="chart-simple" colors="emerald">
+                    Leaderboard</x-fragments.sidebar-item>
+            @endif
             <x-fragments.sidebar-item route="nilai.index" icon="fa-solid fa-square-poll-horizontal"
                 colors="emerald">Nilai
             </x-fragments.sidebar-item>
