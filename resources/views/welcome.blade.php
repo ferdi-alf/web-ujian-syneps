@@ -231,7 +231,6 @@
                             Hubungi Kami
                         </a>
                     </div>
-1
                     <div class="lg:col-span-2 space-y-3">
                         <template x-for="(item, index) in [
                             {q: 'Bagaimana Sistem Belajarnya?', a: 'Sistem belajar kami berbasis proyek (project-based learning) dengan sesi mentoring rutin. Anda akan mengerjakan proyek nyata untuk membangun portofolio yang kuat.'},
