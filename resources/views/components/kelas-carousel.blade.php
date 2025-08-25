@@ -233,6 +233,7 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 <script>
+    
     let swiperInstance = null;
     function initializeSwiper() {
         if (swiperInstance) swiperInstance.destroy(true, true);
