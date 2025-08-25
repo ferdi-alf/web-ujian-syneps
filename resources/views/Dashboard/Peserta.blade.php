@@ -61,8 +61,6 @@
                 4 => 'Batch', // Filter by column index 5 (Batch)
             ]" :filterPlaceholder="'Semua'" />
     </div>
-
-
     <x-fragments.form-modal id="modal-add-peserta" title="Tambah Peserta Baru" action="{{ route('peserta.store') }}">
         @if ($activeBatch->isNotEmpty())
             <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">

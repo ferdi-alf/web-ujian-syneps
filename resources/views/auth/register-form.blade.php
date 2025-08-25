@@ -7,7 +7,6 @@
         <div class="max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden">
             <div class="">
                 <div class="p-8 flex flex-col justify-center">
-
                     <div class="w-full mx-auto">
                         <div class="w-full flex justify-start items-center space-x-1.5">
                             <img src="/images/logo.png" alt="syneps-logo" class="w-14 h-14">
@@ -22,10 +21,9 @@
 
                         <form class="space-y-4" method="POST" action="{{ route('registration.process', $token) }}">
                             @csrf
-                            <input type="email" value="{{ $peserta->email }}" disabled
-                                class="mt-1 hidden w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100 text-gray-500">
+
                             <div>
-                                <x-fragments.text-field id="nameOrEmail" name="name" type="text" label="Name"
+                                <x-fragments.text-field id="name" name="name" type="text" label="Name"
                                     placeholder="Masukan Name atau Email" :value="old('name')" :error="$errors->first('nameOrEmail')" required />
                                 <small>name digunakan untuk login selain email</small>
                             </div>

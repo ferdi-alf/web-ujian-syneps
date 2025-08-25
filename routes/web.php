@@ -20,7 +20,6 @@ use App\Http\Controllers\PembayaranController;
 use App\Http\Controllers\RegisterController;
 use App\Mail\MyTestEmail;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Http\Request;    
 use App\Http\Controllers\LandingController;
 use Illuminate\Support\Facades\Mail;
 
@@ -31,7 +30,7 @@ Route::post('/daftar', [LandingController::class, 'daftar'])->name('daftar.store
 
 Route::get('/testroute', function () {
     $name = "Funny Coder";
-    Mail::to('ferdialfianferdi.08@gmail.com')->send(new MyTestEmail($name));
+    Mail::to('test.08@gmail.com')->send(new MyTestEmail($name));
 });
 
 Route::middleware(['web', 'guest'])->group(function () {

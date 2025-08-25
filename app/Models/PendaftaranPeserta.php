@@ -23,7 +23,9 @@ class PendaftaranPeserta extends Model {
             'jumlah_cicilan',
             'tagihan_per_bulan',
             'bukti_pembayaran_dp',
+            'link_register',
             'created_at',
+
         ];
 
     public function batches()
