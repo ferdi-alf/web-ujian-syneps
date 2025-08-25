@@ -7,7 +7,7 @@
         <section class="relative bg-white">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 lg:pt-28 lg:pb-24">
                 <div class="grid md:grid-cols-2 gap-12 items-center">
-                    <div data-aos="fade-right">
+                    <div data-aos="fade-right" class="md:order-1 order-2">
                         <div
                             class="inline-flex items-center px-4 py-1 bg-gradient-to-r from-teal-300 via-emerald-300 to-emerald-400 rounded-full mb-5 border border-white shadow gap-2 hover:shadow-lg transition-shadow duration-300">
                             <img src="{{ asset('images/logo.png') }}" alt="Sydemy Logo" class="w-5 h-5">
@@ -38,65 +38,122 @@
                         </div>
                     </div>
 
-                    <div data-aos="fade-left" class="flex justify-center">
-                        <img src="{{ asset('images/hero.png') }}" alt="Syneps Academy Logo"
-                            class="w-full max-w-sm drop-shadow-lg border border-white rounded-xl">
+                    <div data-aos="fade-left" class="flex justify-center md:order-2 order-1">
+                        <img src="{{ asset('images/hero.png') }}" alt="Syneps Academy Logo" class="w-full max-w-sm drop-shadow-lg border border-white rounded-xl">
                     </div>
                 </div>
             </div>
         </section>
 
-        <section class="bg-white py-20">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="text-center mb-12" data-aos="fade-up">
-                    <h2 class="text-sm font-semibold tracking-wide text-emerald-500 uppercase">
+        <section class="bg-gray-50 py-20">
+            <div class="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
+
+                <div class="text-center mb-16" data-aos="fade-up">
+                    <span class="inline-block px-4 py-2 bg-gradient-to-r from-emerald-100 to-teal-100 text-emerald-600 text-sm font-semibold rounded-full mb-4 uppercase tracking-wider">
                         Program Unggulan
-                    </h2>
-                    <h3 class="mt-2 text-3xl sm:text-4xl font-extrabold text-gray-900">
-                        Kami Membantu Menemukan <br>
+                    </span>
+                    <h3 class="mt-4 text-4xl sm:text-5xl font-bold text-gray-900 leading-tight">
+                        Kami Membantu Menemukan
+                        <br class="hidden sm:block">
                         <span
-                            class="bg-gradient-to-r from-teal-300 via-emerald-300 to-emerald-400 bg-clip-text text-transparent">
-                            Passionmu di Bidang Digital
+                            class="bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 bg-clip-text text-transparent">
+                            Passion Digital Anda
                         </span>
                     </h3>
+                    <p class="mt-6 text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+                        Temukan dan kembangkan potensi digital Anda melalui program pembelajaran yang dirancang khusus untuk era modern
+                    </p>
                 </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
-                    <div class="bg-white rounded-xl overflow-hidden shadow-md border border-white hover:shadow-xl hover:scale-105 transition transform duration-300 ease-out"
+            
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-10">
+                    <div class="group bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl border border-gray-100 hover:border-emerald-200 transition-all duration-500 ease-out hover:-translate-y-2"
                         data-aos="fade-up" data-aos-delay="100">
-                        <img src="{{ asset('images/PBL.jpg') }}" alt="Project Based Learning"
-                            class="w-full h-52 object-cover">
-                        <div class="p-6">
-                            <h4 class="text-lg font-semibold text-gray-900 mb-2">Project Based Learning</h4>
-                            <p class="text-gray-600 text-sm leading-relaxed">
-                                Konsultasikan skill yang ingin kamu pelajari. Manfaatkan bimbingan untuk skripsi,
-                                penelitian,
-                                dan proyek teknologi lainnya.
+                        <div class="relative overflow-hidden">
+                            <img src="{{ asset('images/PBL.jpg') }}" alt="Project Based Learning"
+                                class="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-700 ease-out">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        </div>
+                        <div class="p-8">
+                            <div class="flex items-center mb-4">
+                                <div class="w-12 h-12 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-xl flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.78 0-2.678-2.153-1.415-3.414l5-5A2 2 0 009 9.172V5L8 4z"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            <h4 class="text-xl font-bold text-gray-900 mb-3 group-hover:text-emerald-600 transition-colors duration-300">
+                                Project Based Learning
+                            </h4>
+                            <p class="text-gray-600 text-base leading-relaxed mb-4">
+                                Konsultasikan skill yang ingin Anda pelajari. Manfaatkan bimbingan untuk skripsi, penelitian, dan proyek teknologi lainnya.
                             </p>
+                            <div class="flex items-center text-emerald-600 font-semibold text-sm group-hover:translate-x-2 transition-transform duration-300">
+                                Pelajari Lebih Lanjut
+                                <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                                </svg>
+                            </div>
                         </div>
                     </div>
+            
 
-                    <div class="bg-white rounded-xl overflow-hidden shadow-md border border-white hover:shadow-xl hover:scale-105 transition transform duration-300 ease-out"
+                    <div class="group bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl border border-gray-100 hover:border-emerald-200 transition-all duration-500 ease-out hover:-translate-y-2"
                         data-aos="fade-up" data-aos-delay="200">
-                        <img src="{{ asset('images/FSD.jpg') }}" alt="Fullstack Development"
-                            class="w-full h-52 object-cover">
-                        <div class="p-6">
-                            <h4 class="text-lg font-semibold text-gray-900 mb-2">Fullstack Development</h4>
-                            <p class="text-gray-600 text-sm leading-relaxed">
-                                Pelajari skill programming dari Front-End hingga Back-End untuk web dan mobile development.
+                        <div class="relative overflow-hidden">
+                            <img src="{{ asset('images/FSD.jpg') }}" alt="Fullstack Development"
+                                class="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-700 ease-out">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        </div>
+                        <div class="p-8">
+                            <div class="flex items-center mb-4">
+                                <div class="w-12 h-12 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-xl flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            <h4 class="text-xl font-bold text-gray-900 mb-3 group-hover:text-emerald-600 transition-colors duration-300">
+                                Fullstack Development
+                            </h4>
+                            <p class="text-gray-600 text-base leading-relaxed mb-4">
+                                Pelajari skill programming dari Front-End hingga Back-End untuk web dan mobile development dengan teknologi terkini.
                             </p>
+                            <div class="flex items-center text-emerald-600 font-semibold text-sm group-hover:translate-x-2 transition-transform duration-300">
+                                Pelajari Lebih Lanjut
+                                <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                                </svg>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="bg-white rounded-xl overflow-hidden shadow-md border border-white hover:shadow-xl hover:scale-105 transition transform duration-300 ease-out"
+                    <div class="group bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl border border-gray-100 hover:border-emerald-200 transition-all duration-500 ease-out hover:-translate-y-2"
                         data-aos="fade-up" data-aos-delay="300">
-                        <img src="{{ asset('images/FL.jpg') }}" alt="Fundamental Learning" class="w-full h-52 object-cover">
-                        <div class="p-6">
-                            <h4 class="text-lg font-semibold text-gray-900 mb-2">Fundamental Learning</h4>
-                            <p class="text-gray-600 text-sm leading-relaxed">
-                                Kuasai dasar UI/UX dan Web Design sebelum melangkah ke tingkat advance dengan biaya
-                                terjangkau.
+                        <div class="relative overflow-hidden">
+                            <img src="{{ asset('images/FL.jpg') }}" alt="Fundamental Learning"
+                                class="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-700 ease-out">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        </div>
+                        <div class="p-8">
+                            <div class="flex items-center mb-4">
+                                <div class="w-12 h-12 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-xl flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            <h4 class="text-xl font-bold text-gray-900 mb-3 group-hover:text-emerald-600 transition-colors duration-300">
+                                Fundamental Learning
+                            </h4>
+                            <p class="text-gray-600 text-base leading-relaxed mb-4">
+                                Kuasai dasar UI/UX dan Web Design sebelum melangkah ke tingkat advance dengan biaya terjangkau.
                             </p>
+                            <div class="flex items-center text-emerald-600 font-semibold text-sm group-hover:translate-x-2 transition-transform duration-300">
+                                Pelajari Lebih Lanjut
+                                <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                                </svg>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -277,7 +334,7 @@
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous"></script>
 
     <style>
         .marquee-container {
