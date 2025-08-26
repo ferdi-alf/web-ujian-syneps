@@ -8,6 +8,7 @@ use App\Http\Controllers\ApprovalController;
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\BatchController;
 use App\Http\Controllers\ForumAlumniController;
+use App\Http\Controllers\LowonganController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UjianController;
 use App\Http\Controllers\UserController;
@@ -91,6 +92,10 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/', 'store')->name('store');
         Route::post('/{id}', 'balasan')->name('balasan');
         Route::delete('/{id}', 'delete')->name('delete');
+    });
+
+    Route::controller(LowonganController::class)->prefix('lowongan')->name('lowongan.')->group(function () {
+        Route::get('/', 'index')->name('index');
     });
 
   

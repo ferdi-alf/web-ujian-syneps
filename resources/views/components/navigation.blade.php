@@ -14,7 +14,7 @@
                         </path>
                     </svg>
                 </button>
-                <a href="https://flowbite.com" class="flex ms-2 md:me-24">
+                <a href="{{ url('/dashboard') }}" class="flex ms-2 md:me-24">
                     <img src="{{ asset('images/logo.png') }}" class="h-10 me-3 border border-teal-900 rounded-full"
                         alt="Logo" />
 
