@@ -93,6 +93,10 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/{id}', 'delete')->name('delete');
     });
 
+    Route::controller(LowonganController::class)->prefix('lowongan')->name('lowongan.')->group(function () {
+        Route::get('/', 'index')->name('index');
+    });
+
   
     Route::controller(NilaiController::class)->prefix('nilai')->name('nilai.')->group(function () {
         Route::get('/', 'index')->name('index');
