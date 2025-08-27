@@ -1,28 +1,28 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\LeaderboardController;
-use App\Http\Controllers\AdminResetController;
-use App\Http\Controllers\ApprovalController;
-use App\Http\Controllers\AuthenticationController;
-use App\Http\Controllers\BatchController;
-use App\Http\Controllers\ForumAlumniController;
-use App\Http\Controllers\LowonganController;
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\UjianController;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\ManajemenUjianController;
-use App\Http\Controllers\NilaiController;
-use App\Http\Controllers\TambahUjianController;
-use App\Http\Controllers\PesertaController;
-use App\Http\Controllers\KelasController;
-use App\Http\Controllers\PembayaranController;
-use App\Http\Controllers\RegisterController;
 use App\Mail\MyTestEmail;
 use Illuminate\Support\Facades\Auth;
-use App\Http\Controllers\LandingController;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\BatchController;
+use App\Http\Controllers\KelasController;
+use App\Http\Controllers\NilaiController;
+use App\Http\Controllers\UjianController;
+use App\Http\Controllers\LandingController;
+use App\Http\Controllers\PesertaController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ApprovalController;
+use App\Http\Controllers\LowonganController;
+use App\Http\Controllers\RegisterController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\AdminResetController;
+use App\Http\Controllers\PembayaranController;
+use App\Http\Controllers\ForumAlumniController;
+use App\Http\Controllers\LeaderboardController;
+use App\Http\Controllers\TambahUjianController;
+use App\Http\Controllers\AuthenticationController;
+use App\Http\Controllers\ManajemenUjianController;
 
 //fatih - LANDING PAGE INTEGRATION ACTIVATED
 Route::get('/', [LandingController::class, 'index'])->name('index');
@@ -96,8 +96,13 @@ Route::middleware(['auth'])->group(function () {
 
     Route::controller(LowonganController::class)->prefix('lowongan')->name('lowongan.')->group(function () {
         Route::get('/', 'index')->name('index');
+        Route::get('/{lowongan}', 'show')->name('show');
+        Route::post('/', 'store')->name('store');
+        Route::put('/{lowongan}', 'update')->name('update');
+        Route::delete('/{lowongan}', 'destroy')->name('destroy');
     });
 
+    Route::post('lowongan/{lowongan}/lamar', [LamaranController::class, 'store'])->name('lamaran.store');
   
     Route::controller(NilaiController::class)->prefix('nilai')->name('nilai.')->group(function () {
         Route::get('/', 'index')->name('index');
