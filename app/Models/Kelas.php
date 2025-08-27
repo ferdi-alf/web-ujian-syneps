@@ -87,32 +87,32 @@ class Kelas extends Model {
         return $this->hasMany(SiswaDetail::class, 'kelas_id');
     }
 
-public function getFormattedKelasAttribute() 
-{
-    $result = $this->nama;
-    
-    $details = [];
-    
-    if (!empty($this->type)) {
-        $details[] = ucfirst($this->type);
-    }
-    
-    if (!empty($this->durasi_belajar)) {
-        $durasi = $this->durasi_belajar . ' bulan';
+    public function getFormattedKelasAttribute() 
+    {
+        $result = $this->nama;
         
-        if (!empty($this->waktu_magang) && $this->waktu_magang > 0) {
-            $durasi .= ' + ' . $this->waktu_magang . ' bulan magang';
+        $details = [];
+        
+        if (!empty($this->type)) {
+            $details[] = ucfirst($this->type);
         }
         
-        $details[] = $durasi;
+        if (!empty($this->durasi_belajar)) {
+            $durasi = $this->durasi_belajar . ' bulan';
+            
+            if (!empty($this->waktu_magang) && $this->waktu_magang > 0) {
+                $durasi .= ' + ' . $this->waktu_magang . ' bulan magang';
+            }
+            
+            $details[] = $durasi;
+        }
+        
+        if (!empty($details)) {
+            $result .= '<br><small class="text-muted">(' . implode(', ', $details) . ')</small>';
+        }
+        
+        return $result;
     }
-    
-    if (!empty($details)) {
-        $result .= '<br><small class="text-muted">(' . implode(', ', $details) . ')</small>';
-    }
-    
-    return $result;
-}
 
 
     public function pengajarDetails(): BelongsToMany

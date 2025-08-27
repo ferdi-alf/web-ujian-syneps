@@ -53,7 +53,7 @@ Route::middleware(['web', 'guest'])->group(function () {
         });
 
 
-    // jangan di kucak login
+   
     Route::controller(AuthenticationController::class)->prefix('login')->name('login.')->group(function () {
         Route::get('/', function () {
             return view('auth.login');

@@ -43,19 +43,19 @@
 </head>
 
 <body class="bg-[#FDFDFC] text-gray-800 antialiased">
-    @if(empty($hideNavFooter))
+    @if (empty($hideNavFooter))
         <x-landing.navbar />
     @endif
 
     <main>
-        @if(isset($content))
+        @if (isset($content))
             {!! $content !!}
         @else
             @yield('content')
         @endif
     </main>
 
-    @if(empty($hideNavFooter))
+    @if (empty($hideNavFooter))
         <x-landing.footer />
     @endif
 
