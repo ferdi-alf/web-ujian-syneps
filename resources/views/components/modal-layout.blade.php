@@ -41,7 +41,7 @@
                 @endif
             </div>
 
-            <div class="p-4 md:p-5">
+            <div class="p-4 md:p-5 max-h-[70vh] overflow-y-auto">
                 {{ $slot }}
             </div>
 

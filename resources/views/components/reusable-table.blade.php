@@ -67,26 +67,39 @@
             <tbody id="table-body-{{ $uniqueTableId }}">
                 @foreach ($data as $index => $row)
                     <tr class="bg-white border-b table-row" data-index="{{ $index }}">
-                        @foreach ($columns as $columnIndex => $column)
-                            <td class="px-6 py-4" data-column="{{ $columnIndex }}">
-                                @php
-                                    $content = $column($row, $index);
-                                @endphp
-                                @if ($truncate)
-                                    <div class="truncate-text">
-                                        {!! $content !!}
-                                    </div>
-                                @else
-                                    <div class="max-lines-2">
-                                        {!! $content !!}
-                                    </div>
+                        @if (!empty($columns))
+                            @foreach ($columns as $columnIndex => $column)
+                                <td class="px-6 py-4" data-column="{{ $columnIndex }}">
+                                    @php
+                                        $content = $column($row, $index);
+                                    @endphp
+                                    @if ($truncate)
+                                        <div class="truncate-text">
+                                            {!! $content !!}
+                                        </div>
+                                    @else
+                                        <div class="max-lines-2">
+                                            {!! $content !!}
+                                        </div>
+                                    @endif
+                                </td>
+                            @endforeach
+                        @else
+                            @foreach ($row as $key => $value)
+                                @if (!in_array($key, ['id', 'action']))
+                                    <td class="px-6 py-4" data-column="{{ $key }}">
+                                        {!! $value !!}
+                                    </td>
                                 @endif
-                            </td>
-                        @endforeach
+                            @endforeach
+                        @endif
+
                         @if ($showActions)
                             <td class="px-6 py-4">
-                                @if ($actionButtons)
+                                @if (!empty($actionButtons))
                                     {!! $actionButtons($row) !!}
+                                @elseif (isset($row['action']))
+                                    {!! $row['action'] !!}
                                 @endif
                             </td>
                         @endif
