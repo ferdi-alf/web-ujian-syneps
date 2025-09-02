@@ -294,6 +294,8 @@
             });
         @endif
     </script>
+    
+    @stack('scripts')
     @stack('modals')
 </body>
 

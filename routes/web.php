@@ -90,8 +90,13 @@ Route::middleware(['auth'])->group(function () {
     Route::controller(ForumAlumniController::class)->prefix('forum-alumni')->name('forum-alumni.')->group(function () {
         Route::get('/', 'index')->name('index');
         Route::post('/', 'store')->name('store');
-        Route::post('/{id}', 'balasan')->name('balasan');
-        Route::delete('/{id}', 'delete')->name('delete');
+        Route::get('/post/{postId}', 'getPost')->name('post.get');
+        Route::get('/post/{postId}/comments', 'getComments')->name('post.comments');
+        Route::post('/{postId}/like', 'toggleLike')->name('like');
+        Route::post('/{postId}/comment', 'addComment')->name('comment');
+        Route::post('/comment/{commentId}/like', 'toggleCommentLike')->name('comment.like');
+        Route::delete('/post/{postId}', 'destroy')->name('post.delete');
+        Route::delete('/comment/{commentId}', 'deleteComment')->name('comment.delete');
     });
 
     Route::controller(LowonganController::class)->prefix('lowongan')->name('lowongan.')->group(function () {
