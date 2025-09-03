@@ -24,6 +24,14 @@ class Kelas extends Model {
         return $this->type ? ucfirst($this->type) : '-';
     }
 
+    public function getNamaAttribute($value)
+    {
+        if (isset($this->attributes['type']) && !empty($this->attributes['type'])) {
+            return $value . ' - ' . $this->attributes['type'];
+        }
+        return $value;
+    }
+
     public function getFormattedDurationAttribute()
     {
         $result = '';
@@ -80,6 +88,11 @@ class Kelas extends Model {
     public function getFormattedDpAttribute()
     {
         return 'Rp ' . number_format($this->total_dp, 0, ',', '.');
+    }
+
+    public function materis()
+    {
+        return $this->hasMany(Materi::class);
     }
 
     public function siswaDetails(): HasMany

@@ -18,6 +18,11 @@ class Batches extends Model
         'kelas_id',
     ];
 
+      public function materis()
+    {
+        return $this->hasMany(Materi::class);
+    }
+
     /**
      * Relasi ke siswa detail
      */

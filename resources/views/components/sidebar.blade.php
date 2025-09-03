@@ -78,6 +78,16 @@
                     </x-fragments.sidebar-item>
                 </x-sidebar-dropdown>
             @endif
+            <x-fragments.sidebar-item route="materi.index" icon="book-open-reader" colors="emerald">
+                @switch(Auth::user()->role)
+                    @case('siswa')
+                        Materi
+                    @break
+
+                    @default
+                        Modul Materi
+                @endswitch
+            </x-fragments.sidebar-item>
             @if (Auth::user()->role === 'siswa')
                 <x-fragments.sidebar-item route="ujian.index" icon="book" colors="emerald">
                     Ujian</x-fragments.sidebar-item>
@@ -91,13 +101,11 @@
             </x-fragments.sidebar-item>
             @if (
                 (Auth::user()->role === 'siswa' && Auth::user()->siswaDetail && Auth::user()->siswaDetail->status === 'alumni') ||
-                Auth::user()->role === 'admin' || Auth::user()->role === 'pengajar')
-                    <x-sidebar-dropdown id="alumni" title="Alumni" icon="fa-solid fa-users" routes="forum-alumni" color="emerald">
-
-                    <x-fragments.sidebar-item route="forum-alumni.index" icon="fa-solid fa-comments" colors="emerald">
-                        Forum
-                    </x-fragments.sidebar-item>
-                </x-sidebar-dropdown>
+                    Auth::user()->role === 'admin' ||
+                    Auth::user()->role === 'pengajar')
+                <x-fragments.sidebar-item route="forum-alumni.index" icon="fa-solid fa-comments" colors="emerald">
+                    Forum Alumni
+                </x-fragments.sidebar-item>
             @endif
 
         </ul>

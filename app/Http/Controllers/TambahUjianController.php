@@ -22,15 +22,56 @@ class TambahUjianController extends Controller
         $kelas = collect();
 
         if ($user->role === 'admin') {
-            $kelas = Kelas::select('id', 'nama')->get();
+            $kelas = Kelas::select('id', 'nama', 'type')->get();
         } elseif ($user->role === 'pengajar') {
             $pengajarDetail = $user->pengajarDetail;
             $kelasIds = $pengajarDetail ? $pengajarDetail->kelas()->pluck('kelas.id')->toArray() : [];
-            $kelas = Kelas::select('id', 'nama')->whereIn('id', $kelasIds)->get();
+            $kelas = Kelas::select('id', 'nama', 'type')->whereIn('id', $kelasIds)->get();
         }
+
+        
 
         return view('Dashboard.Tambah-Ujian', compact('kelas'));
     }
+
+    public function checkBatchActive($kelasId)
+{
+    try {
+        $kelas = Kelas::find($kelasId);
+        
+        if (!$kelas) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kelas tidak ditemukan'
+            ]);
+        }
+
+        $activeBatch = Batches::where('status', 'active')->where('kelas_id', $kelasId)->first();
+
+        if ($activeBatch) {
+            return response()->json([
+                'success' => true,
+                'hasActiveBatch' => true,
+                'message' => "Terdapat \"{$activeBatch->nama}\" yang active untuk kelas {$kelas->nama}",
+                'batchName' => $activeBatch->nama,
+                'kelasName' => $kelas->nama
+            ]);
+        } else {
+            return response()->json([
+                'success' => true,
+                'hasActiveBatch' => false,
+                'message' => "Tidak ada batch yang active untuk kelas {$kelas->nama}",
+                'kelasName' => $kelas->nama
+            ]);
+        }
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+        ]);
+    }
+}
 
     public function store(Request $request) {
         Log::info('📝 Memulai proses penyimpanan ujian', [
