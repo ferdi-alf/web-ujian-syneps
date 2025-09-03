@@ -55,9 +55,9 @@
     <!-- Header -->
     <div class="bg-white rounded-lg shadow-sm p-6 mb-6 border border-gray-100">
         <h1 class="text-2xl font-bold text-gray-800 mb-2">Forum Alumni</h1>
-        <p class="text-gray-600">Berbagi informasi dan diskusi dengan sesama administrator</p>
+        <p class="text-gray-600">Berbagi cerita dan pengalaman dengan sesama alumni</p>
     </div>
-
+    
     <!-- Success Notification -->
     @if (session('success'))
         <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4 flex items-center">
@@ -74,7 +74,7 @@
             <div class="flex-1">
                 <button onclick="openPostModal()" 
                         class="w-full text-left p-4 bg-gray-50 rounded-full text-gray-500 hover:bg-gray-100 transition duration-200">
-                    Buat pengumuman untuk alumni...
+                    Bagikan cerita atau pencapaianmu...
                 </button>
             </div>
         </div>
@@ -94,20 +94,15 @@
                                 <h3 class="font-semibold text-gray-900">
                                     {{ $post->user->nama_lengkap ?? $post->user->name }}
                                 </h3>
-                                <div class="flex items-center space-x-2">
-                                    <p class="text-sm text-gray-500">{{ $post->created_at->diffForHumans() }}</p>
-                                    <span class="px-2 py-1 text-xs rounded-full 
-                                        {{ $post->user->role === 'admin' ? 'bg-red-100 text-red-800' : 
-                                           ($post->user->role === 'pengajar' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800') }}">
-                                        {{ ucfirst($post->user->role) }}
-                                    </span>
-                                </div>
+                                <p class="text-sm text-gray-500">{{ $post->created_at->diffForHumans() }}</p>
                             </div>
                         </div>
-                        <button onclick="deletePost({{ $post->id }})" 
-                                class="text-gray-400 hover:text-red-500 transition duration-200">
-                            <i class="fas fa-trash text-sm"></i>
-                        </button>
+                        @if($post->user_id === auth()->id() || auth()->user()->role === 'admin')
+                            <button onclick="deletePost({{ $post->id }})" 
+                                    class="text-gray-400 hover:text-red-500 transition duration-200">
+                                <i class="fas fa-trash text-sm"></i>
+                            </button>
+                        @endif
                     </div>
                 </div>
 
@@ -195,7 +190,7 @@
             <div class="bg-white rounded-lg shadow-sm p-12 text-center">
                 <i class="fas fa-comments text-4xl text-gray-300 mb-4"></i>
                 <h3 class="text-lg font-medium text-gray-900 mb-2">Belum ada postingan</h3>
-                <p class="text-gray-500">Mulai percakapan dengan membuat postingan pertama!</p>
+                <p class="text-gray-500">Jadilah yang pertama berbagi cerita di forum ini!</p>
             </div>
         @endforelse
     </div>
@@ -239,7 +234,7 @@
                     <!-- Post Content -->
                     <textarea name="content" id="postContent" rows="6" 
                               class="w-full p-3 border-0 resize-none focus:outline-none text-sm placeholder-gray-500" 
-                              placeholder="Tulis pengumuman atau informasi..." required></textarea>
+                              placeholder="Tulis cerita atau pencapaianmu..." required></textarea>
 
                     <!-- Media Preview -->
                     <div id="mediaPreview" class="hidden mt-4">
@@ -371,17 +366,116 @@
 
 @push('styles')
 <style>
+/* Instagram-style Forum Styling */
 .post-card {
-    transition: transform 0.2s ease;
+    transition: all 0.2s ease;
+    border: 1px solid #e2e8f0;
 }
 .post-card:hover {
     transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
-.like-btn.liked {
-    color: #3b82f6 !important;
+
+/* Like button styling (Instagram red heart) */
+.like-btn {
+    transition: all 0.2s ease;
 }
-.like-btn.liked i {
-    color: #3b82f6;
+.like-btn:hover {
+    transform: scale(1.1);
+}
+.like-btn.text-red-500 i {
+    animation: likeAnimation 0.3s ease;
+}
+
+@keyframes likeAnimation {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.3); }
+    100% { transform: scale(1); }
+}
+
+/* Comment section styling */
+.comments-section {
+    background-color: #fafafa;
+}
+.comment-item, .reply-item {
+    transition: background-color 0.2s ease;
+}
+.comment-item:hover, .reply-item:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+    border-radius: 8px;
+    padding: 8px;
+    margin: -8px;
+}
+
+/* Input styling */
+input[type="text"], textarea {
+    border: none !important;
+    outline: none !important;
+    background: transparent !important;
+}
+input[type="text"]:focus, textarea:focus {
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* Avatar styling */
+img[alt="Avatar"] {
+    object-fit: cover;
+    border: 1px solid #e2e8f0;
+}
+
+/* Media hover effects */
+.post-card img[alt="Post Image"] {
+    transition: transform 0.3s ease;
+}
+.post-card img[alt="Post Image"]:hover {
+    transform: scale(1.02);
+}
+
+/* Button hover effects */
+button {
+    transition: all 0.2s ease;
+}
+button:hover {
+    transform: translateY(-1px);
+}
+
+/* Notification styling */
+.notification {
+    backdrop-filter: blur(10px);
+}
+
+/* Reply form styling */
+.reply-form {
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 8px;
+    padding: 8px;
+}
+
+/* Scrollbar styling */
+.comments-list::-webkit-scrollbar {
+    width: 4px;
+}
+.comments-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 2px;
+}
+.comments-list::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 2px;
+}
+.comments-list::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Create post section */
+.create-post-btn {
+    background: linear-gradient(45deg, #f093fb 0%, #f5576c 50%, #4facfe 100%);
+    transition: all 0.3s ease;
+}
+.create-post-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 </style>
 @endpush
