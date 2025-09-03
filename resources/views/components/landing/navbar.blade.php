@@ -95,12 +95,12 @@
                         </div>
                     </div>
 
-                    <a href="#"
+                    <a href="{{ route('online-class') }}"
                         class="text-gray-700 hover:text-teal-500 px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 hover:bg-teal-50">
                         Online Class
                     </a>
 
-                    <a href="#"
+                    <a href="{{ route('project-based') }}"
                         class="text-gray-700 hover:text-teal-500 px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 hover:bg-teal-50">
                         Project Based
                     </a>
@@ -224,7 +224,7 @@
                 </div>
             </div>
 
-            <a href="#"
+            <a href="{{ route('online-class') }}"
                 class="flex items-center px-4 py-3 text-gray-700 hover:text-teal-500 hover:bg-teal-50 rounded-lg transition-all duration-200">
                 <svg class="w-4 h-4 mr-2 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -232,7 +232,7 @@
                 </svg>
                 Online Class
             </a>
-            <a href="#"
+            <a href="{{ route('project-based') }}"
                 class="flex items-center px-4 py-3 text-gray-700 hover:text-teal-500 hover:bg-teal-50 rounded-lg transition-all duration-200">
                 <svg class="w-4 h-4 mr-2 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

@@ -29,6 +29,10 @@ Route::get('/', [LandingController::class, 'index'])->name('index');
 Route::get('/kelas/{id}', [LandingController::class, 'kelasDetail'])->name('kelas.detail');
 Route::post('/daftar', [LandingController::class, 'daftar'])->name('daftar.store');
 
+// Simple info pages
+Route::view('/project-based', 'project-based')->name('project-based');
+Route::view('/online-class', 'online-class')->name('online-class');
+
 Route::get('/testroute', function () {
     $name = "Funny Coder";
     Mail::to('test.08@gmail.com')->send(new MyTestEmail($name));
