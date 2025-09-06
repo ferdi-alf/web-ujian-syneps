@@ -51,11 +51,27 @@
 }
 </style>
 
-    <div class="max-w-4xl mx-auto p-6">
+    <div class="max-w-4xl mx-auto p-6 pb-24">
         <!-- Header -->
         <div class="bg-white rounded-lg shadow-sm p-6 mb-6 border border-gray-100">
-            <h1 class="text-2xl font-bold text-gray-800 mb-2">Forum Alumni</h1>
-            <p class="text-gray-600">Berbagi informasi dan diskusi dengan sesama administrator</p>
+            <h1 class="text-2xl font-bold text-gray-800 mb-2">
+                @if(auth()->user()->role === 'admin')
+                    Forum Alumni
+                @elseif(auth()->user()->role === 'pengajar')
+                    Forum Pengajar
+                @else
+                    Forum Alumni
+                @endif
+            </h1>
+            <p class="text-gray-600">
+                @if(auth()->user()->role === 'admin')
+                    Berbagi informasi dan diskusi dengan sesama administrator
+                @elseif(auth()->user()->role === 'pengajar')
+                    Berbagi informasi dan diskusi dengan sesama pengajar
+                @else
+                    Berbagi cerita dan pengalaman dengan sesama alumni
+                @endif
+            </p>
         </div>
 
     <!-- Success Notification -->
@@ -66,156 +82,27 @@
         </div>
     @endif
 
-        <!-- Create Post Section -->
-        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
-            <div class="flex items-start space-x-4">
-                <img src="{{ asset('images/avatar/' . Auth::user()->avatar) }}" alt="Avatar"
-                    class="w-10 h-10 rounded-full border border-gray-200">
-                <div class="flex-1">
-                    <button onclick="openPostModal()"
-                        class="w-full text-left p-4 bg-gray-50 rounded-full text-gray-500 hover:bg-gray-100 transition duration-200">
-                        Buat pengumuman untuk alumni...
-                    </button>
-                </div>
-            </div>
-        </div>
 
         <!-- Posts Feed -->
         <div id="posts-container">
-            @forelse ($posts as $post)
-                <div class="bg-white rounded-lg shadow-sm mb-6 post-card" data-post-id="{{ $post->id }}">
-                    <!-- Post Header -->
-                    <div class="p-6 pb-4">
-                        <div class="flex items-start justify-between">
-                            <div class="flex items-center space-x-3">
-                                <img src="{{ asset('images/avatar/' . $post->user->avatar) }}" alt="Avatar"
-                                    class="w-12 h-12 rounded-full border border-gray-200">
-                                <div>
-                                    <h3 class="font-semibold text-gray-900">
-                                        {{ $post->user->nama_lengkap ?? $post->user->name }}
-                                    </h3>
-                                    <div class="flex items-center space-x-2">
-                                        <p class="text-sm text-gray-500">{{ $post->created_at->diffForHumans() }}</p>
-                                        <span
-                                            class="px-2 py-1 text-xs rounded-full 
-                                        {{ $post->user->role === 'admin'
-                                            ? 'bg-red-100 text-red-800'
-                                            : ($post->user->role === 'pengajar'
-                                                ? 'bg-blue-100 text-blue-800'
-                                                : 'bg-green-100 text-green-800') }}">
-                                            {{ ucfirst($post->user->role) }}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                            @if (Auth::user()->role === 'admin')
-                                <button onclick="deletePost({{ $post->id }})"
-                                    class="text-gray-400 hover:text-red-500 transition duration-200">
-                                    <i class="fas fa-trash text-sm"></i>
-                                </button>
-                            @endif
-                        </div>
-                    </div>
-
-                    <!-- Post Content -->
-                    <div class="px-6 pb-4">
-                        <p class="text-gray-800 leading-relaxed">{{ $post->content }}</p>
-                    </div>
-
-                    <!-- Post Media -->
-                    @if ($post->media_path)
-                        <div class="px-6 pb-4">
-                            @if ($post->media_type === 'image')
-                                <div class="relative overflow-hidden rounded-lg bg-gray-100 max-w-lg mx-auto cursor-pointer"
-                                    onclick="openPostDetailModal({{ $post->id }})">
-                                    <img src="{{ asset('storage/' . $post->media_path) }}" alt="Post Image"
-                                        class="w-full h-auto max-h-96 object-contain hover:scale-105 transition-transform duration-200">
-                                </div>
-                            @elseif($post->media_type === 'video')
-                                <div class="relative overflow-hidden rounded-lg bg-gray-100 max-w-lg mx-auto">
-                                    <video controls class="w-full h-auto max-h-96 rounded-lg">
-                                        <source src="{{ asset('storage/' . $post->media_path) }}" type="video/mp4">
-                                        Your browser does not support the video tag.
-                                    </video>
-                                </div>
-                            @endif
-                        </div>
-                    @endif
-
-                    <!-- Post Actions -->
-                    <div class="px-6 py-4 border-t border-gray-100">
-                        <div class="flex items-center space-x-6 mb-4">
-                            <button onclick="toggleLike({{ $post->id }})"
-                                class="like-btn flex items-center space-x-2 transition duration-200 {{ $post->isLikedBy(auth()->id()) ? 'text-red-500' : 'text-gray-600' }}">
-                                <i class="{{ $post->isLikedBy(auth()->id()) ? 'fas' : 'far' }} fa-heart text-2xl"></i>
-                            </button>
-                            <button onclick="openCommentModal({{ $post->id }})"
-                                class="flex items-center space-x-2 transition duration-200 text-gray-600 hover:text-gray-800">
-                                <i class="far fa-comment text-2xl"></i>
-                            </button>
-                            <button onclick="sharePost({{ $post->id }})"
-                                class="flex items-center space-x-2 transition duration-200 text-gray-600 hover:text-gray-800">
-                                <i class="far fa-paper-plane text-2xl"></i>
-                            </button>
-                        </div>
-
-                        <div class="text-sm">
-                            <div class="likes-count font-semibold mb-1">{{ $post->likes_count }} suka</div>
-                            @if ($post->content)
-                                <div class="mb-2">
-                                    <span class="font-semibold">{{ $post->user->nama_lengkap ?? $post->user->name }}</span>
-                                    <span class="ml-1">{{ $post->content }}</span>
-                                </div>
-                            @endif
-                            <button onclick="openCommentModal({{ $post->id }})"
-                                class="comments-count text-gray-500 hover:text-gray-700 mb-2">
-                                Lihat semua {{ $post->comments_count }} komentar
-                            </button>
-                            <div class="text-xs text-gray-500">{{ $post->created_at->diffForHumans() }}</div>
-                        </div>
-                    </div>
-
-                    <!-- Comments Section -->
-                    <div id="comments-{{ $post->id }}" class="comments-section hidden border-t border-gray-100">
-                        <!-- Add Comment Form -->
-                        <div class="px-6 py-3 border-b border-gray-100">
-                            <form onsubmit="addComment(event, {{ $post->id }})" class="flex items-center space-x-3">
-                                <img src="{{ asset('images/avatar/' . Auth::user()->avatar) }}" alt="Avatar"
-                                    class="w-8 h-8 rounded-full">
-                                <input type="text" name="content" placeholder="Tambahkan komentar..."
-                                    class="flex-1 py-2 px-0 border-none focus:outline-none text-sm" required>
-                                <button type="submit" class="text-blue-500 font-semibold text-sm hover:text-blue-600">
-                                    Kirim
-                                </button>
-                            </form>
-                        </div>
-
-                        <!-- Comments List -->
-                        <div class="comments-list px-6 pb-4 max-h-96 overflow-y-auto">
-                            @foreach ($post->comments as $comment)
-                                @include('components.comment', [
-                                    'comment' => $comment,
-                                    'post_id' => $post->id,
-                                ])
-                            @endforeach
-                        </div>
-                    </div>
-                </div>
-            @empty
-                <div class="bg-white rounded-lg shadow-sm p-12 text-center">
-                    <i class="fas fa-comments text-4xl text-gray-300 mb-4"></i>
-                    <h3 class="text-lg font-medium text-gray-900 mb-2">Belum ada postingan</h3>
-                    <p class="text-gray-500">Mulai percakapan dengan membuat postingan pertama!</p>
-                </div>
-            @endforelse
+            @include('components.post-list', ['posts' => $posts])
         </div>
 
-        <!-- Pagination -->
-        @if ($posts->hasPages())
-            <div class="mt-8">
-                {{ $posts->links() }}
+        <!-- Loading Indicator -->
+        <div id="loading-indicator" class="hidden bg-white rounded-lg shadow-sm p-8 text-center mb-6">
+            <div class="flex flex-col items-center space-y-3">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                <p class="text-sm text-gray-500">Memuat postingan...</p>
             </div>
-        @endif
+        </div>
+
+        <!-- End of Posts Indicator -->
+        <div id="end-of-posts" class="hidden bg-white rounded-lg shadow-sm p-8 text-center mb-6">
+            <div class="flex flex-col items-center space-y-3">
+                <i class="fas fa-check-circle text-3xl text-green-500"></i>
+                <p class="text-sm text-gray-500">Anda telah melihat semua postingan</p>
+            </div>
+        </div>
     </div>
 
 <!-- Post Creation Modal -->
@@ -249,7 +136,7 @@
                         <!-- Post Content -->
                         <textarea name="content" id="postContent" rows="6"
                             class="w-full p-3 border-0 resize-none focus:outline-none text-sm placeholder-gray-500"
-                            placeholder="Tulis pengumuman atau informasi..." required></textarea>
+                            placeholder="@if(auth()->user()->role === 'admin')Tulis pengumuman atau informasi...@elseif(auth()->user()->role === 'pengajar')Bagikan tips atau motivasi untuk pengajar...@else Tulis cerita atau pencapaianmu...@endif" required></textarea>
 
                     <!-- Media Preview -->
                     <div id="mediaPreview" class="hidden mt-4">
@@ -364,19 +251,111 @@
 
                 <!-- Comments List -->
                 <div id="modalCommentsList" class="flex-1 overflow-y-auto px-4 py-2 bg-white">
-                    <!-- Comments will be loaded here -->
+                    <!-- Loading State -->
+                    <div id="commentsLoading" class="flex items-center justify-center h-40">
+                        <div class="flex flex-col items-center space-y-3">
+                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                            <p class="text-sm text-gray-500">Memuat komentar...</p>
+                        </div>
+                    </div>
+                    <!-- Comments content -->
+                    <div id="commentsContent" class="hidden">
+                        <!-- Comments will be loaded here -->
+                    </div>
                 </div>
 
                 <!-- Add Comment Form - Sticky bottom on mobile -->
                 <div class="px-4 py-3 border-t border-gray-100 bg-white sticky bottom-0 z-10">
                     <form id="modalCommentForm" class="flex items-center space-x-3">
                         <input type="hidden" id="modalPostId" value="">
+                        <!-- User Avatar -->
+                        <img src="{{ asset('images/avatar/' . Auth::user()->avatar) }}" alt="Avatar"
+                            class="w-8 h-8 rounded-full flex-shrink-0 border border-gray-200">
+                        <!-- Comment Input -->
                         <input type="text" id="modalCommentInput" placeholder="Tambahkan komentar..."
                             class="flex-1 py-3 px-4 bg-gray-50 rounded-full border-none focus:outline-none text-sm focus:bg-gray-100 transition-colors">
-                        <button type="submit" class="text-blue-500 font-semibold text-sm hover:text-blue-600 px-2">
+                        <!-- Submit Button -->
+                        <button type="submit" class="text-blue-500 font-semibold text-sm hover:text-blue-600 px-3 py-2 min-w-[60px]">
                             Kirim
                         </button>
                     </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Comment Drawer for Mobile -->
+    <div id="commentDrawer-overlay" onclick="handleCommentDrawerOverlay(event)"
+        class="fixed inset-0 bg-black/50 z-50 opacity-0 pointer-events-none transition-opacity duration-300">
+        <div id="commentDrawer-drawer"
+            class="fixed bottom-0 left-0 right-0 h-[90vh] bg-white rounded-t-2xl shadow-2xl transform translate-y-full transition-transform duration-300 ease-out flex flex-col"
+            onclick="event.stopPropagation()">
+
+            <!-- Drag Handle -->
+            <div class="flex justify-center pt-3 pb-2">
+                <div class="w-12 h-1.5 bg-gray-300 rounded-full"></div>
+            </div>
+
+            <!-- Drawer Header -->
+            <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <button onclick="closeCommentDrawer()" class="text-gray-900 hover:text-gray-700">
+                        <i class="fas fa-arrow-left text-lg"></i>
+                    </button>
+                    <span class="font-semibold text-base text-gray-900">Komentar</span>
+                </div>
+            </div>
+
+            <!-- Comments List -->
+            <div id="drawerCommentsList" class="flex-1 overflow-y-auto px-4 py-2">
+                <!-- Loading State -->
+                <div id="drawerCommentsLoading" class="flex items-center justify-center h-40">
+                    <div class="flex flex-col items-center space-y-3">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                        <p class="text-sm text-gray-500">Memuat komentar...</p>
+                    </div>
+                </div>
+                <!-- Comments content -->
+                <div id="drawerCommentsContent" class="hidden">
+                    <!-- Comments will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Comment Input - Fixed at Bottom -->
+            <div class="px-4 py-3 border-t border-gray-100 bg-white">
+                <form id="drawerCommentForm" class="flex items-center space-x-3">
+                    <input type="hidden" id="drawerPostId" value="">
+                    <!-- User Avatar -->
+                    <img src="{{ asset('images/avatar/' . Auth::user()->avatar) }}" alt="Avatar"
+                        class="w-8 h-8 rounded-full flex-shrink-0 border border-gray-200">
+                    <!-- Comment Input -->
+                    <input type="text" id="drawerCommentInput" placeholder="Tambahkan komentar..."
+                        class="flex-1 py-3 px-4 bg-gray-50 rounded-full border-none focus:outline-none text-sm focus:bg-gray-100 transition-colors">
+                    <!-- Submit Button -->
+                    <button type="submit" class="text-blue-500 font-semibold text-sm hover:text-blue-600 px-3 py-2 min-w-[60px]">
+                        Kirim
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+        <!-- Fixed Bottom Create Post Section -->
+        <div class="fixed bottom-4 bg-white rounded-lg shadow-lg border border-gray-200 p-6 z-30 md:z-50" style="width: calc(100% - 3rem); max-width: 1000px;">
+            <div class="flex items-start space-x-4">
+                <img src="{{ asset('images/avatar/' . Auth::user()->avatar) }}" alt="Avatar"
+                    class="w-10 h-10 rounded-full border border-gray-200">
+                <div class="flex-1">
+                    <button onclick="openPostModal()" 
+                        class="w-full text-left p-4 bg-gray-50 rounded-full text-gray-500 hover:bg-gray-100 transition duration-200 shadow-sm">
+                        @if(auth()->user()->role === 'admin')
+                            Buat pengumuman untuk alumni...
+                        @elseif(auth()->user()->role === 'pengajar')
+                            Bagikan tips atau motivasi untuk pengajar lain...
+                        @else
+                            Bagikan cerita atau pencapaianmu...
+                        @endif
+                    </button>
                 </div>
             </div>
         </div>
@@ -398,6 +377,72 @@
 
             .like-btn.liked i {
                 color: #3b82f6;
+            }
+            
+            /* Drawer specific styles */
+            #commentDrawer-drawer {
+                z-index: 60;
+            }
+            
+            #commentDrawer-overlay {
+                z-index: 55;
+            }
+            
+            /* Ensure drawer appears above other elements on mobile */
+            @media (max-width: 767px) {
+                #commentDrawer-drawer {
+                    z-index: 9999;
+                }
+                
+                #commentDrawer-overlay {
+                    z-index: 9998;
+                }
+            }
+            
+            /* User Profile Improvements */
+            .comment-container img[alt] {
+                transition: transform 0.2s ease;
+            }
+            
+            .comment-container:hover img[alt] {
+                transform: scale(1.05);
+            }
+            
+            .reply-button {
+                transition: all 0.2s ease;
+            }
+            
+            .reply-button:hover {
+                color: #3B82F6 !important;
+            }
+            
+            /* Comment input styling */
+            #drawerCommentForm img,
+            #modalCommentForm img {
+                transition: transform 0.2s ease;
+            }
+            
+            #drawerCommentForm:focus-within img,
+            #modalCommentForm:focus-within img {
+                transform: scale(1.1);
+            }
+            
+            /* Infinite scroll animations */
+            .post-card {
+                transition: opacity 0.5s ease, transform 0.5s ease;
+            }
+            
+            #loading-indicator {
+                transition: opacity 0.3s ease;
+            }
+            
+            #end-of-posts {
+                transition: opacity 0.5s ease;
+            }
+            
+            /* Smooth scroll behavior */
+            html {
+                scroll-behavior: smooth;
             }
         </style>
     @endpush
