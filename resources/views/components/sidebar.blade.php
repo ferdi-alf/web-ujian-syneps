@@ -93,12 +93,10 @@
                 (Auth::user()->role === 'siswa' && Auth::user()->siswaDetail && Auth::user()->siswaDetail->status === 'alumni') ||
 
                     Auth::user()->role === 'admin' || Auth::user()->role === 'pengajar')
-                    <x-sidebar-dropdown id="alumni" title="Alumni" icon="fa-solid fa-users" routes="forum-alumni" color="emerald">
                         
                     <x-fragments.sidebar-item route="forum-alumni.index" icon="fa-solid fa-comments" colors="emerald">
-                        Forum
+                        Forum Alumni
                     </x-fragments.sidebar-item>
-                </x-sidebar-dropdown>
             @endif
 
         </ul>

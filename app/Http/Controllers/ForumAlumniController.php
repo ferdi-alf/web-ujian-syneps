@@ -7,21 +7,33 @@ use App\Models\ForumPost;
 use App\Models\Comment;
 use App\Models\Like;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 
 class ForumAlumniController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $posts = ForumPost::with(['user', 'comments.user', 'likes'])
-                    ->orderBy('created_at', 'desc')
-                    ->paginate(10);
+            ->orderBy('created_at', 'desc')
+            ->paginate(5); // Show 5 posts per page for better performance
 
-        if (auth()->user()->role == 'admin') {
+        // Handle AJAX requests for infinite scroll
+        if ($request->ajax()) {
+            $postsHtml = view('components.post-list', compact('posts'))->render();
+
+            return response()->json([
+                'posts_html' => $postsHtml,
+                'has_more' => $posts->hasMorePages(),
+                'next_page' => $posts->currentPage() + 1
+            ]);
+        }
+
+        if (Auth::user()->role == 'admin') {
             return view('Dashboard.Forum-Alumni', compact('posts'));
-        } elseif (auth()->user()->role == 'pengajar') {
-            return view('Dashboard.Pengajar-Forum', compact('posts'));
+        } elseif (Auth::user()->role == 'pengajar') {
+            return view('Dashboard.Forum-Alumni', compact('posts'));
         } else {
-            return view('Dashboard.Alumni-Forum', compact('posts'));
+            return view('Dashboard.Forum-Alumni', compact('posts'));
         }
     }
 
@@ -38,7 +50,7 @@ class ForumAlumniController extends Controller
         if ($request->hasFile('media')) {
             $file = $request->file('media');
             $extension = $file->getClientOriginalExtension();
-            
+
             // Determine media type
             if (in_array(strtolower($extension), ['jpg', 'jpeg', 'png', 'gif'])) {
                 $mediaType = 'image';
@@ -50,8 +62,8 @@ class ForumAlumniController extends Controller
         }
 
         ForumPost::create([
-            'user_id' => auth()->id(),
-            'content' => $request->content,
+            'user_id' => Auth::id(),
+            'content' => $request->input('content'),
             'media_path' => $mediaPath,
             'media_type' => $mediaType,
         ]);
@@ -62,7 +74,7 @@ class ForumAlumniController extends Controller
     public function toggleLike(Request $request, $postId)
     {
         $post = ForumPost::findOrFail($postId);
-        $isLiked = $post->toggleLike(auth()->id());
+        $isLiked = $post->toggleLike(Auth::id());
 
         return response()->json([
             'liked' => $isLiked,
@@ -80,10 +92,10 @@ class ForumAlumniController extends Controller
         $post = ForumPost::findOrFail($postId);
 
         $comment = Comment::create([
-            'user_id' => auth()->id(),
+            'user_id' => Auth::id(),
             'post_id' => $postId,
-            'parent_id' => $request->parent_id,
-            'content' => $request->content
+            'parent_id' => $request->input('parent_id'),
+            'content' => $request->input('content')
         ]);
 
         $post->increment('comments_count');
@@ -100,9 +112,9 @@ class ForumAlumniController extends Controller
     public function destroy($postId)
     {
         $post = ForumPost::findOrFail($postId);
-        
+
         // Only allow deletion by post owner or admin
-        if ($post->user_id !== auth()->id() && auth()->user()->role !== 'admin') {
+        if ($post->user_id !== Auth::id() && Auth::user()->role !== 'admin') {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
@@ -119,9 +131,9 @@ class ForumAlumniController extends Controller
     public function deleteComment($commentId)
     {
         $comment = Comment::findOrFail($commentId);
-        
+
         // Only allow deletion by comment owner or admin
-        if ($comment->user_id !== auth()->id() && auth()->user()->role !== 'admin') {
+        if ($comment->user_id !== Auth::id() && Auth::user()->role !== 'admin') {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
@@ -135,12 +147,12 @@ class ForumAlumniController extends Controller
     public function getPost($postId)
     {
         $post = ForumPost::with(['user', 'likes'])
-                    ->withCount(['comments', 'likes'])
-                    ->findOrFail($postId);
-        
-        $post->is_liked = $post->likes()->where('user_id', auth()->id())->exists();
+            ->withCount(['comments', 'likes'])
+            ->findOrFail($postId);
+
+        $post->is_liked = $post->likes()->where('user_id', Auth::id())->exists();
         $post->created_at_human = $post->created_at->diffForHumans();
-        
+
         return response()->json([
             'post' => $post
         ]);
@@ -149,20 +161,20 @@ class ForumAlumniController extends Controller
     public function getComments($postId)
     {
         $post = ForumPost::findOrFail($postId);
-        
+
         $comments = Comment::with(['user', 'replies.user', 'likes'])
-                    ->withCount('likes')
-                    ->where('post_id', $postId)
-                    ->whereNull('parent_id')
-                    ->orderBy('created_at', 'desc')
-                    ->get();
+            ->withCount('likes')
+            ->where('post_id', $postId)
+            ->whereNull('parent_id')
+            ->orderBy('created_at', 'desc')
+            ->get();
 
         // Add is_liked status for each comment and reply
         $comments->each(function ($comment) {
-            $comment->is_liked = $comment->likes()->where('user_id', auth()->id())->exists();
+            $comment->is_liked = $comment->likes()->where('user_id', Auth::id())->exists();
             if ($comment->replies) {
                 $comment->replies->each(function ($reply) {
-                    $reply->is_liked = $reply->likes()->where('user_id', auth()->id())->exists();
+                    $reply->is_liked = $reply->likes()->where('user_id', Auth::id())->exists();
                 });
             }
         });
@@ -176,21 +188,21 @@ class ForumAlumniController extends Controller
     public function toggleCommentLike($commentId)
     {
         $comment = Comment::findOrFail($commentId);
-        
-        $existingLike = $comment->likes()->where('user_id', auth()->id())->first();
-        
+
+        $existingLike = $comment->likes()->where('user_id', Auth::id())->first();
+
         if ($existingLike) {
             $existingLike->delete();
             $isLiked = false;
         } else {
             $comment->likes()->create([
-                'user_id' => auth()->id()
+                'user_id' => Auth::id()
             ]);
             $isLiked = true;
         }
-        
+
         $likesCount = $comment->likes()->count();
-        
+
         return response()->json([
             'liked' => $isLiked,
             'likes_count' => $likesCount
