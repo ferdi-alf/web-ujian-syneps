@@ -1,5 +1,198 @@
 // Instagram-Style Forum JavaScript Functions
 
+// Infinite Scroll Variables
+let isLoading = false;
+let hasMorePosts = true;
+let currentPage = 1;
+let loadingTriggered = false;
+let totalLoadedPosts = 0;
+
+// Initialize infinite scroll
+function initInfiniteScroll() {
+    // Check if we have more pages from initial load
+    const postsContainer = document.getElementById('posts-container');
+    if (postsContainer && postsContainer.children.length > 0) {
+        hasMorePosts = true;
+        currentPage = 2; // Next page to load
+        totalLoadedPosts = postsContainer.querySelectorAll('.post-card').length;
+        console.log(`📄 Initial posts loaded: ${totalLoadedPosts}`);
+    }
+    
+    window.addEventListener('scroll', handleScroll);
+    console.log('✅ Infinite scroll initialized');
+}
+
+// Handle scroll events
+function handleScroll() {
+    if (isLoading || !hasMorePosts) return;
+    
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    const windowHeight = window.innerHeight;
+    const documentHeight = document.documentElement.scrollHeight;
+    
+    // Trigger loading when user is 300px from bottom
+    const scrollThreshold = 300;
+    const distanceFromBottom = documentHeight - (scrollTop + windowHeight);
+    
+    if (distanceFromBottom <= scrollThreshold && !loadingTriggered) {
+        loadingTriggered = true;
+        loadMorePosts();
+    }
+}
+
+// Load more posts via AJAX
+async function loadMorePosts() {
+    if (isLoading || !hasMorePosts) return;
+    
+    console.log(`🔄 Loading more posts - Page ${currentPage}`);
+    isLoading = true;
+    loadingTriggered = false;
+    
+    // Show loading indicator
+    const loadingIndicator = document.getElementById('loading-indicator');
+    if (loadingIndicator) {
+        loadingIndicator.classList.remove('hidden');
+    }
+    
+    try {
+        const response = await fetch(`/forum-alumni?page=${currentPage}`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        console.log('📦 Received data:', data);
+        
+        // Hide loading indicator
+        if (loadingIndicator) {
+            loadingIndicator.classList.add('hidden');
+        }
+        
+        if (data.posts_html && data.posts_html.trim() !== '') {
+            // Append new posts to container
+            const postsContainer = document.getElementById('posts-container');
+            if (postsContainer) {
+                // Create a temporary div to hold the new content
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = data.posts_html;
+                
+                // Append each new post with a smooth animation
+                const newPosts = tempDiv.querySelectorAll('.post-card');
+                newPosts.forEach((post, index) => {
+                    post.style.opacity = '0';
+                    post.style.transform = 'translateY(20px)';
+                    postsContainer.appendChild(post);
+                    
+                    // Animate in with delay
+                    setTimeout(() => {
+                        post.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                        post.style.opacity = '1';
+                        post.style.transform = 'translateY(0)';
+                    }, index * 100); // Stagger animation
+                });
+                
+                console.log(`✅ Added ${newPosts.length} new posts`);
+                totalLoadedPosts += newPosts.length;
+                console.log(`📈 Total posts loaded: ${totalLoadedPosts}`);
+            }
+            
+            // Update pagination info
+            currentPage++;
+            hasMorePosts = data.has_more;
+            
+            if (!hasMorePosts) {
+                showEndOfPosts();
+            }
+        } else {
+            hasMorePosts = false;
+            showEndOfPosts();
+        }
+        
+    } catch (error) {
+        console.error('❌ Error loading more posts:', error);
+        
+        // Hide loading indicator on error
+        if (loadingIndicator) {
+            loadingIndicator.classList.add('hidden');
+        }
+        
+        // Show error message
+        showErrorMessage('Gagal memuat postingan. Silakan coba scroll lagi.');
+    } finally {
+        isLoading = false;
+        // Reset trigger after a delay to prevent too frequent calls
+        setTimeout(() => {
+            loadingTriggered = false;
+        }, 1000);
+    }
+}
+
+// Show end of posts indicator
+function showEndOfPosts() {
+    const endIndicator = document.getElementById('end-of-posts');
+    if (endIndicator) {
+        endIndicator.classList.remove('hidden');
+        // Add fade-in animation
+        endIndicator.style.opacity = '0';
+        endIndicator.style.transition = 'opacity 0.5s ease';
+        setTimeout(() => {
+            endIndicator.style.opacity = '1';
+        }, 100);
+    }
+    console.log('📄 End of posts reached');
+}
+
+// Show error message
+function showErrorMessage(message) {
+    // Create error notification
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 flex items-center';
+    errorDiv.innerHTML = `
+        <i class="fas fa-exclamation-triangle mr-2"></i>
+        <span>${message}</span>
+        <button onclick="this.parentElement.remove()" class="ml-auto text-red-500 hover:text-red-700">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    
+    // Insert before posts container
+    const postsContainer = document.getElementById('posts-container');
+    if (postsContainer && postsContainer.parentNode) {
+        postsContainer.parentNode.insertBefore(errorDiv, postsContainer);
+        
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+            if (errorDiv.parentNode) {
+                errorDiv.remove();
+            }
+        }, 5000);
+    }
+}
+
+// Reset infinite scroll (useful after creating new posts)
+function resetInfiniteScroll() {
+    isLoading = false;
+    hasMorePosts = true;
+    currentPage = 2;
+    loadingTriggered = false;
+    
+    // Hide indicators
+    const loadingIndicator = document.getElementById('loading-indicator');
+    const endIndicator = document.getElementById('end-of-posts');
+    
+    if (loadingIndicator) loadingIndicator.classList.add('hidden');
+    if (endIndicator) endIndicator.classList.add('hidden');
+    
+    console.log('🔄 Infinite scroll reset');
+}
+
 // Post Modal Functions
 function openPostModal() {
     const modal = document.getElementById('postModal');
@@ -48,6 +241,11 @@ function handleSharePost(event) {
     
     // Submit form traditionally (not AJAX) since backend expects redirect
     form.submit();
+    
+    // Reset infinite scroll after form submission
+    setTimeout(() => {
+        resetInfiniteScroll();
+    }, 1000);
 }
 
 // Media Preview Functions
@@ -639,6 +837,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Instagram-style Comment Modal Functions
 async function openCommentModal(postId) {
+    console.log('=== Opening comment interface ===');
+    console.log('Post ID:', postId);
+    console.log('Screen width:', window.innerWidth);
+    
+    // Detect screen size and choose interface
+    if (window.innerWidth < 768) {
+        // Mobile: Use drawer
+        await openCommentDrawer(postId);
+    } else {
+        // Desktop: Use modal
+        await openCommentModalDesktop(postId);
+    }
+}
+
+// Desktop Modal Implementation
+async function openCommentModalDesktop(postId) {
     console.log('=== Opening comment modal ===');
     console.log('Post ID:', postId);
     console.log('Current URL:', window.location.pathname);
@@ -651,6 +865,32 @@ async function openCommentModal(postId) {
         return;
     }
     console.log('✅ Comment modal element found');
+    
+    // Show modal immediately with loading state
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+    
+    // Show loading state and hide comments content
+    const loadingElement = document.getElementById('commentsLoading');
+    const commentsContent = document.getElementById('commentsContent');
+    if (loadingElement) loadingElement.classList.remove('hidden');
+    if (commentsContent) commentsContent.classList.add('hidden');
+    
+    // Clear previous content
+    const modalCommentsList = document.getElementById('modalCommentsList');
+    if (modalCommentsList) {
+        modalCommentsList.innerHTML = `
+            <div id="commentsLoading" class="flex items-center justify-center h-40">
+                <div class="flex flex-col items-center space-y-3">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                    <p class="text-sm text-gray-500">Memuat komentar...</p>
+                </div>
+            </div>
+            <div id="commentsContent" class="hidden">
+                <!-- Comments will be loaded here -->
+            </div>
+        `;
+    }
     
     try {
         // Always use forum-alumni endpoint since all forums use the same controller
@@ -740,9 +980,11 @@ async function openCommentModal(postId) {
         // Load comments
         await loadModalComments(postId);
         
-        // Show modal
-        modal.classList.remove('hidden');
-        modal.style.display = 'flex';
+        // Hide loading and show comments content
+        const loadingElement = document.getElementById('commentsLoading');
+        const commentsContent = document.getElementById('commentsContent');
+        if (loadingElement) loadingElement.classList.add('hidden');
+        if (commentsContent) commentsContent.classList.remove('hidden');
         
     } catch (error) {
         console.error('Error opening comment modal:', error);
@@ -754,6 +996,15 @@ async function openCommentModal(postId) {
 }
 
 function closeCommentModal() {
+    // Close appropriate interface based on screen size
+    if (window.innerWidth < 768) {
+        closeCommentDrawer();
+    } else {
+        closeCommentModalDesktop();
+    }
+}
+
+function closeCommentModalDesktop() {
     const modal = document.getElementById('commentModal');
     if (modal) {
         modal.classList.add('hidden');
@@ -762,7 +1013,233 @@ function closeCommentModal() {
     
     // Clear comment input
     const commentInput = document.getElementById('modalCommentInput');
-    if (commentInput) commentInput.value = '';
+    if (commentInput) {
+        commentInput.value = '';
+        commentInput.placeholder = 'Tambahkan komentar...';
+        commentInput.removeAttribute('data-reply-to');
+        
+        // Remove reply indicator
+        const formContainer = commentInput.closest('form').parentElement;
+        const replyIndicator = formContainer.querySelector('.reply-indicator');
+        if (replyIndicator) {
+            replyIndicator.remove();
+        }
+    }
+}
+
+// Mobile Drawer Implementation
+async function openCommentDrawer(postId) {
+    console.log('=== Opening comment drawer ===');
+    console.log('Post ID:', postId);
+    
+    // Show drawer immediately with loading state
+    showCommentDrawer();
+    
+    try {
+        // Load post data and comments
+        await loadDrawerContent(postId);
+    } catch (error) {
+        console.error('Error opening comment drawer:', error);
+        alert(`Gagal membuka komentar: ${error.message}`);
+        closeCommentDrawer();
+    }
+}
+
+function showCommentDrawer() {
+    const overlay = document.getElementById('commentDrawer-overlay');
+    const drawer = document.getElementById('commentDrawer-drawer');
+    
+    if (!overlay || !drawer) {
+        console.error('Drawer elements not found');
+        return;
+    }
+    
+    // Show overlay
+    overlay.classList.remove('opacity-0', 'pointer-events-none');
+    overlay.classList.add('opacity-100');
+    
+    // Show drawer with animation
+    setTimeout(() => {
+        drawer.classList.remove('translate-y-full');
+        drawer.classList.add('translate-y-0');
+    }, 10);
+    
+    // Prevent body scroll
+    document.body.classList.add('overflow-hidden');
+}
+
+function closeCommentDrawer() {
+    const overlay = document.getElementById('commentDrawer-overlay');
+    const drawer = document.getElementById('commentDrawer-drawer');
+    
+    if (!overlay || !drawer) return;
+    
+    // Hide drawer
+    drawer.classList.remove('translate-y-0');
+    drawer.classList.add('translate-y-full');
+    
+    // Hide overlay after animation
+    setTimeout(() => {
+        overlay.classList.add('opacity-0', 'pointer-events-none');
+        overlay.classList.remove('opacity-100');
+    }, 300);
+    
+    // Restore body scroll
+    document.body.classList.remove('overflow-hidden');
+    
+    // Clear comment input
+    const commentInput = document.getElementById('drawerCommentInput');
+    if (commentInput) {
+        commentInput.value = '';
+        commentInput.placeholder = 'Tambahkan komentar...';
+        commentInput.removeAttribute('data-reply-to');
+        
+        // Remove reply indicator
+        const formContainer = commentInput.closest('form').parentElement;
+        const replyIndicator = formContainer.querySelector('.reply-indicator');
+        if (replyIndicator) {
+            replyIndicator.remove();
+        }
+    }
+}
+
+async function loadDrawerContent(postId) {
+    console.log('🔄 Loading drawer content for post:', postId);
+    
+    // Set post ID for form
+    const drawerPostId = document.getElementById('drawerPostId');
+    if (drawerPostId) drawerPostId.value = postId;
+    
+    // Load comments for drawer
+    await loadDrawerComments(postId);
+}
+
+async function loadDrawerComments(postId) {
+    console.log('🔄 Loading drawer comments for post:', postId);
+    
+    const loadingElement = document.getElementById('drawerCommentsLoading');
+    const commentsContent = document.getElementById('drawerCommentsContent');
+    
+    // Show loading state
+    if (loadingElement) loadingElement.classList.remove('hidden');
+    if (commentsContent) commentsContent.classList.add('hidden');
+    
+    try {
+        const response = await fetch(`/forum-alumni/post/${postId}/comments`, {
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        });
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
+        
+        const data = await response.json();
+        const comments = data.comments || data;
+        
+        if (!commentsContent) {
+            console.error('❌ Drawer comments content element not found!');
+            return;
+        }
+        
+        // Clear existing comments
+        commentsContent.innerHTML = '';
+        
+        if (!Array.isArray(comments) || comments.length === 0) {
+            commentsContent.innerHTML = '<div class="text-center text-gray-500 py-4">Belum ada komentar</div>';
+        } else {
+            // Add comments to drawer
+            comments.forEach((comment) => {
+                const commentElement = createCommentElement(comment);
+                commentsContent.appendChild(commentElement);
+            });
+        }
+        
+        // Hide loading and show content
+        if (loadingElement) loadingElement.classList.add('hidden');
+        if (commentsContent) commentsContent.classList.remove('hidden');
+        
+    } catch (error) {
+        console.error('❌ Error loading drawer comments:', error);
+        if (commentsContent) {
+            commentsContent.innerHTML = '<div class="text-center text-red-500 py-4">Gagal memuat komentar</div>';
+        }
+        
+        // Hide loading on error
+        if (loadingElement) loadingElement.classList.add('hidden');
+        if (commentsContent) commentsContent.classList.remove('hidden');
+    }
+}
+
+// Handle drawer overlay clicks
+function handleCommentDrawerOverlay(event) {
+    const drawer = document.getElementById('commentDrawer-drawer');
+    if (!drawer.contains(event.target)) {
+        closeCommentDrawer();
+    }
+}
+
+// Initialize drawer touch handling
+function initializeCommentDrawer() {
+    let startY = 0;
+    let currentY = 0;
+    const swipeThreshold = 100;
+    
+    const drawer = document.getElementById('commentDrawer-drawer');
+    if (!drawer) return;
+    
+    drawer.addEventListener('touchstart', (e) => {
+        startY = e.touches[0].clientY;
+    });
+    
+    drawer.addEventListener('touchmove', (e) => {
+        currentY = e.touches[0].clientY;
+        const deltaY = currentY - startY;
+        if (deltaY > 0) {
+            drawer.style.transform = `translateY(${deltaY}px)`;
+        }
+    });
+    
+    drawer.addEventListener('touchend', (e) => {
+        const deltaY = currentY - startY;
+        if (deltaY > swipeThreshold) {
+            closeCommentDrawer();
+        }
+        drawer.style.transform = '';
+    });
+}
+
+// Handle responsive changes
+function handleResponsiveCommentModal() {
+    // Check if any comment interface is currently open
+    const modal = document.getElementById('commentModal');
+    const overlay = document.getElementById('commentDrawer-overlay');
+    
+    let currentPostId = null;
+    let isOpen = false;
+    
+    // Check if modal is open
+    if (modal && !modal.classList.contains('hidden')) {
+        currentPostId = document.getElementById('modalPostId')?.value;
+        isOpen = true;
+        closeCommentModalDesktop();
+    }
+    
+    // Check if drawer is open
+    if (overlay && !overlay.classList.contains('pointer-events-none')) {
+        currentPostId = document.getElementById('drawerPostId')?.value;
+        isOpen = true;
+        closeCommentDrawer();
+    }
+    
+    // Reopen with appropriate interface if something was open
+    if (isOpen && currentPostId) {
+        setTimeout(() => {
+            openCommentModal(currentPostId);
+        }, 350);
+    }
 }
 
 async function loadModalComments(postId) {
@@ -789,39 +1266,46 @@ async function loadModalComments(postId) {
         const comments = data.comments || data;
         console.log('💬 Parsed comments:', comments);
         
-        const commentsList = document.getElementById('modalCommentsList');
-        if (!commentsList) {
-            console.error('❌ Comments list element not found!');
+        const commentsContent = document.getElementById('commentsContent');
+        if (!commentsContent) {
+            console.error('❌ Comments content element not found!');
             return;
         }
         
-        // Clear existing comments
-        commentsList.innerHTML = '';
+        // Clear existing comments in content area
+        commentsContent.innerHTML = '';
         
         if (!Array.isArray(comments)) {
             console.error('❌ Comments is not an array:', typeof comments);
+            commentsContent.innerHTML = '<div class="text-center text-red-500 py-4">Format data komentar tidak valid</div>';
             return;
         }
         
         if (comments.length === 0) {
             console.log('📭 No comments found for this post');
-            commentsList.innerHTML = '<div class="text-center text-gray-500 py-4">Belum ada komentar</div>';
+            commentsContent.innerHTML = '<div class="text-center text-gray-500 py-4">Belum ada komentar</div>';
             return;
         }
         
-        // Add comments
+        // Add comments to content area
         comments.forEach((comment, index) => {
             console.log(`➕ Adding comment ${index + 1}:`, comment);
             const commentElement = createCommentElement(comment);
-            commentsList.appendChild(commentElement);
+            commentsContent.appendChild(commentElement);
         });
         
     } catch (error) {
         console.error('❌ Error loading comments:', error);
-        const commentsList = document.getElementById('modalCommentsList');
-        if (commentsList) {
-            commentsList.innerHTML = '<div class="text-center text-red-500 py-4">Gagal memuat komentar</div>';
+        const commentsContent = document.getElementById('commentsContent');
+        if (commentsContent) {
+            commentsContent.innerHTML = '<div class="text-center text-red-500 py-4">Gagal memuat komentar</div>';
         }
+        
+        // Hide loading on error
+        const loadingElement = document.getElementById('commentsLoading');
+        if (loadingElement) loadingElement.classList.add('hidden');
+        const commentsContentEl = document.getElementById('commentsContent');
+        if (commentsContentEl) commentsContentEl.classList.remove('hidden');
     }
 }
 
@@ -834,12 +1318,13 @@ function createCommentElement(comment) {
     
     div.innerHTML = `
         <div class="flex items-start space-x-3">
-            <img src="/images/avatar/${comment.user.avatar}" alt="Avatar" 
-                 class="w-8 h-8 rounded-full flex-shrink-0">
+            <img src="/images/avatar/${comment.user.avatar || 'default.jpg'}" alt="${comment.user.nama_lengkap || comment.user.name}" 
+                 class="w-8 h-8 rounded-full flex-shrink-0 border border-gray-200"
+                 onerror="this.src='/images/avatar/default.jpg'">
             <div class="flex-1 min-w-0">
                 <div class="text-sm">
-                    <span class="font-medium">${comment.user.nama_lengkap || comment.user.name}</span>
-                    <span class="ml-1">${comment.content}</span>
+                    <span class="font-medium text-gray-900">${comment.user.nama_lengkap || comment.user.name}</span>
+                    <span class="ml-1 text-gray-800">${comment.content}</span>
                 </div>
                 <div class="flex items-center space-x-4 mt-1 text-xs text-gray-500">
                     <span>${formatTime(comment.created_at)}</span>
@@ -870,12 +1355,13 @@ function createRepliesHtml(replies) {
         
         return `
             <div class="flex items-start space-x-2 ml-8 mt-2" data-comment-id="${reply.id}">
-                <img src="/images/avatar/${reply.user.avatar}" alt="Avatar" 
-                     class="w-6 h-6 rounded-full flex-shrink-0">
+                <img src="/images/avatar/${reply.user.avatar || 'default.jpg'}" alt="${reply.user.nama_lengkap || reply.user.name}" 
+                     class="w-6 h-6 rounded-full flex-shrink-0 border border-gray-100"
+                     onerror="this.src='/images/avatar/default.jpg'">
                 <div class="flex-1 min-w-0">
                     <div class="text-sm">
-                        <span class="font-medium">${reply.user.nama_lengkap || reply.user.name}</span>
-                        <span class="ml-1">${formatReplyContent(reply.content)}</span>
+                        <span class="font-medium text-gray-900">${reply.user.nama_lengkap || reply.user.name}</span>
+                        <span class="ml-1 text-gray-800">${formatReplyContent(reply.content)}</span>
                     </div>
                     <div class="flex items-center space-x-3 mt-1 text-xs text-gray-500">
                         <span>${formatTime(reply.created_at)}</span>
@@ -896,25 +1382,28 @@ function createRepliesHtml(replies) {
 window.replyToComment = function(commentId, username) {
     console.log('💬 REPLY FUNCTION CALLED - Comment ID:', commentId, 'Username:', username);
     
-    // Try multiple ways to find the comment input
-    let mainCommentInput = document.getElementById('modalCommentInput');
+    // Determine which interface is currently active
+    let mainCommentInput = null;
+    let interfaceType = null;
     
-    if (!mainCommentInput) {
-        console.log('🔍 Trying alternative selectors...');
-        mainCommentInput = document.querySelector('#modalCommentInput');
-    }
-    
-    if (!mainCommentInput) {
-        mainCommentInput = document.querySelector('input[placeholder*="comment"]');
-    }
-    
-    if (!mainCommentInput) {
-        mainCommentInput = document.querySelector('#modalCommentForm input[type="text"]');
+    // Check if drawer is active (mobile)
+    const drawerOverlay = document.getElementById('commentDrawer-overlay');
+    if (drawerOverlay && !drawerOverlay.classList.contains('pointer-events-none')) {
+        mainCommentInput = document.getElementById('drawerCommentInput');
+        interfaceType = 'drawer';
+        console.log('📱 Using drawer interface');
+    } else {
+        // Check if modal is active (desktop)
+        const modal = document.getElementById('commentModal');
+        if (modal && !modal.classList.contains('hidden')) {
+            mainCommentInput = document.getElementById('modalCommentInput');
+            interfaceType = 'modal';
+            console.log('💻 Using modal interface');
+        }
     }
     
     console.log('🔍 Comment input element found:', mainCommentInput);
-    console.log('🔍 All input elements:', document.querySelectorAll('input'));
-    console.log('🔍 Modal form:', document.getElementById('modalCommentForm'));
+    console.log('📡 Interface type:', interfaceType);
     
     if (mainCommentInput) {
         // Clean username (remove any extra spaces or special chars)
@@ -937,8 +1426,10 @@ window.replyToComment = function(commentId, username) {
             console.log('📍 Cursor positioned at end');
         }, 50);
         
-        // Scroll to bottom to show the input
-        const commentsList = document.getElementById('modalCommentsList');
+        // Scroll to bottom based on interface type
+        const commentsList = interfaceType === 'drawer' 
+            ? document.getElementById('drawerCommentsList') 
+            : document.getElementById('modalCommentsList');
         if (commentsList) {
             commentsList.scrollTop = commentsList.scrollHeight;
             console.log('📜 Scrolled to bottom');
@@ -946,6 +1437,26 @@ window.replyToComment = function(commentId, username) {
         
         // Change placeholder to indicate replying
         mainCommentInput.placeholder = `Replying to ${cleanUsername}...`;
+        
+        // Add visual indicator for replying
+        const formContainer = mainCommentInput.closest('form').parentElement;
+        let replyIndicator = formContainer.querySelector('.reply-indicator');
+        
+        if (!replyIndicator) {
+            replyIndicator = document.createElement('div');
+            replyIndicator.className = 'reply-indicator px-4 py-2 bg-blue-50 border-l-4 border-blue-400 text-sm text-blue-700';
+            formContainer.insertBefore(replyIndicator, formContainer.lastElementChild);
+        }
+        
+        replyIndicator.innerHTML = `
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-reply text-blue-500"></i>
+                <span>Replying to <strong>${cleanUsername}</strong></span>
+                <button type="button" onclick="cancelReply()" class="ml-auto text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
         
         console.log('✅ Reply setup completed successfully');
         
@@ -955,7 +1466,7 @@ window.replyToComment = function(commentId, username) {
             mainCommentInput.style.border = '';
         }, 2000);
     } else {
-        console.error('❌ Main comment input STILL not found!');
+        console.error('❌ Main comment input not found!');
         console.log('🔍 Available inputs:', Array.from(document.querySelectorAll('input')).map(inp => ({
             id: inp.id,
             type: inp.type,
@@ -980,6 +1491,77 @@ function updateCurrentUserAvatar() {
     document.querySelectorAll('.current-user-avatar').forEach(img => {
         img.src = `/images/avatar/${userAvatar}`;
     });
+}
+
+// Helper function to get safe avatar path
+function getSafeAvatarPath(avatar) {
+    if (!avatar || avatar === 'null' || avatar === 'undefined') {
+        return '/images/avatar/default.jpg';
+    }
+    return avatar.startsWith('/') ? avatar : `/images/avatar/${avatar}`;
+}
+
+// Helper function to get user display name with role indicator
+function getUserDisplayName(user) {
+    const name = user.nama_lengkap || user.name || 'Pengguna';
+    if (user.role) {
+        const roleDisplayMap = {
+            'admin': '👑',
+            'pengajar': '👨‍🏫',
+            'alumni': '🎓',
+            'siswa': '👨‍🎓'
+        };
+        const roleIcon = roleDisplayMap[user.role] || '';
+        return roleIcon ? `${name} ${roleIcon}` : name;
+    }
+    return name;
+}
+
+// Initialize user profile data on page load
+function initializeUserProfile() {
+    // Update current user data in forms if available
+    if (window.currentUser) {
+        const drawerAvatar = document.querySelector('#drawerCommentForm img');
+        const modalAvatar = document.querySelector('#modalCommentForm img');
+        
+        if (drawerAvatar) {
+            drawerAvatar.src = getSafeAvatarPath(window.currentUser.avatar);
+            drawerAvatar.alt = getUserDisplayName(window.currentUser);
+        }
+        
+        if (modalAvatar) {
+            modalAvatar.src = getSafeAvatarPath(window.currentUser.avatar);
+            modalAvatar.alt = getUserDisplayName(window.currentUser);
+        }
+    }
+}
+
+// Cancel reply function
+window.cancelReply = function() {
+    // Find active comment input
+    const drawerInput = document.getElementById('drawerCommentInput');
+    const modalInput = document.getElementById('modalCommentInput');
+    
+    let activeInput = null;
+    if (drawerInput && !document.getElementById('commentDrawer-overlay').classList.contains('pointer-events-none')) {
+        activeInput = drawerInput;
+    } else if (modalInput && !document.getElementById('commentModal').classList.contains('hidden')) {
+        activeInput = modalInput;
+    }
+    
+    if (activeInput) {
+        // Clear input and attributes
+        activeInput.value = '';
+        activeInput.placeholder = 'Tambahkan komentar...';
+        activeInput.removeAttribute('data-reply-to');
+        
+        // Remove reply indicator
+        const formContainer = activeInput.closest('form').parentElement;
+        const replyIndicator = formContainer.querySelector('.reply-indicator');
+        if (replyIndicator) {
+            replyIndicator.remove();
+        }
+    }
 }
 
 
@@ -1233,6 +1815,9 @@ function createReplyElement(reply) {
 
 // Handle modal comment form submission
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize infinite scroll
+    initInfiniteScroll();
+    
     const modalCommentForm = document.getElementById('modalCommentForm');
     if (modalCommentForm) {
         modalCommentForm.addEventListener('submit', async function(e) {
@@ -1245,78 +1830,135 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!content) return;
             
             try {
-                console.log('💬 Submitting comment/reply for post:', postId);
-                console.log('📝 Content:', content);
-                
-                const formData = new FormData();
-                formData.append('content', content);
-                
-                // Check if this is a reply (has @mention and data-reply-to attribute)
-                const replyToId = commentInput.getAttribute('data-reply-to');
-                const isReply = replyToId && content.startsWith('@');
-                
-                if (isReply) {
-                    formData.append('parent_id', replyToId);
-                    console.log('🔗 This is a reply to comment:', replyToId);
-                } else {
-                    console.log('💬 This is a new comment');
-                }
-                
-                const response = await fetch(`/forum-alumni/${postId}/comment`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    },
-                    body: formData
-                });
-                
-                console.log('📡 Submission response status:', response.status);
-                
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error('❌ Submission error:', errorText);
-                    throw new Error(`HTTP ${response.status}: ${errorText}`);
-                }
-                
-                const data = await response.json();
-                console.log('✅ Submission success:', data);
-                
-                // Refresh comments to show the new comment/reply
-                await loadModalComments(postId);
-                
-                // Update comments count in main post
-                const postCard = document.querySelector(`[data-post-id="${postId}"]`);
-                if (postCard) {
-                    const commentsCount = postCard.querySelector('.comments-count');
-                    if (commentsCount) {
-                        commentsCount.textContent = `Lihat semua ${data.comments_count} komentar`;
-                        console.log('🔄 Updated comments count in main post');
-                    }
-                }
-                
-                // Clear input and remove reply attributes
-                commentInput.value = '';
-                commentInput.removeAttribute('data-reply-to');
-                
-                // Show success notification
-                const message = isReply ? 'Balasan berhasil dikirim!' : 'Komentar berhasil dikirim!';
-                showSuccessNotification(message);
-                
-                // Scroll to bottom to show new content
-                const commentsList = document.getElementById('modalCommentsList');
-                if (commentsList) {
-                    setTimeout(() => {
-                        commentsList.scrollTop = commentsList.scrollHeight;
-                    }, 100);
-                }
-                
+                console.log('💬 Submitting modal comment for post:', postId);
+                await submitComment(postId, content, commentInput, 'modal');
             } catch (error) {
-                console.error('❌ Error submitting:', error);
+                console.error('❌ Error submitting modal comment:', error);
                 showErrorNotification(`Gagal mengirim: ${error.message}`);
             }
         });
     }
+    
+    // Handle drawer comment form submission
+    const drawerCommentForm = document.getElementById('drawerCommentForm');
+    if (drawerCommentForm) {
+        drawerCommentForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const postId = document.getElementById('drawerPostId').value;
+            const commentInput = document.getElementById('drawerCommentInput');
+            const content = commentInput.value.trim();
+            
+            if (!content) return;
+            
+            try {
+                console.log('💬 Submitting drawer comment for post:', postId);
+                await submitComment(postId, content, commentInput, 'drawer');
+            } catch (error) {
+                console.error('❌ Error submitting drawer comment:', error);
+                showErrorNotification(`Gagal mengirim: ${error.message}`);
+            }
+        });
+    }
+    
+    // Initialize drawer touch handling
+    initializeCommentDrawer();
+    
+    // Initialize user profile data
+    initializeUserProfile();
+    
+    // Handle window resize for responsive switching
+    let resizeTimeout;
+    window.addEventListener('resize', function() {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(handleResponsiveCommentModal, 150);
+    });
 });
+
+// Unified comment submission function
+async function submitComment(postId, content, commentInput, interfaceType) {
+    console.log('📝 Content:', content);
+    
+    const formData = new FormData();
+    formData.append('content', content);
+    
+    // Check if this is a reply (has @mention and data-reply-to attribute)
+    const replyToId = commentInput.getAttribute('data-reply-to');
+    const isReply = replyToId && content.startsWith('@');
+    
+    if (isReply) {
+        formData.append('parent_id', replyToId);
+        console.log('🔗 This is a reply to comment:', replyToId);
+    } else {
+        console.log('💬 This is a new comment');
+    }
+    
+    const response = await fetch(`/forum-alumni/${postId}/comment`, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: formData
+    });
+    
+    console.log('📡 Submission response status:', response.status);
+    
+    if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ Submission error:', errorText);
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+    }
+    
+    const data = await response.json();
+    console.log('✅ Submission success:', data);
+    
+    // Refresh comments based on interface type
+    if (interfaceType === 'modal') {
+        await loadModalComments(postId);
+        // Scroll to bottom for modal
+        const commentsList = document.getElementById('modalCommentsList');
+        if (commentsList) {
+            setTimeout(() => {
+                commentsList.scrollTop = commentsList.scrollHeight;
+            }, 100);
+        }
+    } else if (interfaceType === 'drawer') {
+        await loadDrawerComments(postId);
+        // Scroll to bottom for drawer
+        const commentsList = document.getElementById('drawerCommentsList');
+        if (commentsList) {
+            setTimeout(() => {
+                commentsList.scrollTop = commentsList.scrollHeight;
+            }, 100);
+        }
+    }
+    
+    // Update comments count in main post
+    const postCard = document.querySelector(`[data-post-id="${postId}"]`);
+    if (postCard) {
+        const commentsCount = postCard.querySelector('.comments-count');
+        if (commentsCount) {
+            commentsCount.textContent = `Lihat semua ${data.comments_count} komentar`;
+            console.log('🔄 Updated comments count in main post');
+        }
+    }
+    
+    // Clear input and remove reply attributes
+    commentInput.value = '';
+    commentInput.placeholder = 'Tambahkan komentar...';
+    commentInput.removeAttribute('data-reply-to');
+    
+    // Remove reply indicator if present
+    const formContainer = commentInput.closest('form').parentElement;
+    const replyIndicator = formContainer.querySelector('.reply-indicator');
+    if (replyIndicator) {
+        replyIndicator.remove();
+    }
+    
+    // Show success notification
+    const message = isReply ? 'Balasan berhasil dikirim!' : 'Komentar berhasil dikirim!';
+    showSuccessNotification(message);
+}
 
 // Utility functions for date/time formatting
 function formatTime(dateString) {
