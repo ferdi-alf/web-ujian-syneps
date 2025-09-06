@@ -157,7 +157,8 @@
                         <label class="cursor-pointer flex items-center space-x-2 text-gray-600 hover:text-gray-800">
                             <i class="fas fa-image text-lg"></i>
                             <span class="text-sm">Add photos/videos</span>
-                            <input type="file" name="media" accept="image/*,video/*" class="hidden" onchange="previewMedia(this)" required>
+                            <span class="text-xs text-red-500 ml-1">*</span>
+                            <input type="file" name="media" accept="image/*,video/*" class="hidden" onchange="previewMedia(this)">
                         </label>
                         <div class="text-xs text-gray-400">
                             <span id="charCount">0</span>/2,200
@@ -339,6 +340,35 @@
             </div>
         </div>
     </div>
+
+<!-- Image Modal for Full View -->
+<div id="imageModal" class="fixed inset-0 z-[9999] hidden bg-black bg-opacity-90 flex items-center justify-center p-4">
+    <div class="relative max-w-4xl max-h-full">
+        <!-- Loading Indicator -->
+        <div id="imageLoading" class="flex items-center justify-center h-40">
+            <div class="flex flex-col items-center space-y-3">
+                <div class="animate-spin rounded-full h-12 w-12 border-4 border-white border-t-transparent"></div>
+                <p class="text-white text-sm">Memuat gambar...</p>
+            </div>
+        </div>
+        
+        <!-- Image Container -->
+        <div id="imageContainer" class="hidden">
+            <img id="modalImage" class="max-w-full max-h-screen object-contain rounded-lg" alt="Full Image">
+        </div>
+        
+        <!-- Close Button -->
+        <button onclick="closeImageModal()" 
+                class="absolute top-4 right-4 text-white hover:text-gray-300 text-2xl z-10 bg-black bg-opacity-50 rounded-full w-10 h-10 flex items-center justify-center">
+            <i class="fas fa-times"></i>
+        </button>
+        
+        <!-- Image Navigation (if needed for future enhancement) -->
+        <div class="absolute top-4 left-4 text-white text-sm bg-black bg-opacity-50 px-3 py-1 rounded">
+            <span id="imageInfo">Klik untuk menutup</span>
+        </div>
+    </div>
+</div>
 
         <!-- Fixed Bottom Create Post Section -->
         <div class="fixed bottom-4 bg-white rounded-lg shadow-lg border border-gray-200 p-6 z-30 md:z-50" style="width: calc(100% - 3rem); max-width: 1000px;">
