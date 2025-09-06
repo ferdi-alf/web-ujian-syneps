@@ -8,6 +8,7 @@ use App\Models\ForumComment;
 use App\Models\ForumLike;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class ForumAlumniController extends Controller
 {
@@ -207,7 +208,7 @@ class ForumAlumniController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            \Log::error('Error loading comments: ' . $e->getMessage());
+            Log::error('Error loading comments: ' . $e->getMessage());
             return response()->json([
                 'error' => 'Failed to load comments: ' . $e->getMessage(),
                 'comments' => [],
