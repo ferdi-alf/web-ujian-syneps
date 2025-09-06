@@ -220,6 +220,7 @@ function closePostModal() {
     if (charCount) charCount.textContent = '0';
     
     removeMedia();
+    updateShareButtonState(); // Reset share button state
 }
 
 // Handle Share Button Click - Submit post
@@ -228,6 +229,7 @@ function handleSharePost(event) {
     
     const form = document.getElementById('createPostForm');
     const postContent = document.getElementById('postContent');
+    const mediaInput = document.querySelector('input[type="file"][name="media"]');
     
     // Validate content
     if (!postContent.value.trim()) {
@@ -238,6 +240,22 @@ function handleSharePost(event) {
         });
         return;
     }
+    
+    // Validate media (now required)
+    if (!mediaInput.files || mediaInput.files.length === 0) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Media Diperlukan',
+            text: 'Silakan tambahkan foto atau video untuk membuat postingan!'
+        });
+        return;
+    }
+    
+    // Show loading state
+    const shareButton = document.getElementById('shareButton');
+    const originalText = shareButton.textContent;
+    shareButton.textContent = 'Posting...';
+    shareButton.disabled = true;
     
     // Submit form traditionally (not AJAX) since backend expects redirect
     form.submit();
@@ -251,7 +269,10 @@ function handleSharePost(event) {
 // Media Preview Functions
 function previewMedia(input) {
     const file = input.files[0];
-    if (!file) return;
+    if (!file) {
+        updateShareButtonState();
+        return;
+    }
     
     const mediaPreview = document.getElementById('mediaPreview');
     const imagePreview = document.getElementById('imagePreview');
@@ -277,6 +298,7 @@ function previewMedia(input) {
             videoPreview.classList.remove('hidden');
         }
         mediaPreview.classList.remove('hidden');
+        updateShareButtonState();
     };
     
     reader.readAsDataURL(file);
@@ -301,6 +323,32 @@ function removeMedia() {
     document.querySelectorAll('input[type="file"][name="media"]').forEach(input => {
         input.value = '';
     });
+    
+    updateShareButtonState();
+}
+
+// Function to update share button state based on content and media
+function updateShareButtonState() {
+    const shareButton = document.getElementById('shareButton');
+    const postContent = document.getElementById('postContent');
+    const mediaInput = document.querySelector('input[type="file"][name="media"]');
+    
+    if (!shareButton || !postContent || !mediaInput) return;
+    
+    const hasContent = postContent.value.trim().length > 0;
+    const hasMedia = mediaInput.files && mediaInput.files.length > 0;
+    
+    if (hasContent && hasMedia) {
+        shareButton.disabled = false;
+        shareButton.classList.remove('text-gray-400', 'cursor-not-allowed');
+        shareButton.classList.add('text-blue-500', 'cursor-pointer');
+        shareButton.textContent = 'Share';
+    } else {
+        shareButton.disabled = true;
+        shareButton.classList.add('text-gray-400', 'cursor-not-allowed');
+        shareButton.classList.remove('text-blue-500', 'cursor-pointer');
+        shareButton.textContent = 'Share';
+    }
 }
 
 // Like Functionality
@@ -685,6 +733,29 @@ function closeImageModal() {
 function openPostDetailModal(postId) {
     console.log('Opening post detail modal for post ID:', postId);
     
+    // Show modal immediately with loading state
+    const modal = document.getElementById('postDetailModal');
+    const content = document.getElementById('postDetailContent');
+    
+    if (!modal || !content) {
+        console.error('Post detail modal elements not found');
+        return;
+    }
+    
+    // Show modal immediately
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+    
+    // Show loading state
+    content.innerHTML = `
+        <div class="flex items-center justify-center h-40">
+            <div class="flex flex-col items-center space-y-3">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                <p class="text-sm text-gray-500">Memuat detail postingan...</p>
+            </div>
+        </div>
+    `;
+    
     // Detect current forum type from URL
     let apiEndpoint;
     if (window.location.pathname.includes('Alumni-Forum') || 
@@ -702,8 +773,6 @@ function openPostDetailModal(postId) {
         })
         .then(data => {
             console.log('Post data received:', data);
-            const modal = document.getElementById('postDetailModal');
-            const content = document.getElementById('postDetailContent');
             
             let mediaHtml = '';
             if (data.post.media_path) {
@@ -725,6 +794,7 @@ function openPostDetailModal(postId) {
                 }
             }
             
+            // Update content with actual post data
             content.innerHTML = `
                 <!-- User Info -->
                 <div class="flex items-center space-x-3 mb-4">
@@ -746,22 +816,39 @@ function openPostDetailModal(postId) {
                 ${mediaHtml}
             `;
             
-            modal.classList.remove('hidden');
-            modal.style.display = 'flex';
-            document.body.style.overflow = 'hidden';
         })
         .catch(error => {
             console.error('Error loading post details:', error);
-            alert('Error loading post details: ' + error.message);
+            
+            // Show error state
+            content.innerHTML = `
+                <div class="flex items-center justify-center h-40">
+                    <div class="flex flex-col items-center space-y-3">
+                        <i class="fas fa-exclamation-triangle text-4xl text-red-500"></i>
+                        <p class="text-sm text-gray-600 text-center">Gagal memuat detail postingan</p>
+                        <button onclick="openPostDetailModal(${postId})" 
+                                class="text-blue-500 hover:text-blue-700 text-sm font-medium">
+                            Coba Lagi
+                        </button>
+                    </div>
+                </div>
+            `;
         });
 }
 
 function closePostDetailModal() {
     const modal = document.getElementById('postDetailModal');
+    const content = document.getElementById('postDetailContent');
+    
     if (modal) {
         modal.classList.add('hidden');
         modal.style.display = 'none';
         document.body.style.overflow = '';
+    }
+    
+    // Clear content to free memory
+    if (content) {
+        content.innerHTML = '';
     }
 }
 
@@ -831,8 +918,12 @@ document.addEventListener('DOMContentLoaded', function() {
     if (postContent && charCount) {
         postContent.addEventListener('input', function() {
             charCount.textContent = this.value.length;
+            updateShareButtonState(); // Update share button when content changes
         });
     }
+    
+    // Initialize share button state
+    updateShareButtonState();
 });
 
 // Instagram-style Comment Modal Functions
@@ -2050,4 +2141,100 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
+});
+
+// Image Modal Functions
+function openImageModal(imageSrc) {
+    const modal = document.getElementById('imageModal');
+    const imageLoading = document.getElementById('imageLoading');
+    const imageContainer = document.getElementById('imageContainer');
+    const modalImage = document.getElementById('modalImage');
+    const imageInfo = document.getElementById('imageInfo');
+    
+    if (!modal || !imageLoading || !imageContainer || !modalImage) {
+        console.error('Image modal elements not found');
+        return;
+    }
+    
+    // Show modal
+    modal.classList.remove('hidden');
+    
+    // Show loading state
+    imageLoading.classList.remove('hidden');
+    imageContainer.classList.add('hidden');
+    
+    // Create new image to preload
+    const img = new Image();
+    
+    img.onload = function() {
+        // Image loaded successfully
+        modalImage.src = imageSrc;
+        
+        // Hide loading and show image
+        imageLoading.classList.add('hidden');
+        imageContainer.classList.remove('hidden');
+        
+        // Update info text
+        imageInfo.textContent = 'Klik ESC atau tombol X untuk menutup';
+    };
+    
+    img.onerror = function() {
+        // Image failed to load
+        imageLoading.innerHTML = `
+            <div class="flex flex-col items-center space-y-3">
+                <i class="fas fa-exclamation-triangle text-4xl text-red-500"></i>
+                <p class="text-white text-sm">Gagal memuat gambar</p>
+                <button onclick="closeImageModal()" class="text-blue-400 hover:text-blue-300 underline text-sm">
+                    Tutup
+                </button>
+            </div>
+        `;
+    };
+    
+    // Start loading the image
+    img.src = imageSrc;
+}
+
+function closeImageModal() {
+    const modal = document.getElementById('imageModal');
+    const imageLoading = document.getElementById('imageLoading');
+    const imageContainer = document.getElementById('imageContainer');
+    const modalImage = document.getElementById('modalImage');
+    
+    if (!modal) return;
+    
+    // Hide modal
+    modal.classList.add('hidden');
+    
+    // Reset states
+    imageLoading.classList.remove('hidden');
+    imageContainer.classList.add('hidden');
+    
+    // Clear image source to free memory
+    if (modalImage) {
+        modalImage.src = '';
+    }
+    
+    // Reset loading content
+    imageLoading.innerHTML = `
+        <div class="flex flex-col items-center space-y-3">
+            <div class="animate-spin rounded-full h-12 w-12 border-4 border-white border-t-transparent"></div>
+            <p class="text-white text-sm">Memuat gambar...</p>
+        </div>
+    `;
+}
+
+// Close modal on ESC key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeImageModal();
+    }
+});
+
+// Close modal on background click
+document.addEventListener('click', function(e) {
+    const modal = document.getElementById('imageModal');
+    if (e.target === modal) {
+        closeImageModal();
+    }
 });

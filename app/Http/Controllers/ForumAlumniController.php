@@ -41,7 +41,12 @@ class ForumAlumniController extends Controller
     {
         $request->validate([
             'content' => 'required|string|max:2000',
-            'media' => 'nullable|file|mimes:jpg,jpeg,png,gif,mp4,mov,avi|max:50000', // 50MB max
+            'media' => 'required|file|mimes:jpg,jpeg,png,gif,mp4,mov,avi|max:50000', // Media is now required
+        ], [
+            'media.required' => 'Foto atau video harus ditambahkan untuk membuat postingan.',
+            'media.file' => 'File yang diupload harus berupa foto atau video.',
+            'media.mimes' => 'File harus berformat: jpg, jpeg, png, gif, mp4, mov, atau avi.',
+            'media.max' => 'Ukuran file maksimal 50MB.'
         ]);
 
         $mediaPath = null;
@@ -205,7 +210,6 @@ class ForumAlumniController extends Controller
                 'comments' => $formattedComments,
                 'comments_count' => $post->comments_count
             ]);
-
         } catch (\Exception $e) {
             \Log::error('Error loading comments: ' . $e->getMessage());
             return response()->json([
