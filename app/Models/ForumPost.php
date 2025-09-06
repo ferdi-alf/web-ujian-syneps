@@ -1,3 +1,72 @@
+    protected $casts = [
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+    ];
+
+    // Relationships
+>>>>>>> forum
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function comments()
+    {
+<<<<<<< HEAD
+        return $this->hasMany(Comment::class, 'post_id')->whereNull('parent_id')->with('user', 'replies');
+    }
+
+    public function allComments()
+    {
+        return $this->hasMany(Comment::class, 'post_id');
+        return $this->hasMany(ForumComment::class, 'post_id')->whereNull('parent_id')->with('replies');
+>>>>>>> forum
+    }
+
+    public function likes()
+    {
+<<<<<<< HEAD
+        return $this->hasMany(Like::class, 'post_id');
+    }
+
+        return $this->hasMany(ForumLike::class, 'post_id');
+    }
+
+    // Helper methods
+>>>>>>> forum
+    public function isLikedBy($userId)
+    {
+        return $this->likes()->where('user_id', $userId)->exists();
+    }
+
+    public function toggleLike($userId)
+    {
+        $like = $this->likes()->where('user_id', $userId)->first();
+        
+        if ($like) {
+            $like->delete();
+            $this->decrement('likes_count');
+            return false;
+        } else {
+<<<<<<< HEAD
+            $this->likes()->create(['user_id' => $userId, 'post_id' => $this->id]);
+            $this->likes()->create(['user_id' => $userId]);
+>>>>>>> forum
+            $this->increment('likes_count');
+            return true;
+        }
+    }
+<<<<<<< HEAD
+
+    // Scopes
+    public function scopeWithUserAndCounts($query)
+    {
+        return $query->with('user')
+                    ->withCount(['comments', 'likes'])
+                    ->orderBy('created_at', 'desc');
+    }
+>>>>>>> forum
+}
 <?php
 
 namespace App\Models;
@@ -20,6 +89,12 @@ class ForumPost extends Model
         'comments_count'
     ];
 
+    protected $casts = [
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+    ];
+
+    // Relationships
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -27,19 +102,15 @@ class ForumPost extends Model
 
     public function comments()
     {
-        return $this->hasMany(Comment::class, 'post_id')->whereNull('parent_id')->with('user', 'replies');
-    }
-
-    public function allComments()
-    {
-        return $this->hasMany(Comment::class, 'post_id');
+        return $this->hasMany(ForumComment::class, 'post_id')->whereNull('parent_id')->with('replies');
     }
 
     public function likes()
     {
-        return $this->hasMany(Like::class, 'post_id');
+        return $this->hasMany(ForumLike::class, 'post_id');
     }
 
+    // Helper methods
     public function isLikedBy($userId)
     {
         return $this->likes()->where('user_id', $userId)->exists();
@@ -54,9 +125,91 @@ class ForumPost extends Model
             $this->decrement('likes_count');
             return false;
         } else {
-            $this->likes()->create(['user_id' => $userId, 'post_id' => $this->id]);
+            $this->likes()->create(['user_id' => $userId]);
             $this->increment('likes_count');
             return true;
         }
     }
+
+    // Scopes
+    public function scopeWithUserAndCounts($query)
+    {
+        return $query->with('user')
+                    ->withCount(['comments', 'likes'])
+                    ->orderBy('created_at', 'desc');
+    }
+}
+=======
+    protected $casts = [
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+    ];
+
+    // Relationships
+>>>>>>> forum
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function comments()
+    {
+<<<<<<< HEAD
+        return $this->hasMany(Comment::class, 'post_id')->whereNull('parent_id')->with('user', 'replies');
+    }
+
+    public function allComments()
+    {
+        return $this->hasMany(Comment::class, 'post_id');
+=======
+        return $this->hasMany(ForumComment::class, 'post_id')->whereNull('parent_id')->with('replies');
+>>>>>>> forum
+    }
+
+    public function likes()
+    {
+<<<<<<< HEAD
+        return $this->hasMany(Like::class, 'post_id');
+    }
+
+=======
+        return $this->hasMany(ForumLike::class, 'post_id');
+    }
+
+    // Helper methods
+>>>>>>> forum
+    public function isLikedBy($userId)
+    {
+        return $this->likes()->where('user_id', $userId)->exists();
+    }
+
+    public function toggleLike($userId)
+    {
+        $like = $this->likes()->where('user_id', $userId)->first();
+        
+        if ($like) {
+            $like->delete();
+            $this->decrement('likes_count');
+            return false;
+        } else {
+<<<<<<< HEAD
+            $this->likes()->create(['user_id' => $userId, 'post_id' => $this->id]);
+=======
+            $this->likes()->create(['user_id' => $userId]);
+>>>>>>> forum
+            $this->increment('likes_count');
+            return true;
+        }
+    }
+<<<<<<< HEAD
+=======
+
+    // Scopes
+    public function scopeWithUserAndCounts($query)
+    {
+        return $query->with('user')
+                    ->withCount(['comments', 'likes'])
+                    ->orderBy('created_at', 'desc');
+    }
+>>>>>>> forum
 }

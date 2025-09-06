@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\ForumPost;
-use App\Models\Comment;
-use App\Models\Like;
+use App\Models\ForumComment;
+use App\Models\ForumLike;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 
@@ -91,7 +91,7 @@ class ForumAlumniController extends Controller
 
         $post = ForumPost::findOrFail($postId);
 
-        $comment = Comment::create([
+        $comment = ForumComment::create([
             'user_id' => Auth::id(),
             'post_id' => $postId,
             'parent_id' => $request->input('parent_id'),
@@ -130,14 +130,14 @@ class ForumAlumniController extends Controller
 
     public function deleteComment($commentId)
     {
-        $comment = Comment::findOrFail($commentId);
+        $comment = ForumComment::findOrFail($commentId);
 
         // Only allow deletion by comment owner or admin
         if ($comment->user_id !== Auth::id() && Auth::user()->role !== 'admin') {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
-        $post = $comment->forumPost;
+        $post = $comment->post;
         $comment->delete();
         $post->decrement('comments_count');
 
@@ -160,34 +160,65 @@ class ForumAlumniController extends Controller
 
     public function getComments($postId)
     {
-        $post = ForumPost::findOrFail($postId);
+        try {
+            $post = ForumPost::findOrFail($postId);
 
-        $comments = Comment::with(['user', 'replies.user', 'likes'])
-            ->withCount('likes')
-            ->where('post_id', $postId)
-            ->whereNull('parent_id')
-            ->orderBy('created_at', 'desc')
-            ->get();
+            $comments = ForumComment::with(['user', 'replies.user'])
+                ->where('post_id', $postId)
+                ->whereNull('parent_id')
+                ->orderBy('created_at', 'desc')
+                ->get();
 
-        // Add is_liked status for each comment and reply
-        $comments->each(function ($comment) {
-            $comment->is_liked = $comment->likes()->where('user_id', Auth::id())->exists();
-            if ($comment->replies) {
-                $comment->replies->each(function ($reply) {
-                    $reply->is_liked = $reply->likes()->where('user_id', Auth::id())->exists();
-                });
-            }
-        });
+            // Format comments for response
+            $formattedComments = $comments->map(function ($comment) {
+                return [
+                    'id' => $comment->id,
+                    'content' => $comment->content,
+                    'created_at' => $comment->created_at->toISOString(),
+                    'user' => [
+                        'id' => $comment->user->id,
+                        'name' => $comment->user->name,
+                        'nama_lengkap' => $comment->user->nama_lengkap ?? $comment->user->name,
+                        'avatar' => $comment->user->avatar ?? 'default.jpg',
+                        'role' => $comment->user->role ?? 'alumni'
+                    ],
+                    'replies' => $comment->replies->map(function ($reply) {
+                        return [
+                            'id' => $reply->id,
+                            'content' => $reply->content,
+                            'created_at' => $reply->created_at->toISOString(),
+                            'parent_id' => $reply->parent_id,
+                            'user' => [
+                                'id' => $reply->user->id,
+                                'name' => $reply->user->name,
+                                'nama_lengkap' => $reply->user->nama_lengkap ?? $reply->user->name,
+                                'avatar' => $reply->user->avatar ?? 'default.jpg',
+                                'role' => $reply->user->role ?? 'alumni'
+                            ]
+                        ];
+                    })
+                ];
+            });
 
-        return response()->json([
-            'comments' => $comments,
-            'comments_count' => $post->comments_count
-        ]);
+            return response()->json([
+                'success' => true,
+                'comments' => $formattedComments,
+                'comments_count' => $post->comments_count
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Error loading comments: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Failed to load comments: ' . $e->getMessage(),
+                'comments' => [],
+                'comments_count' => 0
+            ], 500);
+        }
     }
 
     public function toggleCommentLike($commentId)
     {
-        $comment = Comment::findOrFail($commentId);
+        $comment = ForumComment::findOrFail($commentId);
 
         $existingLike = $comment->likes()->where('user_id', Auth::id())->first();
 

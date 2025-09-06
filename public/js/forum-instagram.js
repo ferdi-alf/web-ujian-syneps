@@ -1126,18 +1126,25 @@ async function loadDrawerComments(postId) {
     
     try {
         const response = await fetch(`/forum-alumni/post/${postId}/comments`, {
+            method: 'GET',
             headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
             }
         });
         
+        console.log('📡 Response status:', response.status);
+        
         if (!response.ok) {
             const errorText = await response.text();
+            console.error('❌ API Error:', errorText);
             throw new Error(`HTTP ${response.status}: ${errorText}`);
         }
         
         const data = await response.json();
-        const comments = data.comments || data;
+        console.log('📦 API Response data:', data);
+        const comments = data.comments || [];
         
         if (!commentsContent) {
             console.error('❌ Drawer comments content element not found!');
@@ -1246,8 +1253,11 @@ async function loadModalComments(postId) {
     console.log('🔄 Loading comments for post:', postId);
     try {
         const response = await fetch(`/forum-alumni/post/${postId}/comments`, {
+            method: 'GET',
             headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
             }
         });
         
@@ -1263,7 +1273,7 @@ async function loadModalComments(postId) {
         console.log('📝 Comments data received:', data);
         
         // Handle different response structures
-        const comments = data.comments || data;
+        const comments = data.comments || [];
         console.log('💬 Parsed comments:', comments);
         
         const commentsContent = document.getElementById('commentsContent');

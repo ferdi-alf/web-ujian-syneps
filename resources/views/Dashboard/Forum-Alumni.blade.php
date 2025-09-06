@@ -114,7 +114,7 @@
                 <i class="fas fa-arrow-left text-lg"></i>
             </button>
             <h2 class="text-base font-semibold text-gray-900">Create new post</h2>
-            <button type="button" onclick="handleSharePost(event)" class="text-blue-500 hover:text-blue-600 font-semibold text-sm">
+            <button type="button" onclick="handleSharePost(event)" id="shareButton" class="text-gray-400 font-semibold text-sm cursor-not-allowed" disabled>
                 Share
             </button>
         </div>
@@ -157,7 +157,7 @@
                         <label class="cursor-pointer flex items-center space-x-2 text-gray-600 hover:text-gray-800">
                             <i class="fas fa-image text-lg"></i>
                             <span class="text-sm">Add photos/videos</span>
-                            <input type="file" name="media" accept="image/*,video/*" class="hidden" onchange="previewMedia(this)">
+                            <input type="file" name="media" accept="image/*,video/*" class="hidden" onchange="previewMedia(this)" required>
                         </label>
                         <div class="text-xs text-gray-400">
                             <span id="charCount">0</span>/2,200
