@@ -206,7 +206,6 @@ class ForumAlumniController extends Controller
                 'comments' => $formattedComments,
                 'comments_count' => $post->comments_count
             ]);
-
         } catch (\Exception $e) {
             Log::error('Error loading comments: ' . $e->getMessage());
             return response()->json([

@@ -50,7 +50,7 @@ class ForumPost extends Model
     public function toggleLike($userId)
     {
         $like = $this->likes()->where('user_id', $userId)->first();
-        
+
         if ($like) {
             $like->delete();
             $this->decrement('likes_count');
@@ -66,7 +66,7 @@ class ForumPost extends Model
     public function scopeWithUserAndCounts($query)
     {
         return $query->with('user')
-                    ->withCount(['comments', 'likes'])
-                    ->orderBy('created_at', 'desc');
+            ->withCount(['comments', 'likes'])
+            ->orderBy('created_at', 'desc');
     }
 }
