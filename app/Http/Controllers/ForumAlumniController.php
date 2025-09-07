@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use Log;
+use App\Models\ForumLike;
 use App\Models\ForumPost;
 use App\Models\ForumComment;
-use App\Models\ForumLike;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class ForumAlumniController extends Controller
 {
@@ -211,7 +212,7 @@ class ForumAlumniController extends Controller
                 'comments_count' => $post->comments_count
             ]);
         } catch (\Exception $e) {
-            \Log::error('Error loading comments: ' . $e->getMessage());
+            Log::error('Error loading comments: ' . $e->getMessage());
             return response()->json([
                 'error' => 'Failed to load comments: ' . $e->getMessage(),
                 'comments' => [],

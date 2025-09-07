@@ -13,7 +13,6 @@ use App\Http\Controllers\LandingController;
 use App\Http\Controllers\PesertaController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ApprovalController;
-use App\Http\Controllers\LowonganController;
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AdminResetController;
@@ -39,19 +38,19 @@ Route::middleware(['web', 'guest'])->group(function () {
         Route::get('/', function () {
             return view('auth.register');
         })->name('index');
-    
+
         Route::post('/', [RegisterController::class, 'regsiter'])->name('store');
     });
 
-    
-        Route::controller(RegisterController::class)->group(function () {
-            Route::get('/register/{token}', 'showRegistrationForm')->name('registration.form');
-            Route::post('/register/{token}', 'processRegistration')->name('registration.process');
-            
-            Route::get('/verify/{user}', 'showVerificationForm')->name('verification.show');
-            Route::post('/verify/{user}', 'processVerification')->name('verification.process');
-            Route::post('/verify/{user}/resend', 'resendVerificationCode')->name('verification.resend');
-        });
+
+    Route::controller(RegisterController::class)->group(function () {
+        Route::get('/register/{token}', 'showRegistrationForm')->name('registration.form');
+        Route::post('/register/{token}', 'processRegistration')->name('registration.process');
+
+        Route::get('/verify/{user}', 'showVerificationForm')->name('verification.show');
+        Route::post('/verify/{user}', 'processVerification')->name('verification.process');
+        Route::post('/verify/{user}/resend', 'resendVerificationCode')->name('verification.resend');
+    });
 
 
     // jangan di kucak login
@@ -59,7 +58,7 @@ Route::middleware(['web', 'guest'])->group(function () {
         Route::get('/', function () {
             return view('auth.login');
         })->name('index');
-    
+
         Route::post('/', [AuthenticationController::class, 'store'])->name('store');
     });
 });
@@ -99,17 +98,6 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/comment/{commentId}', 'deleteComment')->name('comment.delete');
     });
 
-    Route::controller(LowonganController::class)->prefix('lowongan')->name('lowongan.')->group(function () {
-        Route::get('/', 'index')->name('index');
-        Route::get('/{lowongan}', 'show')->name('show');
-        Route::post('/', 'store')->name('store');
-        Route::put('/{lowongan}', 'update')->name('update');
-        Route::delete('/{lowongan}', 'destroy')->name('destroy');
-    });
-
-    Route::post('lowongan/{lowongan}/lamar', [LamaranController::class, 'store'])->name('lamaran.store');
-
-  
     Route::controller(NilaiController::class)->prefix('nilai')->name('nilai.')->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/download', 'download')->name('download');
@@ -165,7 +153,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/', 'index')->name('index');
             Route::patch('/{id}', 'update')->name('update');
             Route::post('/{id}/resend', 'resend')->name('resend');
-            Route::delete('/{id}', 'delete')->name('delete'); 
+            Route::delete('/{id}', 'delete')->name('delete');
         });
 
 
