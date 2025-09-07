@@ -22,6 +22,7 @@ use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\TambahUjianController;
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\ManajemenUjianController;
+use App\Http\Controllers\MateriController;
 
 //fatih - LANDING PAGE INTEGRATION ACTIVATED
 Route::get('/', [LandingController::class, 'index'])->name('index');
@@ -63,10 +64,6 @@ Route::middleware(['web', 'guest'])->group(function () {
     });
 });
 
-
-
-
-
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/leaderboard-siswa', [DashboardController::class, 'index'])->name('leaderboard.siswa');
@@ -83,8 +80,6 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/{slug}/save-progress', 'saveProgress')->name('save-progress');
         Route::get('/{slug}/selesai', 'selesai')->name('selesai');
     });
-
-
 
     Route::controller(ForumAlumniController::class)->prefix('forum-alumni')->name('forum-alumni.')->group(function () {
         Route::get('/', 'index')->name('index');
@@ -103,6 +98,13 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/download', 'download')->name('download');
     });
 
+    Route::controller(MateriController::class)->prefix('materi')->name('materi.')->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::post('/', 'store')->name('store');
+        Route::put('/{id}', 'update')->name('update');
+        Route::delete('/{id}', 'destroy')->name('destroy');
+    });
+
     Route::middleware(['deny.roles:siswa'])->group(function () {
         Route::get('/leaderboard', [LeaderboardController::class, 'leaderboard'])->name('leaderboard');
         Route::post('/admin/reset-data', [AdminResetController::class, 'resetData'])->name('admin.reset.data');
@@ -112,6 +114,7 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/', 'store')->name('store');
             Route::get('/progress', 'getProgress')->name('progress');
             Route::post('/clear-progress', 'clearProgress')->name('clear-progress');
+            Route::get('/check-batch-active/{kelasId}', 'checkBatchActive')->name('check-batch-active');
         });
 
         Route::controller(BatchController::class)->prefix('batch')->name('batch.')->group(function () {
