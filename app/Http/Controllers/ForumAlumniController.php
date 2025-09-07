@@ -2,13 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use Log;
+use App\Models\ForumLike;
 use App\Models\ForumPost;
 use App\Models\ForumComment;
-use App\Models\ForumLike;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+<<<<<<< HEAD
 use Illuminate\Support\Facades\Log;
+=======
+use Illuminate\Support\Facades\Storage;
+>>>>>>> forum
 
 class ForumAlumniController extends Controller
 {

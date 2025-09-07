@@ -22,7 +22,6 @@ use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\TambahUjianController;
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\ManajemenUjianController;
-use App\Http\Controllers\MateriController;
 
 //fatih - LANDING PAGE INTEGRATION ACTIVATED
 Route::get('/', [LandingController::class, 'index'])->name('index');
@@ -39,27 +38,27 @@ Route::middleware(['web', 'guest'])->group(function () {
         Route::get('/', function () {
             return view('auth.register');
         })->name('index');
-    
+
         Route::post('/', [RegisterController::class, 'regsiter'])->name('store');
     });
 
-    
-        Route::controller(RegisterController::class)->group(function () {
-            Route::get('/register/{token}', 'showRegistrationForm')->name('registration.form');
-            Route::post('/register/{token}', 'processRegistration')->name('registration.process');
-            
-            Route::get('/verify/{user}', 'showVerificationForm')->name('verification.show');
-            Route::post('/verify/{user}', 'processVerification')->name('verification.process');
-            Route::post('/verify/{user}/resend', 'resendVerificationCode')->name('verification.resend');
-        });
+
+    Route::controller(RegisterController::class)->group(function () {
+        Route::get('/register/{token}', 'showRegistrationForm')->name('registration.form');
+        Route::post('/register/{token}', 'processRegistration')->name('registration.process');
+
+        Route::get('/verify/{user}', 'showVerificationForm')->name('verification.show');
+        Route::post('/verify/{user}', 'processVerification')->name('verification.process');
+        Route::post('/verify/{user}/resend', 'resendVerificationCode')->name('verification.resend');
+    });
 
 
-   
+    // jangan di kucak login
     Route::controller(AuthenticationController::class)->prefix('login')->name('login.')->group(function () {
         Route::get('/', function () {
             return view('auth.login');
         })->name('index');
-    
+
         Route::post('/', [AuthenticationController::class, 'store'])->name('store');
     });
 });
@@ -99,17 +98,9 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/comment/{commentId}', 'deleteComment')->name('comment.delete');
     });
 
-  
     Route::controller(NilaiController::class)->prefix('nilai')->name('nilai.')->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/download', 'download')->name('download');
-    });
-
-    Route::controller(MateriController::class)->prefix('materi')->name('materi.')->group(function () {
-            Route::get('/', 'index')->name('index');
-            Route::post('/', 'store')->name('store');
-            Route::put('/{id}', 'update')->name('update');
-            Route::delete('/{id}', 'destroy')->name('destroy');
     });
 
     Route::middleware(['deny.roles:siswa'])->group(function () {
@@ -121,9 +112,7 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/', 'store')->name('store');
             Route::get('/progress', 'getProgress')->name('progress');
             Route::post('/clear-progress', 'clearProgress')->name('clear-progress');
-            Route::get('/check-batch-active/{kelasId}', 'checkBatchActive')->name('check-batch-active');
         });
-        
 
         Route::controller(BatchController::class)->prefix('batch')->name('batch.')->group(function () {
             Route::post('/', 'store')->name('store');
@@ -164,7 +153,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/', 'index')->name('index');
             Route::patch('/{id}', 'update')->name('update');
             Route::post('/{id}/resend', 'resend')->name('resend');
-            Route::delete('/{id}', 'delete')->name('delete'); 
+            Route::delete('/{id}', 'delete')->name('delete');
         });
 
 
