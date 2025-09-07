@@ -8,11 +8,8 @@ use App\Models\ForumPost;
 use App\Models\ForumComment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-<<<<<<< HEAD
-use Illuminate\Support\Facades\Log;
-=======
 use Illuminate\Support\Facades\Storage;
->>>>>>> forum
+
 
 class ForumAlumniController extends Controller
 {
