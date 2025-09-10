@@ -1583,7 +1583,13 @@ function formatReplyContent(content) {
     if (!content) return '';
     
     // Replace @mentions with styled spans (Instagram style)
-    return content.replace(/@(\w+)/g, '<span class="text-blue-600 font-medium">@$1</span>');
+    return content.replace(/@([A-Za-z0-9]+(?:\s[A-Za-z0-9]+)?)\s/g, function(match, username, offset, string) {
+        // Keep the space after username in original color
+        return '<span class="text-blue-600 font-medium">@' + username.trim() + '</span> ';
+    }).replace(/@([A-Za-z0-9]+(?:\s[A-Za-z0-9]+)?)$/g, function(match, username) {
+        // Handle @ at end of string
+        return '<span class="text-blue-600 font-medium">@' + username.trim() + '</span>';
+    });
 }
 
 // Update current user avatar in reply inputs
