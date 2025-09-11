@@ -1,7 +1,7 @@
 @props(['id', 'title', 'action', 'method' => 'POST', 'size' => 'lg', 'show' => false])
 
 <x-modal-layout :id="$id" :title="$title" :size="$size" :show="$show">
-    <form action="{{ $action }}" method="POST" class="space-y-4 p-2">
+    <form action="{{ $action }}" method="POST" class="space-y-4 p-2" enctype="multipart/form-data">
         @csrf
         @if (in_array(strtoupper($method), ['PUT', 'PATCH', 'DELETE']))
             @method($method)

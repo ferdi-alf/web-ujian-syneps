@@ -26,7 +26,7 @@ use App\Http\Controllers\MateriController;
 
 //fatih - LANDING PAGE INTEGRATION ACTIVATED
 Route::get('/', [LandingController::class, 'index'])->name('index');
-Route::get('/kelas/{id}', [LandingController::class, 'kelasDetail'])->name('kelas.detail');
+Route::get('/kelas/{slug}', [LandingController::class, 'kelasDetail'])->name('kelas.detail');
 Route::post('/daftar', [LandingController::class, 'daftar'])->name('daftar.store');
 
 Route::get('/testroute', function () {
@@ -103,6 +103,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/', 'store')->name('store');
         Route::put('/{id}', 'update')->name('update');
         Route::delete('/{id}', 'destroy')->name('destroy');
+        Route::get('/download/{id}', 'download')->name('download');
     });
 
     Route::middleware(['deny.roles:siswa'])->group(function () {

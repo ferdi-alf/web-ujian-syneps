@@ -275,7 +275,7 @@
                 title: '{{ $alert['title'] }}',
                 text: '{{ $alert['message'] }}',
                 confirmButtonColor: '#991b1b',
-                timer: 3000,
+                timer: 6000,
                 timerProgressBar: true
             });
         @endif
@@ -294,7 +294,7 @@
             });
         @endif
     </script>
-    
+
     @stack('scripts')
     @stack('modals')
 </body>

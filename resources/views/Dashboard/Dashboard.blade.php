@@ -373,9 +373,9 @@
                     <div class="hidden" id="periode-batch">
                         <div class="grid grid-cols-2 gap-3">
                             <x-fragments.text-field type="date" label="Tanggal Mulai" name="tanggal_mulai"
-                                placeholder="Masukkan tanggal mulai batch" required />
+                                placeholder="Masukkan tanggal mulai batch" />
                             <x-fragments.text-field type="date" label="Tanggal Selesai" name="tanggal_selesai"
-                                placeholder="Masukkan tanggal selesai batch" required />
+                                placeholder="Masukkan tanggal selesai batch" />
                         </div>
                         <small id="periode-info">Harap set periode batch</small>
                         <div id="kelas-duration-info" class="mt-2 hidden">
@@ -535,12 +535,17 @@
                             if (this.value === 'active') {
                                 periodeBatch?.classList.remove('hidden');
                                 periodeBatch?.classList.add('grid');
+                                tanggalMulaiInput?.setAttribute('required', true);
+                                tanggalSelesaiInput?.setAttribute('required', true);
                             } else {
                                 periodeBatch?.classList.add('hidden');
                                 periodeBatch?.classList.remove('grid');
+                                tanggalMulaiInput?.removeAttribute('required');
+                                tanggalSelesaiInput?.removeAttribute('required');
                             }
                             updateDurationDisplay();
                         });
+
 
                         kelasSelect?.addEventListener('change', function() {
                             updateDurationDisplay();

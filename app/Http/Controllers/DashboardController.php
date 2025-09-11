@@ -48,7 +48,6 @@ class DashboardController extends Controller {
                 
                 $batchData = $this->getBatchData();
                 $data['batchData'] = $batchData;
-                Log::info('Batch Data: ', $batchData->toArray());
             }
         } else {
             $data['chartData'] = $this->getSiswaChartData($user);
@@ -58,13 +57,31 @@ class DashboardController extends Controller {
         return view('Dashboard.Dashboard', $data);
     }
 
-    private function getBatchData() {
+    private function getBatchData()
+    {
         return Batches::withCount('siswaDetails')
             ->with('kelas')
             ->get()
             ->map(function ($batch) {
                 $batchNumber = $this->extractBatchNumber($batch->nama);
-                            
+
+                $periode = "-";
+                if ($batch->tanggal_mulai && $batch->tanggal_selesai) {
+                    $periode = \Carbon\Carbon::parse($batch->tanggal_mulai)->format('d M Y') .
+                        ' - ' .
+                        \Carbon\Carbon::parse($batch->tanggal_selesai)->format('d M Y');
+                }
+
+                if (strtolower($batch->status) === 'registration') {
+                    $jumlahPeserta = \App\Models\PendaftaranPeserta::where('batch_id', $batch->id)
+                        ->where('kelas_id', $batch->kelas_id)
+                        ->count();
+
+                    $jumlahPesertaText = $jumlahPeserta . ' Jumlah Pendaftar';
+                } else {
+                    $jumlahPesertaText = $batch->siswa_details_count . ' Peserta';
+                }
+
                 return [
                     'id' => $batch->id,
                     'nama' => $batch->nama,
@@ -78,45 +95,46 @@ class DashboardController extends Controller {
                         'finished' => '<span class="px-2 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded-full">Finished</span>',
                         default => '<span class="px-2 py-1 bg-gray-100 text-gray-800 text-xs font-medium rounded-full">Inactive</span>',
                     },
-                    'jumlah_peserta' => $batch->siswa_details_count . ' siswa',
+                    'jumlah_peserta' => $jumlahPesertaText,
                     'created_at' => $batch->created_at->format('d M Y'),
-                    'tanggal_mulai' => $batch->tanggal_mulai ,
+                    'tanggal_mulai' => $batch->tanggal_mulai,
                     'tanggal_selesai' => $batch->tanggal_selesai,
-                    'periode' => \Carbon\Carbon::parse($batch->tanggal_mulai)->format('d M Y') . ' - ' . \Carbon\Carbon::parse($batch->tanggal_selesai)->format('d M Y'),
+                    'periode' => $periode,
                 ];
             })
             ->sort(function ($a, $b) {
                 $aIsActive = strtolower($a['status']) === 'active';
                 $bIsActive = strtolower($b['status']) === 'active';
-                
+
                 if ($aIsActive && !$bIsActive) return -1;
                 if (!$aIsActive && $bIsActive) return 1;
-                
+
                 if ($aIsActive && $bIsActive) {
                     return $a['kelas_id'] <=> $b['kelas_id'];
                 }
-                
+
                 if ($a['kelas_id'] !== $b['kelas_id']) {
                     return $a['kelas_id'] <=> $b['kelas_id'];
                 }
-                
+
                 $statusOrder = [
                     'inactive' => 1,
                     'registration' => 2,
                     'finished' => 3
                 ];
-                
+
                 $aStatusOrder = $statusOrder[strtolower($a['status'])] ?? 4;
                 $bStatusOrder = $statusOrder[strtolower($b['status'])] ?? 4;
-                
+
                 if ($aStatusOrder !== $bStatusOrder) {
                     return $aStatusOrder <=> $bStatusOrder;
                 }
-                
+
                 return $b['batch_number'] <=> $a['batch_number'];
             })
             ->values();
     }
+
 
     private function extractBatchNumber($batchName) {
         preg_match_all('/\d+/', $batchName, $matches);
@@ -126,7 +144,7 @@ class DashboardController extends Controller {
         }
             
         return 0;
-}
+    }
 
     private function getCardData($user) {
         $data = [];

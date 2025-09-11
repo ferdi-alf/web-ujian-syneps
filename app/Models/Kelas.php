@@ -173,4 +173,28 @@ class Kelas extends Model {
         return $this->hasMany(Batches::class, 'kelas_id');
     }
 
+     public function getActiveBatchAttribute()
+    {
+        return $this->batches()->where('status', 'active')->first();
+    }
+    
+    public function hasActiveBatch()
+    {
+        return $this->batches()->where('status', 'active')->exists();
+    }
+
+    public function hasRegistrationBatch()
+    {
+        return $this->batches()->where('status', 'registration')->exists();
+    }
+    
+    public function getSlugAttribute()
+    {
+        $activeBatch = $this->active_batch;
+        if ($activeBatch) {
+            return $activeBatch->slug;
+        }
+        return null;
+    }
+
 }

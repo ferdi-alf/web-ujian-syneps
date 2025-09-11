@@ -100,10 +100,9 @@
                                 {{ $i + 1 }}
                             </td>
                             <td class="px-4 py-4 text-center">
-                                <img src="{{ asset('uploads/images/dp/' . $p->bukti_pembayaran_dp) }}"
-                                    alt="Bukti Pembayaran"
+                                <img src="{{ asset('storage/' . $p->bukti_pembayaran_dp) }}" alt="Bukti Pembayaran"
                                     class="w-16 h-16 object-cover rounded-md mx-auto cursor-pointer hover:scale-110 transition-transform"
-                                    onclick="showImageModal('{{ asset('uploads/images/dp/' . $p->bukti_pembayaran_dp) }}')">
+                                    onclick="showImageModal('{{ asset('storage/' . $p->bukti_pembayaran_dp) }}')">
                             </td>
                             <td class="px-4 py-4 font-medium text-gray-900 ">
                                 <div class="break-words">
@@ -337,10 +336,10 @@
                                         </label>
                                         <div class="bg-gray-50 p-4 rounded-md border-l-4 border-indigo-400">
                                             <div class="relative group inline-block">
-                                                <img src="uploads/images/dp/${pesertaData.buktiPembayaran}" 
+                                                <img src="storage/${pesertaData.buktiPembayaran}" 
                                                     alt="Bukti Pembayaran" 
                                                     class=" object-cover rounded-lg cursor-pointer shadow-md transform group-hover:scale-110 transition-all duration-300 hover:shadow-xl"
-                                                    onclick="showImageModal('uploads/images/dp/${pesertaData.buktiPembayaran}')">
+                                                    onclick="showImageModal('storage/${pesertaData.buktiPembayaran}')">
                                                 
                                             </div>
                                         </div>
@@ -470,21 +469,21 @@
                                         </div>
                                            ${pesertaData.link_register && 
                                             `
-                                                                            <div class="mt-4 p-4 w-full">
-                                                                            <a 
-                                                                                  href="https://wa.me/${pesertaData.noHp.replace(/^0/, '62')}?text=${encodeURIComponent(
-                                                                                    `Halo ${pesertaData.nama},\n\n` +
-                                                                                    `Selamat! Anda telah diterima di kelas ${pesertaData.kelas} - Batch ${pesertaData.batch}.\n\n` +
-                                                                                    `Silakan selesaikan proses registrasi melalui link berikut (berlaku 24 jam):\n` +
-                                                                                    `${pesertaData.link_register}\n\n` +
-                                                                                    `Terima kasih`
-                                                                                )}" 
-                                                                                target="_blank" 
-                                                                                class="no-underline bg-green-500 rounded-lg shadow-md p-4 text-white font-semibold">
-                                                                                Kirim Melalui Whatsapp
-                                                                            </a>
-                                                                        </div>
-                                                                        `}
+                                                                                                    <div class="mt-4 p-4 w-full">
+                                                                                                    <a 
+                                                                                                          href="https://wa.me/${pesertaData.noHp.replace(/^0/, '62')}?text=${encodeURIComponent(
+                                                                                                            `Halo ${pesertaData.nama},\n\n` +
+                                                                                                            `Selamat! Anda telah diterima di kelas ${pesertaData.kelas} - Batch ${pesertaData.batch}.\n\n` +
+                                                                                                            `Silakan selesaikan proses registrasi melalui link berikut (berlaku 24 jam):\n` +
+                                                                                                            `${pesertaData.link_register}\n\n` +
+                                                                                                            `Terima kasih`
+                                                                                                        )}" 
+                                                                                                        target="_blank" 
+                                                                                                        class="no-underline bg-green-500 rounded-lg shadow-md p-4 text-white font-semibold">
+                                                                                                        Kirim Melalui Whatsapp
+                                                                                                    </a>
+                                                                                                </div>
+                                                                                                `}
                                     </div>
                                 </div>
                         </div>

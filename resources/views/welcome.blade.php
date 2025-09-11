@@ -11,7 +11,7 @@
                         <div
                             class="inline-flex items-center px-4 py-1 bg-gradient-to-r from-teal-300 via-emerald-300 to-emerald-400 rounded-full mb-5 border border-white shadow gap-2 hover:shadow-lg transition-shadow duration-300">
                             <img src="{{ asset('images/logo.png') }}" alt="Sydemy Logo" class="w-5 h-5">
-                            <span class="text-xs font-semibold text-gray-900">Sydemy</span>
+                            <span class="text-xs font-semibold text-white">Sydemy</span>
                             <span class="w-2 h-2 bg-emerald-600 rounded-full animate-pulse"></span>
                         </div>
 
@@ -29,8 +29,8 @@
                         </p>
 
                         <div class="mt-6">
-                            <a href="{{ route('kelas.index') }}"
-                                class="group relative px-6 py-3 rounded-lg bg-gradient-to-r from-teal-300 via-emerald-300 to-emerald-400 text-gray-900 font-semibold shadow border border-white transition-all duration-300 ease-out hover:scale-105 hover:shadow-xl hover:shadow-emerald-200">
+                            <a href="#kelas"
+                                class="group relative px-6 py-3 rounded-lg bg-gradient-to-r from-teal-300 via-emerald-300 to-emerald-400 text-white font-semibold shadow border border-white transition-all duration-300 ease-out hover:scale-105 hover:shadow-xl hover:shadow-emerald-200">
                                 <span class="relative z-10">lihat kelas</span>
                                 <span
                                     class="absolute inset-0 rounded-lg bg-white opacity-0 group-hover:opacity-10 transition"></span>
@@ -317,7 +317,7 @@
                         </p>
                         <a href="https://wa.me/6283178569163?text=Halo%20saya%20ingin%20bertanya%20tentang%20kelas"
                             target="_blank"
-                            class="mt-6 inline-flex items-center gap-2 bg-gradient-to-r from-teal-300 via-emerald-300 to-emerald-400 text-gray-900 font-semibold px-6 py-3 rounded-lg hover:shadow-lg transition-all">
+                            class="mt-6 inline-flex items-center gap-2 bg-gradient-to-r from-teal-300 via-emerald-300 to-emerald-400 text-white font-semibold px-6 py-3 rounded-lg hover:shadow-lg transition-all">
                             <i class="fab fa-whatsapp"></i>
                             Hubungi Kami
                         </a>

@@ -9,10 +9,10 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
+   public function up(): void
     {
         Schema::table('materis', function (Blueprint $table) {
-            //
+            $table->string('judul')->after('id'); 
         });
     }
 
@@ -22,7 +22,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('materis', function (Blueprint $table) {
-            //
+            $table->dropColumn('judul');
         });
     }
+
 };

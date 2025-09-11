@@ -93,7 +93,7 @@
     </style>
 @endpush
 
-<section class="overflow-x-hidden py-8 sm:py-12 lg:py-16">
+<section id="kelas" class="overflow-x-hidden py-8 sm:py-12 lg:py-16">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex flex-col sm:flex-row justify-between items-center mb-6 sm:mb-8">
             <div class="text-center sm:text-left mb-4 sm:mb-0">
@@ -246,7 +246,22 @@
                                     </div>
                                 </div>
                                 <div class="p-4 sm:p-5 mt-auto">
-                                    <a href="{{ route('kelas.detail', $kelasItem['id']) }}"
+                                    @php
+                                        $kelasModel = App\Models\Kelas::find($kelasItem['id']);
+                                        $registrationBatch = $kelasModel
+                                            ->batches()
+                                            ->where('status', 'registration')
+                                            ->first();
+                                        $slug = null;
+                                        if ($registrationBatch) {
+                                            $slug =
+                                                Str::slug($kelasModel->nama) .
+                                                '-' .
+                                                Str::slug($registrationBatch->nama);
+                                        }
+                                    @endphp
+
+                                    <a href="{{ route('kelas.detail', $slug) }}"
                                         class="block w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white text-center py-2 sm:py-3 px-4 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg group">
                                         <span class="flex items-center justify-center gap-2">
                                             Lihat Detail

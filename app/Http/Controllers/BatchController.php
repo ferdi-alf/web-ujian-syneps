@@ -23,8 +23,8 @@ class BatchController extends Controller
             'nama'           => 'required|string|max:255',
             'status'         => 'required|in:active,inactive,registration',
             'kelas_id'       => 'required|exists:kelas,id',
-            'tanggal_mulai'  => 'required_if:status,active|date',
-            'tanggal_selesai'=> 'required_if:status,active|date|after:tanggal_mulai',
+            'tanggal_mulai'   => 'required_if:status,active|nullable|date',
+            'tanggal_selesai' => 'required_if:status,active|nullable|date|after:tanggal_mulai',
         ]);
 
         if ($validator->fails()) {
@@ -45,29 +45,10 @@ class BatchController extends Controller
             $mulai   = \Carbon\Carbon::parse($request->tanggal_mulai);
             $selesai = \Carbon\Carbon::parse($request->tanggal_selesai);
 
-            // SOLUSI 1: Menggunakan Carbon diffInMonths (lebih sederhana dan akurat)
             $selisihBulan = $mulai->diffInMonths($selesai);
             log('Selisih Bulan: ' . $selisihBulan);
 
-            // SOLUSI 2: Jika ingin tetap manual, perbaiki logikanya
-            /*
-            $selisihBulan = ($selesai->year - $mulai->year) * 12 + ($selesai->month - $mulai->month);
-            
-            // Hanya tambah 1 bulan jika tanggal selesai lebih besar dari tanggal mulai
-            // DAN bukan tanggal yang sama persis
-            if ($selesai->day > $mulai->day) {
-                $selisihBulan++;
-            }
-            // Jika tanggal sama persis (misal: 13 Agustus ke 13 Februari), 
-            // maka tidak perlu ditambah karena sudah tepat 6 bulan
-            */
-
-            // SOLUSI 3: Untuk perhitungan yang lebih presisi (opsional)
-            /*
-            // Hitung selisih dalam hari, lalu konversi ke bulan
-            $selisihHari = $mulai->diffInDays($selesai);
-            $selisihBulan = round($selisihHari / 30.44); // rata-rata hari per bulan
-            */
+     
 
             if ($selisihBulan != $totalDurasi) {
                 if ($waktuMagang > 0) {
@@ -142,8 +123,9 @@ class BatchController extends Controller
         $validator = Validator::make($request->all(), [
             'nama' => 'required|string|max:255',
             'status' => 'required|in:active,inactive,finished,registration',
-            'tanggal_mulai' => 'required_if:status,active|date',
-            'tanggal_selesai' => 'required_if:status,active|date|after:tanggal_mulai',
+            'tanggal_mulai'   => 'required_if:status,active|nullable|date',
+            'tanggal_selesai' => 'required_if:status,active|nullable|date|after:tanggal_mulai',
+
         ]);
 
         if ($request->kelas_id) {
