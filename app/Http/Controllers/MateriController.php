@@ -44,6 +44,29 @@ class MateriController extends Controller
         return view('Dashboard.Materi', compact('kelas', 'materi'));
     }
 
+    public function show($id)
+    {
+        try {
+            $materi = Materi::with(['kelas', 'batch'])->findOrFail($id);
+            
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'id' => $materi->id,
+                    'judul' => $materi->judul,
+                    'kelas_id' => $materi->kelas_id,
+                    'file_pdf' => $materi->file_pdf,
+                    'file_pdf_name' => $materi->file_pdf ? basename($materi->file_pdf) : null,
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data tidak ditemukan'
+            ], 404);
+        }
+    }
+
     public function store(Request $request)
     {
         // dd($request->all());
@@ -160,48 +183,45 @@ class MateriController extends Controller
         try {
             $materi = Materi::findOrFail($id);
             
-            // Hapus file PDF jika ada
             if ($materi->file_pdf && Storage::disk('public')->exists($materi->file_pdf)) {
                 Storage::disk('public')->delete($materi->file_pdf);
             }
             
             $materi->delete();
 
-            return redirect()->route('materi.index')
-                ->with('success', 'Materi berhasil dihapus!');
+            return back()->with(AlertHelper::success('Materi berhasil dihapus!', 'Success'));
                 
         } catch (\Exception $e) {
-            return redirect()->back()
-                ->with('error', 'Gagal menghapus materi: ' . $e->getMessage());
+           return back()->with(AlertHelper::error('Gagal menghapus materi: ' . $e->getMessage(), 'Error'));
         }
     }
 
-public function download($id)
-{
-    $materi = Materi::findOrFail($id);
+    public function download($id)
+    {
+        $materi = Materi::findOrFail($id);
 
-    if (!$materi->materi) {
-        return redirect()->back()
-            ->with(AlertHelper::error('File tidak tersedia!', 'Error'));
+        if (!$materi->materi) {
+            return redirect()->back()
+                ->with(AlertHelper::error('File tidak tersedia!', 'Error'));
+        }
+
+        $fullPath = storage_path('app/public/' . $materi->materi);
+
+        if (!file_exists($fullPath)) {
+            return redirect()->back()
+                ->with(AlertHelper::error('File tidak ditemukan di server!', 'Error'));
+        }
+
+        try {
+            $downloadName = Str::slug($materi->judul) . '.pdf';
+            
+            return response()->download($fullPath, $downloadName, [
+                'Content-Type' => 'application/pdf',
+            ]);
+            
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with(AlertHelper::error('Gagal mendownload file: ' . $e->getMessage(), 'Error'));
+        }
     }
-
-    $fullPath = storage_path('app/public/' . $materi->materi);
-
-    if (!file_exists($fullPath)) {
-        return redirect()->back()
-            ->with(AlertHelper::error('File tidak ditemukan di server!', 'Error'));
-    }
-
-    try {
-        $downloadName = Str::slug($materi->judul) . '.pdf';
-        
-        return response()->download($fullPath, $downloadName, [
-            'Content-Type' => 'application/pdf',
-        ]);
-        
-    } catch (\Exception $e) {
-        return redirect()->back()
-            ->with(AlertHelper::error('Gagal mendownload file: ' . $e->getMessage(), 'Error'));
-    }
-}
 }

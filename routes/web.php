@@ -101,6 +101,7 @@ Route::middleware(['auth'])->group(function () {
     Route::controller(MateriController::class)->prefix('materi')->name('materi.')->group(function () {
         Route::get('/', 'index')->name('index');
         Route::post('/', 'store')->name('store');
+        Route::get('/{id}', 'show')->name('show'); // Endpoint untuk get data
         Route::put('/{id}', 'update')->name('update');
         Route::delete('/{id}', 'destroy')->name('destroy');
         Route::get('/download/{id}', 'download')->name('download');

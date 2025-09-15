@@ -1,10 +1,12 @@
+{{-- resources/views/components/fragments/action-button --}}
 @props([
-    'modalId' => null,
+    'modalTarget' => null,
     'drawerId' => null,
     'deleteRoute' => null,
     'viewAction' => null,
     'deleteMessage' => null,
     'showView' => true,
+    'editData' => null,
 ])
 
 <div class="flex space-x-2">
@@ -22,8 +24,8 @@
         </button>
     @endif
 
-    @if ($modalId)
-        <x-fragments.modal-button :target="$modalId" variant="edit" size="sm">
+    @if ($modalTarget && $editData)
+        <x-fragments.modal-button :target="$modalTarget" variant="edit" size="sm" act="update" :data="$editData">
             <i class="fa-solid fa-pen"></i>
         </x-fragments.modal-button>
     @endif
@@ -31,5 +33,4 @@
     @if ($deleteRoute)
         <x-fragments.delete-button :url="$deleteRoute" title="Hapus Data" :message="$deleteMessage ?? 'Yakin ingin menghapus data ini?'" />
     @endif
-
 </div>
