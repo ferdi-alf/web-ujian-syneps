@@ -30,6 +30,7 @@
         selectedValues: @js($selectedValues),
         options: @js($options),
         highlightedIndex: -1,
+        fieldName: '{{ $name }}',
     
         get selectedItems() {
             return this.selectedValues.map(value =>
@@ -72,8 +73,32 @@
     
         navigateUp() {
             this.highlightedIndex = Math.max(this.highlightedIndex - 1, -1);
+        },
+    
+        // Method untuk set values dari luar
+        setValues(values) {
+            this.selectedValues = values.map(v => String(v));
+        },
+    
+        // Method untuk reset
+        reset() {
+            this.selectedValues = [];
+            this.searchQuery = '';
+            this.isOpen = false;
+            this.highlightedIndex = -1;
         }
-    }" @click.away="isOpen = false">
+    }" x-init="// Listen untuk custom events
+    window.addEventListener('setMultipleSelectValues', (e) => {
+        if (e.detail.fieldId === fieldName.replace('[]', '')) {
+            setValues(e.detail.values);
+        }
+    });
+    
+    window.addEventListener('resetMultipleSelect', (e) => {
+        if (e.detail.fieldId === fieldName.replace('[]', '')) {
+            reset();
+        }
+    });" @click.away="isOpen = false">
 
         <div class="min-h-[42px] border border-gray-300 rounded-md px-3 py-2 bg-white focus-within:ring-1 focus-within:ring-blue-500 focus-within:border-blue-500 cursor-text"
             @click="$refs.searchInput.focus()">

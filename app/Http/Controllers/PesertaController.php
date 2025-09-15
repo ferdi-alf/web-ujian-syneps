@@ -98,10 +98,60 @@ class PesertaController extends Controller
         return view('Dashboard.Peserta', compact('pesertaData', 'kelas', 'activeBatch'));
     }
 
+    
+    public function show($id)
+    {
+        try {
+            $user = Auth::user();
+            $siswa = User::siswa()->with(['siswaDetail.kelas', 'siswaDetail.batches', 'hasilUjian.ujian'])->findOrFail($id);
+
+            if ($user->role === 'pengajar') {
+                $pengajarDetail = $user->pengajarDetail;
+                $kelasIds = $pengajarDetail ? $pengajarDetail->kelas()->pluck('kelas.id')->toArray() : [];
+                $siswaKelasId = $siswa->siswaDetail->kelas_id ?? null;
+
+                if (!in_array($siswaKelasId, $kelasIds)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Unauthorized'
+                    ], 403);
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'id' => $siswa->id,
+                    'name' => $siswa->name,
+                    'email' => $siswa->email,
+                    'nama_lengkap' => $siswa->siswaDetail->nama_lengkap ?? '',
+                    'kelas_id' => $siswa->siswaDetail->kelas_id ?? null,
+                    'batch_id' => $siswa->siswaDetail->batch_id ?? null,
+                    'status' => $siswa->siswaDetail->status ?? 'inactive',
+                    'kelas' => $siswa->siswaDetail?->kelas ? [
+                        'id' => $siswa->siswaDetail->kelas->id,
+                        'nama' => $siswa->siswaDetail->kelas->nama
+                    ] : null,
+                    'batch' => $siswa->siswaDetail?->batches ? [
+                        'id' => $siswa->siswaDetail->batches->id,
+                        'nama' => $siswa->siswaDetail->batches->nama
+                    ] : null
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data peserta tidak ditemukan',
+                'error' => $e->getMessage()
+            ], 404);
+        }
+    }
+
     public function approval()
     {
         return view('Dashboard.Approval');
     }
+
 
     private function formatWaktuPengerjaanDetik($waktuDetik) {
         if ($waktuDetik < 60) {

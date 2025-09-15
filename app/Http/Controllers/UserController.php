@@ -21,6 +21,39 @@ class UserController extends Controller
         
         return view('Dashboard.Users', compact('admins', 'pengajars', 'kelas'));
     }
+
+    public function show($id)
+    {
+        try {
+            $user = User::with('pengajarDetail.kelas')->findOrFail($id);
+            
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'role' => $user->role,
+                    'pengajar_detail' => $user->pengajarDetail ? [
+                        'id' => $user->pengajarDetail->id,
+                        'nama_lengkap' => $user->pengajarDetail->nama_lengkap,
+                        'kelas' => $user->pengajarDetail->kelas->map(function($kelas) {
+                            return [
+                                'id' => $kelas->id,
+                                'nama' => $kelas->nama
+                            ];
+                        })
+                    ] : null
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User tidak ditemukan',
+                'error' => $e->getMessage()
+            ], 404);
+        }
+    }
     
     public function store(Request $request) 
     {

@@ -18,6 +18,30 @@ class BatchController extends Controller
     /**
      * Store a newly created batch
      */
+     public function show($id)
+    {
+        try {
+            $materi = Batches::with(['kelas'])->findOrFail($id);
+            
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'id' => $materi->id,
+                    'nama' => $materi->nama,
+                    'status' => $materi->status,
+                    'tanggal_mulai' => $materi->tanggal_mulai,
+                    'tanggal_selesai' => $materi->tanggal_selesai,
+                    'kelas' => $materi->kelas->nama,
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data tidak ditemukan'
+            ], 404);
+        }
+    }
+
     public function store(Request $request) {
         $validator = Validator::make($request->all(), [
             'nama'           => 'required|string|max:255',

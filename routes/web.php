@@ -101,7 +101,7 @@ Route::middleware(['auth'])->group(function () {
     Route::controller(MateriController::class)->prefix('materi')->name('materi.')->group(function () {
         Route::get('/', 'index')->name('index');
         Route::post('/', 'store')->name('store');
-        Route::get('/{id}', 'show')->name('show'); // Endpoint untuk get data
+        Route::get('/{id}', 'show')->name('show'); 
         Route::put('/{id}', 'update')->name('update');
         Route::delete('/{id}', 'destroy')->name('destroy');
         Route::get('/download/{id}', 'download')->name('download');
@@ -120,6 +120,7 @@ Route::middleware(['auth'])->group(function () {
         });
 
         Route::controller(BatchController::class)->prefix('batch')->name('batch.')->group(function () {
+            Route::get('/{id}', 'show')->name('show');
             Route::post('/', 'store')->name('store');
             Route::put('/{id}', 'update')->name('update');
             Route::delete('/{id}', 'destroy')->name('destroy');
@@ -133,6 +134,7 @@ Route::middleware(['auth'])->group(function () {
 
         Route::controller(PesertaController::class)->prefix('peserta')->name('peserta.')->group(function () {
             Route::get('/', 'index')->name('index');
+            Route::get('/{id}', 'show')->name('show');
             Route::get('/approval', 'approval')->name('approval');
             Route::post('/', 'store')->name('store');
             Route::put('/{id}', 'update')->name('update');
@@ -143,6 +145,7 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['deny.roles:siswa,pengajar'])->group(function () {
         Route::controller(UserController::class)->prefix('users')->name('users.')->group(function () {
             Route::get('/', 'index')->name('index');
+            Route::get('/{id}', 'show')->name('show');
             Route::post('/', 'store')->name('store');
             Route::put('/{id}', 'update')->name('update');
             Route::delete('/{id}', 'destroy')->name('destroy');

@@ -15,7 +15,7 @@
             </div>
 
             <x-fragments.form-modal id="universal-materi-modal" title="Form Materi" action="{{ route('materi.store') }}"
-                fetchEndpoint="/materi" createTitle="Tambah Materi" editTitle="Edit Materi" size="xl">
+                createTitle="Tambah Materi" editTitle="Edit Materi" size="xl">
 
                 <div class="mb-3">
                     <label class="form-label fw-medium">Upload File PDF
@@ -85,7 +85,6 @@
                     'deleteRoute' => route('materi.destroy', $row->id),
                     'editData' => [
                         'id' => $row->id,
-                        'modalTarget' => 'universal-materi-modal',
                         'fetchEndpoint' => '/materi/' . $row->id,
                         'updateEndpoint' => '/materi/' . $row->id,
                         'act' => 'update',
@@ -106,13 +105,7 @@
                         'remove-file-universal'
                     );
 
-                    document.addEventListener('modalCreate', function(e) {
-                        if (e.detail.modalId === 'universal-materi-modal') {
-                            document.getElementById('pdf-required-indicator').classList.remove('hidden');
-                            document.getElementById('current-file-info-universal').classList.add('hidden');
-                            resetFileInput();
-                        }
-                    });
+
 
                     document.addEventListener('modalUpdate', function(e) {
                         if (e.detail.modalId === 'universal-materi-modal') {

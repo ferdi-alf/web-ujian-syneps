@@ -57,6 +57,7 @@ class DashboardController extends Controller {
         return view('Dashboard.Dashboard', $data);
     }
 
+
     private function getBatchData()
     {
         return Batches::withCount('siswaDetails')

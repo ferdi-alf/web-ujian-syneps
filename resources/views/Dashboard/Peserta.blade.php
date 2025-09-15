@@ -8,7 +8,6 @@
 
         <div class="flex mb-4 md:flex-row flex-col md:items-center items-end justify-between gap-2">
             <div class="flex items-center gap-4 md:w-auto w-full">
-
                 @if ($activeBatch->isNotEmpty())
                     <div class="bg-green-50 border md:w-auto w-full border-green-200 rounded-lg px-3 py-2">
                         <div class="flex items-center">
@@ -36,13 +35,55 @@
                 @endif
             </div>
 
-            <x-fragments.modal-button target="modal-add-peserta" variant="emerald" :disabled="!isset($activeBatch)">
+            <x-fragments.modal-button target="modal-control-peserta" variant="emerald" act="create" :disabled="$activeBatch->isEmpty()">
                 <i class="fa-solid fa-plus mr-2"></i>
                 Tambah Peserta
             </x-fragments.modal-button>
         </div>
 
-        <x-reusable-table :searchBar="true" :truncate="true" :headers="['No', 'Avatar', 'Nama Lengkap', 'Email', 'Kelas', 'Batch', 'Status', 'Hasil Ujian']" :data="$pesertaData" :columns="[
+        <x-fragments.form-modal id="modal-control-peserta" title="Form Peserta" createTitle="Tambah Peserta Baru"
+            editTitle="Edit Peserta" action="{{ route('peserta.store') }}">
+
+            @if ($activeBatch->isNotEmpty())
+                <div id="batch-info-section" class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                    <div class="flex items-center">
+                        <i class="fas fa-info-circle text-blue-600 mr-2"></i>
+                        <span class="text-sm text-blue-800">
+                            Batch dalam status registration akan otomatis digunakan untuk peserta baru.
+                        </span>
+                    </div>
+                    <ul class="list-disc ml-10">
+                        @foreach ($activeBatch as $batch)
+                            <li class="text-sm text-blue-800"><strong>{{ $batch->display_name }}</strong></li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            <div class="grid grid-cols-2 gap-4">
+                <x-fragments.text-field label="Nama User" name="name" placeholder="Masukkan nama untuk login peserta"
+                    required />
+                <x-fragments.text-field label="Email" name="email" type="email" placeholder="Masukkan email"
+                    required />
+            </div>
+
+            <div class="mt-4">
+                <x-fragments.text-field label="Password" name="password" type="password" placeholder="Masukkan password"
+                    required />
+                <p id="password-help-text" class="text-sm text-gray-500 mt-1">Kosongkan jika tidak ingin mengubah password
+                </p>
+            </div>
+
+            <x-fragments.text-field label="Nama Lengkap" name="nama_lengkap"
+                placeholder="Masukkan nama lengkap (Opsional)" />
+
+            <div id="kelas-div" class="mt-4 ">
+                <x-fragments.select-field label="Kelas" name="kelas_id" :options="$kelas->pluck('nama', 'id')->toArray()" required />
+            </div>
+            <p id="text-info" class="text-blue-500 hidden">Kelas yang terdapat pada peserta tidak dapat diubah</p>
+        </x-fragments.form-modal>
+
+        <x-reusable-table :searchBar="true" :truncate="false" :headers="['No', 'Avatar', 'Nama Lengkap', 'Email', 'Kelas', 'Batch', 'Status', 'Hasil Ujian']" :data="$pesertaData" :columns="[
             fn($row, $i) => $i + 1,
             fn($row) => $row['avatar'],
             fn($row) => $row['nama_lengkap'],
@@ -53,81 +94,20 @@
             fn($row) => count($row['hasil']) . ' ujian',
         ]"
             :showActions="true" :actionButtons="fn($row) => view('components.action-buttons', [
-                'modalId' => 'modal-edit-peserta-' . $row['id'],
-                'drawerId' => 'drawer-detail-peserta-' . $row['id'],
-                'updateRoute' => route('peserta.update', $row['id']),
+                'modalTarget' => 'modal-control-peserta',
+                'editData' => [
+                    'id' => $row['id'],
+                    'fetchEndpoint' => '/peserta/' . $row['id'],
+                    'updateEndpoint' => '/peserta/' . $row['id'],
+                    'act' => 'update',
+                ],
                 'deleteRoute' => route('peserta.destroy', $row['id']),
-            ])" :autoFilter="[
-                4 => 'Batch', // Filter by column index 5 (Batch)
-            ]" :filterPlaceholder="'Semua'" />
+                'drawerId' => 'drawer-detail-peserta-' . $row['id'],
+            ])" :autoFilter="[4 => 'Kelas']" :filterPlaceholder="'Semua'" />
     </div>
-    <x-fragments.form-modal id="modal-add-peserta" title="Tambah Peserta Baru" action="{{ route('peserta.store') }}">
-        @if ($activeBatch->isNotEmpty())
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-                <div class="flex items-center">
-                    <i class="fas fa-info-circle text-blue-600 mr-2"></i>
-                    <span class="text-sm text-blue-800">
-                        Batch dalam status registration akan otomatis digunakan untuk peserta baru.
-                    </span>
-                </div>
-                <ul class="list-disc ml-10">
-                    @foreach ($activeBatch as $batch)
-                        <li class="text-sm text-blue-800"><strong>{{ $batch->display_name }}</strong></li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
-
-
-        <div class="grid grid-cols-2 gap-4">
-            <x-fragments.text-field label="Nama User" name="name" placeholder="Masukkan nama untuk login peserta"
-                required />
-            <x-fragments.text-field label="Email" name="email" type="email" placeholder="Masukkan email" required />
-        </div>
-        <x-fragments.text-field label="Password" name="password" type="password" placeholder="Masukkan password" required
-            class="mt-4" />
-        <x-fragments.text-field label="Nama Lengkap" name="nama_lengkap"
-            placeholder="Masukkan nama lengkap, (Opsional) bisa dikosongkan" />
-        <div class="mt-4">
-            <x-fragments.select-field label="Kelas" name="kelas_id" :options="$kelas->pluck('nama', 'id')->toArray()" required />
-        </div>
-    </x-fragments.form-modal>
-
 
     @foreach ($pesertaData as $peserta)
-        <x-fragments.form-modal id="modal-edit-peserta-{{ $peserta['id'] }}" title="Edit Peserta"
-            action="{{ route('peserta.update', $peserta['id']) }}" method="PUT">
-            <div class="grid grid-cols-2 gap-4">
-                <x-fragments.text-field label="Nama User" name="name" value="{{ $peserta['name'] }}"
-                    placeholder="Masukkan nama user" required />
-                <x-fragments.text-field label="Email" name="email" type="email" value="{{ $peserta['email'] }}"
-                    placeholder="Masukkan email" required />
-            </div>
-            <x-fragments.text-field label="Password" name="password" type="password"
-                placeholder="Kosongkan jika tidak ingin mengubah" class="mt-4" />
-            <x-fragments.text-field label="Nama Lengkap" name="nama_lengkap" value="{{ $peserta['nama_lengkap'] }}"
-                placeholder="Masukkan nama lengkap, (Opsional) bisa dikosongkan" />
-            <div class="mt-4">
-                <x-fragments.select-field label="Kelas" name="kelas_id" :options="$kelas->pluck('nama', 'id')->toArray()"
-                    value="{{ $peserta['kelas_id'] }}" required />
-            </div>
-
-
-            <div class="bg-gray-50 border border-gray-200 rounded-lg p-3 mt-4">
-                <div class="flex items-center">
-                    <i class="fas fa-layer-group text-gray-600 mr-2"></i>
-                    <span class="text-sm text-gray-700">
-                        <strong>Batch:</strong> {{ $peserta['batch'] }}
-                    </span>
-                </div>
-            </div>
-        </x-fragments.form-modal>
-    @endforeach
-
-
-    @foreach ($pesertaData as $peserta)
-        <x-drawer-layout id="drawer-detail-peserta-{{ $peserta['id'] }}"
-            title="Detail Hasil Ujian: {{ $peserta['name'] }}"
+        <x-drawer-layout id="drawer-detail-peserta-{{ $peserta['id'] }}" title="Detail Hasil Ujian: {{ $peserta['name'] }}"
             description="Informasi lengkap tentang hasil ujian {{ $peserta['nama_lengkap'] }}">
             <div class="space-y-6">
                 <div class="bg-gray-50 p-4 rounded-lg">
@@ -207,4 +187,65 @@
             </div>
         </x-drawer-layout>
     @endforeach
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const nameInput = document.querySelector('input[name="name"]');
+            const emailInput = document.querySelector('input[name="email"]');
+            const passwordInput = document.querySelector('input[name="password"]');
+            const namaLengkapInput = document.querySelector('input[name="nama_lengkap"]');
+            const kelasSelect = document.querySelector('select[name="kelas_id"]');
+            const batchInfoSection = document.getElementById('batch-info-section');
+            const passwordHelpText = document.getElementById('password-help-text');
+            const kelasDiv = document.getElementById('kelas-div');
+            const textInfo = document.getElementById('text-info');
+
+            document.addEventListener('modalCreate', function(e) {
+                if (e.detail.modalId === 'modal-control-peserta') {
+                    resetForm();
+                    if (batchInfoSection) batchInfoSection.style.display = 'block';
+                    passwordInput.required = true;
+                    passwordHelpText.style.display = 'none';
+                }
+            });
+
+            document.addEventListener('modalUpdate', function(e) {
+                if (e.detail.modalId === 'modal-control-peserta') {
+                    const pesertaData = e.detail.data;
+                    console.log('Peserta Data:', pesertaData);
+
+                    nameInput.value = pesertaData.name || '';
+                    emailInput.value = pesertaData.email || '';
+                    namaLengkapInput.value = pesertaData.nama_lengkap || '';
+                    kelasSelect.value = pesertaData.kelas_id || '';
+                    kelasSelect.disabled = true;
+                    kelasSelect.removeAttribute('required');
+                    textInfo.classList.remove('hidden')
+                    kelasDiv.classList.add('opacity-25');
+                    kelasSelect.style.cursor = 'not-allowed';
+                    passwordInput.value = '';
+                    passwordInput.required = false;
+                    passwordHelpText.style.display = 'block';
+
+                    if (batchInfoSection) batchInfoSection.style.display = 'none';
+                }
+            });
+            document.addEventListener('modalReset', function(e) {
+                if (e.detail.modalId === 'modal-control-peserta') {
+                    resetForm();
+                }
+            });
+
+            function resetForm() {
+                nameInput.value = '';
+                emailInput.value = '';
+                passwordInput.value = '';
+                namaLengkapInput.value = '';
+                kelasSelect.value = '';
+                passwordInput.required = true;
+                passwordHelpText.style.display = 'none';
+                if (batchInfoSection) batchInfoSection.style.display = 'block';
+            }
+        });
+    </script>
 @endsection
