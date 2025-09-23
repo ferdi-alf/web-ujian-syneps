@@ -13,7 +13,6 @@ class PengajarDetail extends Model
 
     protected $fillable = [
         'pengajar_id',
-        'kelas_id',
         'nama_lengkap',
     ];
 

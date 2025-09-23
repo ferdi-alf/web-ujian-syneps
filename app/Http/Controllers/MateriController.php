@@ -9,8 +9,10 @@ use App\Models\Materi;
 use Illuminate\Console\View\Components\Alert;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Throwable;
 
 class MateriController extends Controller
 {
@@ -66,6 +68,64 @@ class MateriController extends Controller
             ], 404);
         }
     }
+
+    public function showPdf($id) {
+        try {
+            $user = Auth::user();
+            $materi = Materi::with('kelas', 'batch')->findOrFail($id);
+            
+            if(!$this->canAccessMateri($user, $materi)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Anda tidak memiliki Akses ke materi ini'
+                ], 403);
+            }
+
+            return response()->json([
+                'success' => true,  
+                'data' => [       
+                    'id' => $materi->id,
+                    'judul' => $materi->judul,
+                    'kelas_id' => $materi->kelas_id,
+                    'batch_id' => $materi->batch_id,
+                    'file_pdf' => $materi->materi,
+                    'file_pdf_name' => $materi->materi ? basename($materi->materi) : null,
+                    'file_pdf_url' => $materi->materi ? Storage::url($materi->materi) : null,
+                    'kelas' => $materi->kelas,
+                    'batch' => $materi->batch,
+                ]
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data tidak ditemukan ' . $th->getMessage()
+            ], 404);
+        }
+    }
+
+    private function canAccessMateri($user, $materi) {
+        switch ($user->role) {
+            case 'admin':
+                return true;
+                break;
+            case 'siswa':
+                $siswaDetail = $user->siswaDetail;
+                if (!$siswaDetail) return false;
+
+                return $siswaDetail->kelas_id == $materi->kelas_id &&
+                       $siswaDetail->batch_id == $materi->batch_id;
+                break;
+            case 'pengajar':
+                $pengajarDetail = $user->pengajarDetail;
+                if(!$pengajarDetail) return false;
+
+                return $pengajarDetail->kelas()->where('kelas_id', $materi->kelas_id)->exists();
+                break;
+            default:
+                return false;
+                break;
+        }
+    } 
 
     public function store(Request $request)
     {

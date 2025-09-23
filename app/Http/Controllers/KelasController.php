@@ -14,6 +14,31 @@ class KelasController extends Controller
         return view('Dashboard.Kelas', compact('kelas'));
     }
 
+    public function show($id)
+    {
+        try {
+            $kelas = Kelas::findOrFail($id);
+            Log::info('Data kelas ditemukan: ' . $kelas->nama);
+            
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'id' => $kelas->id,
+                    'name' => $kelas->nama,
+                    'price' => $kelas->harga,
+                    'dp_persen' => $kelas->dp_persen,
+                    'type' => $kelas->type,
+                    'durasi_belajar' => $kelas->durasi_belajar,
+                    'waktu_magang' => $kelas->waktu_magang,
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data kelas tidak ditemukan'. $e->getMessage()
+            ], 404);
+        }
+}
 
     public function store(Request $request) {
         $request->validate([

@@ -171,19 +171,19 @@ class NilaiController extends Controller
         return $result;
     }
 
-private function getBatchOptionsFromData($data) {
-    $batchNames = [];
-    
-    foreach ($data as $namaKelas => $ujianList) {
-        foreach ($ujianList as $ujian) {
-            if (!empty($ujian['batch_nama']) && $ujian['batch_nama'] !== '-') {
-                $batchNames[] = $ujian['batch_nama'];
+    private function getBatchOptionsFromData($data) {
+        $batchNames = [];
+        
+        foreach ($data as $namaKelas => $ujianList) {
+            foreach ($ujianList as $ujian) {
+                if (!empty($ujian['batch_nama']) && $ujian['batch_nama'] !== '-') {
+                    $batchNames[] = $ujian['batch_nama'];
+                }
             }
         }
+        
+        return array_values(array_unique($batchNames));
     }
-    
-    return array_values(array_unique($batchNames));
-}
 
     private function getSiswaData($user)
     {

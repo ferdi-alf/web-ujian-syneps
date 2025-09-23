@@ -100,8 +100,9 @@ Route::middleware(['auth'])->group(function () {
 
     Route::controller(MateriController::class)->prefix('materi')->name('materi.')->group(function () {
         Route::get('/', 'index')->name('index');
-        Route::post('/', 'store')->name('store');
         Route::get('/{id}', 'show')->name('show'); 
+        Route::get('/pdf/{id}', 'showPdf')->name('showPdf'); 
+        Route::post('/', 'store')->name('store');
         Route::put('/{id}', 'update')->name('update');
         Route::delete('/{id}', 'destroy')->name('destroy');
         Route::get('/download/{id}', 'download')->name('download');
@@ -165,8 +166,9 @@ Route::middleware(['auth'])->group(function () {
         });
 
 
-        Route::controller(KelasController::class)->prefix('kelas')->name('kelas.')->group(function () {
+       Route::controller(KelasController::class)->prefix('kelas')->name('kelas.')->group(function () {
             Route::get('/', 'index')->name('index');
+            Route::get('/show/{id}', 'show')->name('show');
             Route::post('/', 'store')->name('store');
             Route::put('/{id}', 'update')->name('update');
             Route::delete('/{id}', 'destroy')->name('destroy');

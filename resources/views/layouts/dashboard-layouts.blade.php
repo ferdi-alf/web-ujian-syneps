@@ -76,14 +76,14 @@
     @include('components.sidebar')
 
 
-    <div class="md:p-4 p-2 sm:ml-64 bg-gray-50 min-h-screen overflow-y-auto">
+    <div class="md:p-4 relative p-2 sm:ml-64 bg-gray-50 min-h-screen overflow-y-auto">
         <div class="p-4 mt-14">
             @yield('content')
         </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/flowbite@3.1.2/dist/flowbite.min.js"></script>
     <script>

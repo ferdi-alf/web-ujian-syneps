@@ -1,4 +1,4 @@
-{{-- resources/views/components/fragments/action-button --}}
+{{-- resources/views/components/action-buttons.blade.php --}}
 @props([
     'modalTarget' => null,
     'drawerId' => null,
@@ -7,6 +7,7 @@
     'deleteMessage' => null,
     'showView' => true,
     'editData' => null,
+    'viewData' => null,
 ])
 
 <div class="flex space-x-2">
@@ -16,6 +17,21 @@
             title="Lihat Detail">
             <i class="fa-solid fa-eye"></i>
         </button>
+    @elseif ($viewData)
+        @if ($viewData['type'] === 'slideOver')
+            <button
+                onclick="openDrawerWithData('{{ $viewData['drawerTarget'] ?? $viewData['drawerId'] }}', {{ json_encode($viewData) }});"
+                class="inline-flex items-center p-3 text-xs font-medium text-green-600 bg-green-100 rounded-md hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1 transition-colors duration-200"
+                title="Lihat Detail">
+                <i class="fa-solid fa-eye"></i>
+            </button>
+        @elseif ($viewData['type'] === 'bottomSheet')
+            <button onclick="openDrawerWithData('{{ $viewData['drawerTarget'] }}', {{ json_encode($viewData) }})"
+                class="inline-flex items-center p-3 text-xs font-medium text-green-600 bg-green-100 rounded-md hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1 transition-colors duration-200"
+                title="Lihat Detail">
+                <i class="fa-solid fa-eye"></i>
+            </button>
+        @endif
     @elseif ($drawerId)
         <button onclick="openDrawer('{{ $drawerId }}')"
             class="inline-flex items-center p-3 text-xs font-medium text-green-600 bg-green-100 rounded-md hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1 transition-colors duration-200"

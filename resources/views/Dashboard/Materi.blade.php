@@ -14,6 +14,10 @@
                 </x-fragments.modal-button>
             </div>
 
+            <x-drawer-layout id="drawer-control-materi" title="Detail Materi" description="Preview dan informasi materi"
+                type="slideOver">
+                <x-pdf-viewer drawerId="drawer-control-materi" />
+            </x-drawer-layout>
             <x-fragments.form-modal id="universal-materi-modal" title="Form Materi" action="{{ route('materi.store') }}"
                 createTitle="Tambah Materi" editTitle="Edit Materi" size="xl">
 
@@ -89,9 +93,16 @@
                         'updateEndpoint' => '/materi/' . $row->id,
                         'act' => 'update',
                     ],
+                    'viewData' => [
+                        'id' => $row->id,
+                        'fetchEndpoint' => '/materi/pdf/' . $row->id,
+                        'drawerId' => 'drawer-control-materi',
+                        'type' => 'slideOver',
+                        'title' => 'Detail Materi: ' . $row->judul,
+                        'description' => 'Lihat detail dan preview PDF',
+                    ],
                 ])" :searchBar="true" :truncate="true" :rowPerPage="10" position="left" :autoFilter="[2 => 'Kelas']"
                 :filterPlaceholder="'Semua'" />
-
 
             <script>
                 document.addEventListener('DOMContentLoaded', function() {
@@ -132,6 +143,14 @@
                         if (e.detail.modalId === 'universal-materi-modal') {
                             document.getElementById('current-file-info-universal').classList.add('hidden');
                             resetFileInput();
+                        }
+                    });
+
+                    document.addEventListener('drawerDataLoaded', function(e) {
+                        if (e.detail.drawerId === 'drawer-control-materi') {
+                            const materiData = e.detail.data;
+                            console.log('Materi data loaded:', materiData);
+
                         }
                     });
 

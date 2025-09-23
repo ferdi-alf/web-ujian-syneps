@@ -1,143 +1,269 @@
+{{-- components/drawer-layout.blade.php --}}
 @props([
     'id' => 'default-drawer',
     'title' => 'Detail Data',
     'description' => 'Informasi detail',
+    'type' => 'bottomSheet', // 'bottomSheet' or 'slideOver'
 ])
 
-<div id="{{ $id }}-overlay" onclick="handleOverlayClick(event, '{{ $id }}')"
-    class="fixed inset-0 bg-black/50 z-50 opacity-0 pointer-events-none transition-opacity duration-300">
-    <div id="{{ $id }}-drawer"
-        class="fixed bottom-0 left-0 right-0 h-[80vh] bg-white rounded-t-2xl shadow-2xl transform translate-y-full transition-transform duration-300 ease-out flex flex-col"
-        onclick="event.stopPropagation()">
+<div x-data="drawerManager('{{ $id }}', '{{ $type }}')" x-init="init()" x-on:open-drawer.window="handleOpen($event)"
+    x-on:close-drawer.window="handleClose($event)">
 
-        <div class="flex justify-center pt-3 pb-2" id="{{ $id }}-drag-handle">
-            <div class="w-12 h-1.5 bg-gray-300 rounded-full"></div>
+    {{-- Bottom Sheet Layout --}}
+    <div x-show="open && drawerType === 'bottomSheet'">
+        <!-- Overlay -->
+        <div x-show="open" x-transition.opacity @click="closeDrawer()" class="fixed inset-0 bg-black/50 z-45">
         </div>
 
-        <div class="px-6 py-4 border-b border-gray-200">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h2 class="text-xl font-semibold text-gray-900" id="{{ $id }}-title">{{ $title }}
-                    </h2>
-                    <p class="text-sm text-gray-600 mt-1" id="{{ $id }}-description">{{ $description }}</p>
+        <div x-show="open" x-transition:enter="transform transition ease-out duration-300"
+            x-transition:enter-start="translate-y-full" x-transition:enter-end="translate-y-0"
+            x-transition:leave="transform transition ease-in duration-300" x-transition:leave-start="translate-y-0"
+            x-transition:leave-end="translate-y-full" @click.stop
+            class="fixed bottom-0 left-0 right-0 h-[80vh] bg-white rounded-t-2xl shadow-2xl z-50 flex flex-col">
+
+            <div class="flex justify-center pt-3 pb-2">
+                <div class="w-12 h-1.5 bg-gray-300 rounded-full"></div>
+            </div>
+
+            <div class="px-6 py-4 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 x-text="currentTitle" class="text-xl font-semibold text-gray-900">{{ $title }}
+                        </h2>
+                        <p x-text="currentDescription" class="text-sm text-gray-600 mt-1">{{ $description }}</p>
+                    </div>
+                    <button @click="closeDrawer()"
+                        class="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
                 </div>
-                <button onclick="closeDrawer('{{ $id }}')"
-                    class="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
-                        </path>
-                    </svg>
-                </button>
+            </div>
+
+            <!-- Content -->
+            <div class="flex-1 min-h-0 overflow-y-auto">
+                <div x-show="loading" class="flex items-center justify-center h-64">
+                    <div class="flex flex-col items-center">
+                        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
+                        <p class="text-gray-600">Memuat data...</p>
+                    </div>
+                </div>
+
+                <div x-show="error" class="flex items-center justify-center h-64">
+                    <div class="text-center">
+                        <i class="fa-solid fa-exclamation-triangle text-4xl text-red-500 mb-4"></i>
+                        <p class="text-red-600" x-text="errorMessage"></p>
+                        <button @click="closeDrawer()"
+                            class="mt-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
+                            Tutup
+                        </button>
+                    </div>
+                </div>
+
+                <div x-show="!loading && !error" class="p-6">
+                    {{ $slot }}
+                </div>
             </div>
         </div>
+    </div>
 
-        <div id="{{ $id }}-content" class="flex-1 min-h-0 overflow-y-auto">
-            <div class="p-6">
-                {{ $slot }}
+    <div x-show="open && drawerType === 'slideOver'">
+
+
+        <div x-show="open" x-transition:enter="transform transition ease-out duration-300"
+            x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0"
+            x-transition:leave="transform transition ease-in duration-300" x-transition:leave-start="translate-x-0"
+            x-transition:leave-end="translate-x-full" @click.stop
+            class="absolute top-0 mt-16 right-0 w-full h-full bg-white shadow-xl z-44 flex flex-col"
+            style="padding-top: 0px !important;">
+
+            <nav class="w-full p-3 shadow-lg flex justify-start">
+                <div class="w-1/2 flex justify-between items-center">
+                    <button @click="closeDrawer()"
+                        class="p-3 rounded-lg border-2 border-gray-100 hover:shadow-lg hover:bg-gray-100 flex justify-center items-center cursor-pointer hover:text-gray-700">
+                        <i class="fa-solid fa-arrow-left"></i>
+                    </button>
+                    <h2 x-text="currentTitle" class="font-semibold">{{ $title }}</h2>
+                </div>
+            </nav>
+
+            <div class="p-4 overflow-y-auto flex-1">
+                <div x-show="loading" class="flex items-center justify-center h-64">
+                    <div class="flex flex-col items-center">
+                        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
+                        <p class="text-gray-600">Memuat data...</p>
+                    </div>
+                </div>
+
+                <div x-show="error" class="flex items-center justify-center ">
+                    <div class="text-center">
+                        <i class="fa-solid fa-exclamation-triangle text-4xl text-red-500 mb-4"></i>
+                        <p class="text-red-600" x-text="errorMessage"></p>
+                        <button @click="closeDrawer()"
+                            class="mt-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
+                            Tutup
+                        </button>
+                    </div>
+                </div>
+
+                <div x-show="!loading && !error" class="p-6">
+                    {{ $slot }}
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        initializeDrawer('{{ $id }}');
-    });
+    function drawerManager(drawerId, type) {
+        return {
+            open: false,
+            loading: false,
+            error: false,
+            errorMessage: '',
+            data: null,
+            currentTitle: '',
+            currentDescription: '',
+            drawerType: type,
+            drawerId: drawerId,
 
-    function initializeDrawer(drawerId) {
-        let startY = 0;
-        let currentY = 0;
-        const swipeThreshold = 100;
+            init() {
+                this.currentTitle = '{{ $title }}';
+                this.currentDescription = '{{ $description }}';
 
-        const drawer = document.getElementById(drawerId + '-drawer');
-        if (drawer) {
-            drawer.addEventListener('touchstart', (e) => {
-                startY = e.touches[0].clientY;
-            });
+                console.log('Drawer initialized:', this.drawerId, this.drawerType);
+                this.$nextTick(() => {
+                    console.log('Alpine ready, drawer state:', {
+                        open: this.open,
+                        type: this.drawerType,
+                        id: this.drawerId
+                    });
+                });
+            },
 
-            drawer.addEventListener('touchmove', (e) => {
-                currentY = e.touches[0].clientY;
-                const deltaY = currentY - startY;
-                if (deltaY > 0) {
-                    drawer.style.transform = `translateY(${deltaY}px)`;
+            handleOpen(event) {
+                console.log('handleOpen called:', event.detail);
+                console.log('My drawer ID:', this.drawerId);
+                console.log('Event drawer ID:', event.detail.id);
+
+                if (event.detail.id !== this.drawerId) {
+                    console.log('ID mismatch, ignoring');
+                    return;
                 }
-            });
 
-            drawer.addEventListener('touchend', (e) => {
-                const deltaY = currentY - startY;
-                if (deltaY > swipeThreshold) {
-                    closeDrawer(drawerId);
-                    drawer.style.transform = '';
+                this.currentTitle = event.detail.title || this.currentTitle;
+                this.currentDescription = event.detail.description || this.currentDescription;
+
+                this.open = true;
+                document.body.classList.add('overflow-hidden');
+
+                console.log('Drawer opened:', this.open);
+
+                if (event.detail.fetchEndpoint) {
+                    this.fetchData(event.detail.fetchEndpoint);
                 } else {
-                    drawer.style.transform = '';
+                    this.dispatchDataEvent({});
                 }
-            });
+            },
+
+            handleClose(event) {
+                if (event.detail && event.detail.id !== this.drawerId) return;
+                this.closeDrawer();
+            },
+
+            closeDrawer() {
+                this.open = false;
+                this.data = null;
+                this.error = false;
+                this.errorMessage = '';
+                this.loading = false;
+                document.body.classList.remove('overflow-hidden');
+
+                console.log('Drawer closed');
+            },
+
+            fetchData(endpoint) {
+                this.loading = true;
+                this.error = false;
+
+                console.log('Fetching data from:', endpoint);
+
+                fetch(endpoint, {
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute(
+                                'content')
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(result => {
+                        this.loading = false;
+                        console.log('Raw response:', result);
+
+                        if (result.success !== undefined) {
+                            if (result.success) {
+                                this.data = result.data;
+                                this.dispatchDataEvent(result.data);
+                            } else {
+                                this.error = true;
+                                this.errorMessage = result.message || 'Gagal memuat data';
+                            }
+                        } else {
+                            this.data = result;
+                            this.dispatchDataEvent(result);
+                        }
+                    })
+                    .catch(err => {
+                        this.loading = false;
+                        this.error = true;
+                        this.errorMessage = 'Terjadi kesalahan saat memuat data';
+                        console.error('Fetch error:', err);
+                    });
+            },
+
+            dispatchDataEvent(data) {
+                console.log('Dispatching data event for drawer:', this.drawerId, 'with data:', data);
+
+
+                window.dispatchEvent(new CustomEvent('drawerdataloaded', {
+                    detail: {
+                        drawerId: this.drawerId,
+                        data: data
+                    }
+                }));
+            }
         }
     }
 
-    function openDrawer(drawerId, options = {}) {
-        console.log("Opening drawer:", drawerId);
+    window.openDrawerWithData = function(drawerId, viewData) {
+        console.log('openDrawerWithData called:', drawerId, viewData);
 
-        const overlay = document.getElementById(drawerId + '-overlay');
-        const drawer = document.getElementById(drawerId + '-drawer');
-        const title = document.getElementById(drawerId + '-title');
-        const description = document.getElementById(drawerId + '-description');
-        const content = document.getElementById(drawerId + '-content');
+        window.dispatchEvent(new CustomEvent('open-drawer', {
+            detail: {
+                id: drawerId,
+                drawerId: drawerId,
+                dataId: viewData.id,
+                fetchEndpoint: viewData.fetchEndpoint,
+                title: viewData.title,
+                description: viewData.description,
+                type: viewData.type,
+                drawerTarget: viewData.drawerTarget
+            }
+        }));
 
-        if (!overlay || !drawer) {
-            console.error('Drawer elements not found');
-            return;
-        }
+        console.log('Event dispatched: open-drawer with drawer ID:', drawerId);
+    };
 
-        if (options.title && title) {
-            title.textContent = options.title;
-        }
+    window.closeDrawer = function(drawerId) {
+        console.log('closeDrawer called:', drawerId);
 
-        if (options.description && description) {
-            description.textContent = options.description;
-        }
-
-        if (options.content && content) {
-            content.querySelector('.p-6').innerHTML = options.content;
-        }
-
-        overlay.classList.remove('opacity-0', 'pointer-events-none');
-        overlay.classList.add('opacity-100');
-
-        setTimeout(() => {
-            drawer.classList.remove('translate-y-full');
-            drawer.classList.add('translate-y-0');
-        }, 10);
-
-        document.body.classList.add('overflow-hidden');
-    }
-
-    function closeDrawer(drawerId) {
-        console.log("Closing drawer:", drawerId);
-
-        const overlay = document.getElementById(drawerId + '-overlay');
-        const drawer = document.getElementById(drawerId + '-drawer');
-
-        if (!overlay || !drawer) return;
-
-        drawer.classList.remove('translate-y-0');
-        drawer.classList.add('translate-y-full');
-
-        setTimeout(() => {
-            overlay.classList.add('opacity-0', 'pointer-events-none');
-            overlay.classList.remove('opacity-100');
-        }, 300);
-
-        document.body.classList.remove('overflow-hidden');
-    }
-
-    function handleOverlayClick(e, drawerId) {
-        const drawer = document.getElementById(drawerId + '-drawer');
-        if (!drawer.contains(e.target)) {
-            closeDrawer(drawerId);
-        }
-    }
-
-    window.openDrawer = openDrawer;
-    window.closeDrawer = closeDrawer;
+        window.dispatchEvent(new CustomEvent('close-drawer', {
+            detail: {
+                id: drawerId
+            }
+        }));
+    };
 </script>
