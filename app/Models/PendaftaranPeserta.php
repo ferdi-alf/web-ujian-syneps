@@ -21,6 +21,7 @@ class PendaftaranPeserta extends Model {
             'mengetahui_program_dari',
             'total_tagihan',
             'jumlah_cicilan',
+            'tagihan_per_bulan',
             'bukti_pembayaran_dp',
             'link_register',
             'created_at',

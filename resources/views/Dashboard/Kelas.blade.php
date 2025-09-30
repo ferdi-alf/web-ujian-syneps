@@ -25,7 +25,10 @@
 
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <x-fragments.select-field label="Type Kelas" name="type" :options="['' => 'Pilih Type', 'intensif' => 'Intensif', 'partime' => 'Partime']" />
+                        <x-fragments.select-field label="Type Kelas" name="type" :options="[
+                            'intensif' => 'Intensif',
+                            'partime' => 'Partime',
+                        ]" />
                         <small class="text-gray-500">Kosongkan jika kelas tidak ada type spesifik</small>
                     </div>
                     <div>
@@ -47,7 +50,8 @@
         <div class="mt-6">
             <x-reusable-table :headers="['No', 'Nama Kelas', 'Harga', 'DP (%)', 'Total DP', 'Type', 'Durasi']" position="center" :data="$kelas" :columns="[
                 fn($row, $i) => $i + 1,
-                fn($row) => $row->nama,
+                fn($row) => $row->normal_nama,
+            
                 fn($row) => 'Rp ' . number_format($row->harga, 0, ',', '.'),
                 fn($row) => $row->dp_persen . '%',
                 fn($row) => 'Rp ' . number_format(($row->harga * $row->dp_persen) / 100, 0, ',', '.'),
@@ -73,14 +77,30 @@
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             const nameInput = document.querySelector('input[name="name"]');
-            const priceInput = document.querySelector('input[name="price"]');
+            const priceDisplayInput = document.querySelector('input[name="price_display"]');
+            const priceHiddenInput = document.querySelector('input[name="price"]');
             const dpPersenInput = document.querySelector('input[name="dp_persen"]');
             const typeSelect = document.querySelector('select[name="type"]');
             const durasiBelajarInput = document.querySelector('input[name="durasi_belajar"]');
             const waktuMagangInput = document.querySelector('input[name="waktu_magang"]');
 
+            function setCurrencyValue(value) {
+                if (!priceDisplayInput || !priceHiddenInput) return;
+
+                const numericValue = value.toString().replace(/[^\d]/g, '');
+
+                const formattedValue = numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+
+
+                priceDisplayInput.value = formattedValue;
+                priceHiddenInput.value = numericValue;
+
+                console.log('Currency set - Display:', formattedValue, 'Hidden:', numericValue);
+            }
+
             document.addEventListener('modalCreate', function(e) {
                 if (e.detail.modalId === 'modal-control-kelas') {
+                    console.log('Modal Create - Resetting form');
                     resetForm();
                 }
             });
@@ -88,40 +108,43 @@
             document.addEventListener('modalUpdate', function(e) {
                 if (e.detail.modalId === 'modal-control-kelas') {
                     const kelasData = e.detail.data;
-                    console.log('Kelas Data:', kelasData);
+                    console.log('Modal Update - Kelas Data:', kelasData);
 
                     nameInput.value = kelasData.name || '';
-                    priceInput.value = kelasData.price ?
-                        parseInt(kelasData.price).toString() :
-                        '';
-                    if (typeof formatCurrency === 'function') {
-                        formatCurrency(priceInput);
-                    }
-
                     dpPersenInput.value = kelasData.dp_persen || '';
                     typeSelect.value = kelasData.type || '';
                     durasiBelajarInput.value = kelasData.durasi_belajar || '';
                     waktuMagangInput.value = kelasData.waktu_magang || '';
 
-                    if (priceInput && typeof formatCurrency === 'function') {
-                        formatCurrency(priceInput);
+                    if (kelasData.price) {
+                        const cleanPrice = kelasData.price.toString().replace(/[^\d]/g, '');
+                        console.log('Setting price:', cleanPrice);
+                        setCurrencyValue(cleanPrice);
+
+                        if (typeof window.formatCurrency === 'function' && priceDisplayInput) {
+                            setTimeout(() => {
+                                window.formatCurrency(priceDisplayInput);
+                            }, 100);
+                        }
                     }
                 }
             });
 
             document.addEventListener('modalReset', function(e) {
                 if (e.detail.modalId === 'modal-control-kelas') {
+                    console.log('Modal Reset');
                     resetForm();
                 }
             });
 
             function resetForm() {
                 nameInput.value = '';
-                priceInput.value = '';
                 dpPersenInput.value = '';
                 typeSelect.value = '';
                 durasiBelajarInput.value = '';
                 waktuMagangInput.value = '';
+                if (priceDisplayInput) priceDisplayInput.value = '';
+                if (priceHiddenInput) priceHiddenInput.value = '';
             }
         });
     </script>

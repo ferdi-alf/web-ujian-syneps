@@ -349,6 +349,7 @@
                                 'inactive' => 'Inactive',
                                 'registration' => 'Registration',
                                 'active' => 'Active',
+                                'finished' => 'Finished',
                             ]" required />
                         </div>
                         <div class="hidden" id="periode-batch">
@@ -405,6 +406,7 @@
                 <script>
                     const kelasData = @json($kelasData ?? []);
                     let currentMode = 'create';
+
 
                     function generateDurationText(kelasId) {
                         if (!kelasData[kelasId]) return '';
@@ -475,12 +477,11 @@
                         const kelasDisplayCard = document.querySelector('#card-kelas');
                         const kelasDisplayText = document.querySelector('#kelas-display');
                         const selectKelasDiv = document.querySelector('#select-kelas');
-
+                        const formElement = document.querySelector('#modal-control-batch form');
 
                         function resetModalState() {
                             periodeBatch?.classList.add('hidden');
                             periodeBatch?.classList.remove('grid');
-
                             document.getElementById('duration-validation')?.classList.add('hidden');
                             tanggalMulaiInput?.removeAttribute('required');
                             tanggalSelesaiInput?.removeAttribute('required');
@@ -491,7 +492,6 @@
                         document.addEventListener('modalCreate', function(e) {
                             if (e.detail.modalId === 'modal-control-batch') {
                                 currentMode = 'create';
-
                                 resetModalState();
 
                                 if (kelasSelect) {
@@ -501,6 +501,9 @@
                                 }
                                 if (selectKelasDiv) selectKelasDiv.classList.remove('hidden');
                                 if (kelasDisplayCard) kelasDisplayCard.classList.add('hidden');
+
+                                // Reset original value saat create
+                                statusSelect?.removeAttribute('data-original-value');
 
                                 updateDurationDisplay();
                                 validateAddBatch();
@@ -531,10 +534,12 @@
 
                                     if (kelasDisplayText) kelasDisplayText.textContent = `Kelas: ${batchData.kelas}`;
                                 }
+
+                                statusSelect?.setAttribute('data-original-value', batchData.status);
+
                                 if (batchData.status === 'active') {
                                     periodeBatch?.classList.remove('hidden');
                                     periodeBatch?.classList.add('grid');
-
                                     tanggalMulaiInput?.setAttribute('required', true);
                                     tanggalSelesaiInput?.setAttribute('required', true);
                                 }
@@ -582,8 +587,36 @@
                             }
                         }
 
-                        statusSelect?.addEventListener('change', function() {
-                            if (this.value === 'active') {
+
+                        statusSelect?.addEventListener('change', function(e) {
+                            const originalValue = this.getAttribute('data-original-value');
+
+
+                            if (this.value === 'finished' && currentMode === 'update' && originalValue !== 'finished') {
+                                Swal.fire({
+                                    title: 'Apakah Anda yakin?',
+                                    text: 'Jika batch diubah ke finished, semua peserta akan menjadi alumni.',
+                                    icon: 'warning',
+                                    showCancelButton: true,
+                                    confirmButtonColor: '#3085d6',
+                                    cancelButtonColor: '#d33',
+                                    confirmButtonText: 'Ya, ubah ke Finished!',
+                                    cancelButtonText: 'Batal',
+                                    reverseButtons: true
+                                }).then((result) => {
+                                    if (!result.isConfirmed) {
+                                        statusSelect.value = originalValue || 'active';
+                                        handleStatusChange();
+                                    }
+                                });
+                            }
+
+                            handleStatusChange();
+                        });
+
+
+                        function handleStatusChange() {
+                            if (statusSelect.value === 'active') {
                                 periodeBatch?.classList.remove('hidden');
                                 periodeBatch?.classList.add('grid');
                                 tanggalMulaiInput?.setAttribute('required', true);
@@ -595,9 +628,10 @@
                                 tanggalSelesaiInput?.removeAttribute('required');
                                 document.getElementById('duration-validation')?.classList.add('hidden');
                             }
+
                             updateDurationDisplay();
                             validateAddBatch();
-                        });
+                        }
 
                         kelasSelect?.addEventListener('change', function() {
                             updateDurationDisplay();
@@ -606,6 +640,44 @@
 
                         tanggalMulaiInput?.addEventListener('change', validateAddBatch);
                         tanggalSelesaiInput?.addEventListener('change', validateAddBatch);
+
+
+                        function showToast(message, type = 'success') {
+                            const toast = document.createElement('div');
+                            const bgColor = {
+                                'success': 'bg-green-500',
+                                'warning': 'bg-yellow-500',
+                                'error': 'bg-red-500',
+                                'info': 'bg-blue-500'
+                            } [type] || 'bg-gray-500';
+
+                            toast.className =
+                                `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg text-white z-50 transform transition-all duration-300 ${bgColor}`;
+                            toast.textContent = message;
+                            document.body.appendChild(toast);
+
+
+                            setTimeout(() => toast.style.transform = 'translateX(0)', 10);
+
+
+                            setTimeout(() => {
+                                toast.style.opacity = '0';
+                                toast.style.transform = 'translateX(100%)';
+                                setTimeout(() => toast.remove(), 300);
+                            }, 3000);
+                        }
+
+                        @if (session('success'))
+                            showToast('{{ session('success') }}', 'success');
+                        @endif
+
+                        @if (session('error'))
+                            showToast('{{ session('error') }}', 'error');
+                        @endif
+
+                        @if (session('warning'))
+                            showToast('{{ session('warning') }}', 'warning');
+                        @endif
                     });
                 </script>
             @endif
@@ -750,61 +822,7 @@
                 document.addEventListener('DOMContentLoaded', function() {
                     const ctx = document.getElementById('stackedBarChart').getContext('2d');
                     const chartData = @json($chartData);
-                    const editForms = document.querySelectorAll('[id^="modal-edit-batch-"]');
 
-                    editForms.forEach(form => {
-                        const selectStatus = form.querySelector('select[name="status"]');
-                        const formElement = form.querySelector('form');
-
-                        if (selectStatus && formElement) {
-                            selectStatus.addEventListener('change', function() {
-                                if (this.value === 'finished') {
-                                    event.preventDefault();
-
-                                    Swal.fire({
-                                        title: 'Apakah Anda yakin?',
-                                        text: 'Apakah Anda yakin ingin mengubah batch ini menjadi finished? Jika diubah jadi finished maka semua peserta statusnya akan berubah jadi alumni.',
-                                        icon: 'warning',
-                                        showCancelButton: true,
-                                        confirmButtonColor: '#3085d6',
-                                        cancelButtonColor: '#d33',
-                                        confirmButtonText: 'Ya, ubah ke finished!',
-                                        cancelButtonText: 'Batal',
-                                        reverseButtons: true
-                                    }).then((result) => {
-                                        if (!result.isConfirmed) {
-                                            selectStatus.value = selectStatus.getAttribute(
-                                                'data-original-value') || 'active';
-                                        }
-                                    });
-                                }
-                            });
-
-                            selectStatus.setAttribute('data-original-value', selectStatus.value);
-                            formElement.addEventListener('submit', function(e) {
-                                const currentStatus = selectStatus.value;
-
-                                if (currentStatus === 'finished') {
-                                    e.preventDefault();
-
-                                    Swal.fire({
-                                        title: 'Konfirmasi Perubahan Status',
-                                        text: 'Apakah Anda yakin ingin mengubah batch ini menjadi finished? Semua peserta akan menjadi alumni.',
-                                        icon: 'question',
-                                        showCancelButton: true,
-                                        confirmButtonColor: '#28a745',
-                                        cancelButtonColor: '#dc3545',
-                                        confirmButtonText: 'Ya, Finished!',
-                                        cancelButtonText: 'Batal'
-                                    }).then((result) => {
-                                        if (result.isConfirmed) {
-                                            this.submit();
-                                        }
-                                    });
-                                }
-                            });
-                        }
-                    });
                     new Chart(ctx, {
                         type: 'bar',
                         data: {

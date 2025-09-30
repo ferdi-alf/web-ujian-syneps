@@ -254,27 +254,7 @@
                 </div>
             </template>
 
-            <!-- Additional Info -->
-            <div class="mt-8 p-4 bg-gray-50 rounded-lg border">
-                <h4 class="font-medium text-gray-900 mb-3 flex items-center">
-                    <i class="fa-solid fa-info-circle mr-2 text-blue-500"></i>
-                    Informasi Materi
-                </h4>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div class="bg-white p-3 rounded border">
-                        <div class="text-xs text-gray-500 uppercase tracking-wide">ID Materi</div>
-                        <div class="font-mono text-sm text-gray-900" x-text="materiData.id"></div>
-                    </div>
-                    <div class="bg-white p-3 rounded border">
-                        <div class="text-xs text-gray-500 uppercase tracking-wide">Kelas ID</div>
-                        <div class="font-mono text-sm text-gray-900" x-text="materiData.kelas_id"></div>
-                    </div>
-                    <div class="bg-white p-3 rounded border">
-                        <div class="text-xs text-gray-500 uppercase tracking-wide">Batch ID</div>
-                        <div class="font-mono text-sm text-gray-900" x-text="materiData.batch_id"></div>
-                    </div>
-                </div>
-            </div>
+
         </div>
     </template>
 

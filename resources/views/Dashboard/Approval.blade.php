@@ -387,7 +387,6 @@
                                                 </label>
                                                 <div class="bg-gray-50 text-gray-900 p-3 rounded-md border-l-4 border-red-400">
                                                     ${pesertaData.alamat}
-                                                    lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, voluptatum.
                                                 </div>
                                             </div>
                                             <div class="transform hover:scale-105 transition-transform duration-200">
@@ -469,21 +468,21 @@
                                         </div>
                                            ${pesertaData.link_register && 
                                             `
-                                                                                                    <div class="mt-4 p-4 w-full">
-                                                                                                    <a 
-                                                                                                          href="https://wa.me/${pesertaData.noHp.replace(/^0/, '62')}?text=${encodeURIComponent(
-                                                                                                            `Halo ${pesertaData.nama},\n\n` +
-                                                                                                            `Selamat! Anda telah diterima di kelas ${pesertaData.kelas} - Batch ${pesertaData.batch}.\n\n` +
-                                                                                                            `Silakan selesaikan proses registrasi melalui link berikut (berlaku 24 jam):\n` +
-                                                                                                            `${pesertaData.link_register}\n\n` +
-                                                                                                            `Terima kasih`
-                                                                                                        )}" 
-                                                                                                        target="_blank" 
-                                                                                                        class="no-underline bg-green-500 rounded-lg shadow-md p-4 text-white font-semibold">
-                                                                                                        Kirim Melalui Whatsapp
-                                                                                                    </a>
-                                                                                                </div>
-                                                                                                `}
+                                                                                                            <div class="mt-4 p-4 w-full">
+                                                                                                            <a 
+                                                                                                                  href="https://wa.me/${pesertaData.noHp.replace(/^0/, '62')}?text=${encodeURIComponent(
+                                                                                                                    `Halo ${pesertaData.nama},\n\n` +
+                                                                                                                    `Selamat! Anda telah diterima di kelas ${pesertaData.kelas} - Batch ${pesertaData.batch}.\n\n` +
+                                                                                                                    `Silakan selesaikan proses registrasi melalui link berikut (berlaku 24 jam):\n` +
+                                                                                                                    `${pesertaData.link_register}\n\n` +
+                                                                                                                    `Terima kasih`
+                                                                                                                )}" 
+                                                                                                                target="_blank" 
+                                                                                                                class="no-underline bg-green-500 rounded-lg shadow-md p-4 text-white font-semibold">
+                                                                                                                Kirim Melalui Whatsapp
+                                                                                                            </a>
+                                                                                                        </div>
+                                                                                                        `}
                                     </div>
                                 </div>
                         </div>

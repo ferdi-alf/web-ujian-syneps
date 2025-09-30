@@ -24,7 +24,7 @@
 
                             <div>
                                 <x-fragments.text-field id="name" name="name" type="text" label="Name"
-                                    placeholder="Masukan Name atau Email" :value="old('name')" :error="$errors->first('nameOrEmail')" required />
+                                    placeholder="Masukan Name" :value="old('name')" :error="$errors->first('nameOrEmail')" required />
                                 <small>name digunakan untuk login selain email</small>
                             </div>
 

@@ -14,12 +14,12 @@
                         </path>
                     </svg>
                 </button>
-                <a href="{{ url('/dashboard') }}" class="flex ms-2 md:me-24">
+                <a href="{{ url('/dashboard') }}" class="flex ms-2 items-center md:me-24">
                     <img src="{{ asset('images/logo.png') }}" class="h-10 me-3 border border-teal-900 rounded-full"
                         alt="Logo" />
 
                     <p
-                        class="bg-gradient-to-br from-teal-400 to-emerald-400 text-transparent bg-clip-text text-2xl font-extrabold">
+                        class="bg-gradient-to-br from-teal-400 to-emerald-400 text-transparent bg-clip-text text-lg sm:text-2xl font-extrabold">
                         Syneps Academy
                     </p>
                 </a>

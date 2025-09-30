@@ -17,7 +17,7 @@
 
 <div>
     @if ($label)
-        <label for="{{ $name }}" class="block mb-2 text-sm font-medium text-gray-900">
+        <label for="{{ $name }}_display" class="block mb-2 text-sm font-medium text-gray-900">
             {{ $label }}
             @if ($required)
                 <span class="text-red-500">*</span>
@@ -32,13 +32,15 @@
             </div>
         @endif
 
-        <input type="text" name="{{ $name }}" id="{{ $name }}" value="{{ old($name, $value) }}"
+        {{-- Input untuk display (yang dilihat user) --}}
+        <input type="text" name="{{ $name }}_display" id="{{ $name }}_display"
             placeholder="{{ $placeholder }}"
             class="bg-gray-50 border {{ $errorClass }} text-gray-900 text-sm rounded-lg block w-full {{ $currency ? 'pl-12' : 'pl-3' }} pr-3 py-2.5 transition-colors duration-200"
-            {{ $required ? 'required' : '' }} {{ $attributes }} data-currency-input />
+            {{ $attributes }} data-currency-input autocomplete="off" />
 
-        <input type="hidden" name="{{ $name }}_numeric" id="{{ $name }}_numeric"
-            value="{{ old($name . '_numeric', preg_replace('/[^\d]/', '', $value)) }}">
+        {{-- Hidden input untuk submit ke server (value asli) --}}
+        <input type="hidden" name="{{ $name }}" id="{{ $name }}" value="{{ old($name, $value) }}"
+            {{ $required ? 'required' : '' }} data-currency-hidden />
     </div>
 
     @error($name)
@@ -53,46 +55,70 @@
     document.addEventListener('DOMContentLoaded', function() {
         function formatCurrency(value) {
             const numericValue = value.toString().replace(/[^\d]/g, '');
-
+            if (!numericValue) return '';
             return numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
         }
 
-        document.querySelectorAll('[data-currency-input]').forEach(function(input) {
-            const hiddenInput = document.getElementById(input.id + '_numeric');
+        function unformatCurrency(value) {
+            return value.toString().replace(/[^\d]/g, '');
+        }
 
-            if (input.value) {
-                const numericValue = input.value.replace(/[^\d]/g, '');
-                input.value = formatCurrency(numericValue);
-                if (hiddenInput) {
-                    hiddenInput.value = numericValue;
-                }
+
+        function setCurrencyValue(displayInput, hiddenInput, value) {
+            const numericValue = unformatCurrency(value);
+            const formattedValue = formatCurrency(numericValue);
+
+            displayInput.value = formattedValue;
+            hiddenInput.value = numericValue;
+        }
+
+        window.formatCurrency = function(input) {
+            const hiddenInput = document.getElementById(input.id.replace('_display', ''));
+            if (hiddenInput && input.value) {
+                setCurrencyValue(input, hiddenInput, input.value);
             }
-            input.addEventListener('input', function(e) {
+        };
+
+
+        document.querySelectorAll('[data-currency-input]').forEach(function(displayInput) {
+            const hiddenInput = document.getElementById(displayInput.id.replace('_display', ''));
+
+            if (!hiddenInput) {
+                console.error('Hidden input not found for:', displayInput.id);
+                return;
+            }
+
+
+            if (hiddenInput.value) {
+                setCurrencyValue(displayInput, hiddenInput, hiddenInput.value);
+            }
+
+            displayInput.addEventListener('input', function(e) {
                 const cursorPosition = e.target.selectionStart;
                 const oldValue = e.target.value;
-                const numericValue = oldValue.replace(/[^\d]/g, '');
+                const oldLength = oldValue.length;
+
+                const numericValue = unformatCurrency(oldValue);
                 const formattedValue = formatCurrency(numericValue);
 
                 e.target.value = formattedValue;
+                hiddenInput.value = numericValue;
 
-                if (hiddenInput) {
-                    hiddenInput.value = numericValue;
-                }
-
-                const lengthDifference = formattedValue.length - oldValue.length;
-                const newCursorPosition = cursorPosition + lengthDifference;
+                const newLength = formattedValue.length;
+                const lengthDiff = newLength - oldLength;
+                const newCursorPosition = Math.max(0, cursorPosition + lengthDiff);
                 e.target.setSelectionRange(newCursorPosition, newCursorPosition);
             });
 
-            input.addEventListener('paste', function(e) {
+            displayInput.addEventListener('paste', function(e) {
                 e.preventDefault();
                 const pastedText = (e.clipboardData || window.clipboardData).getData('text');
-                const numericValue = pastedText.replace(/[^\d]/g, '');
-                const formattedValue = formatCurrency(numericValue);
+                setCurrencyValue(displayInput, hiddenInput, pastedText);
+            });
 
-                e.target.value = formattedValue;
-                if (hiddenInput) {
-                    hiddenInput.value = numericValue;
+            displayInput.addEventListener('blur', function(e) {
+                if (e.target.value) {
+                    setCurrencyValue(displayInput, hiddenInput, e.target.value);
                 }
             });
         });

@@ -28,7 +28,7 @@ class LandingController extends Controller
         
             return view('welcome', compact('kelas'));
         } catch (\Exception $e) {
-            // Jika ada error, tetap tampilkan halaman dengan data kosong
+           
             Log::error('Error loading landing page: ' . $e->getMessage());
             $kelas = collect(); // Empty collection
             return view('welcome', compact('kelas'));
@@ -113,6 +113,7 @@ class LandingController extends Controller
                 'jenis_kelamin' => $request->jenis_kelamin,
                 'pendidikan_terakhir' => $request->pendidikan_terakhir,
                 'mengetahui_program_dari' => $request->mengetahui_program_dari,
+                'tagihan_per_bulan' => $tagihanPerBulan,
                 'status' => 'pending',
                 'total_tagihan' => $sisaTagihan,
                 'jumlah_cicilan' => $totalBulan,

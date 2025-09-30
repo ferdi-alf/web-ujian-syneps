@@ -1,17 +1,16 @@
-{{-- components/drawer-layout.blade.php --}}
 @props([
     'id' => 'default-drawer',
     'title' => 'Detail Data',
     'description' => 'Informasi detail',
-    'type' => 'bottomSheet', // 'bottomSheet' or 'slideOver'
+    'type' => 'bottomSheet',
 ])
 
 <div x-data="drawerManager('{{ $id }}', '{{ $type }}')" x-init="init()" x-on:open-drawer.window="handleOpen($event)"
     x-on:close-drawer.window="handleClose($event)">
 
-    {{-- Bottom Sheet Layout --}}
+
     <div x-show="open && drawerType === 'bottomSheet'">
-        <!-- Overlay -->
+
         <div x-show="open" x-transition.opacity @click="closeDrawer()" class="fixed inset-0 bg-black/50 z-45">
         </div>
 
@@ -62,7 +61,7 @@
                     </div>
                 </div>
 
-                <div x-show="!loading && !error" class="p-6">
+                <div x-show="!loading && !error" class="md:p-6 p-2">
                     {{ $slot }}
                 </div>
             </div>
@@ -70,7 +69,6 @@
     </div>
 
     <div x-show="open && drawerType === 'slideOver'">
-
 
         <div x-show="open" x-transition:enter="transform transition ease-out duration-300"
             x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0"
@@ -80,7 +78,7 @@
             style="padding-top: 0px !important;">
 
             <nav class="w-full p-3 shadow-lg flex justify-start">
-                <div class="w-1/2 flex justify-between items-center">
+                <div class="md:w-1/2 w-fit flex justify-between items-center">
                     <button @click="closeDrawer()"
                         class="p-3 rounded-lg border-2 border-gray-100 hover:shadow-lg hover:bg-gray-100 flex justify-center items-center cursor-pointer hover:text-gray-700">
                         <i class="fa-solid fa-arrow-left"></i>
@@ -108,7 +106,7 @@
                     </div>
                 </div>
 
-                <div x-show="!loading && !error" class="p-6">
+                <div x-show="!loading && !error" class="md:p-6 p-0">
                     {{ $slot }}
                 </div>
             </div>

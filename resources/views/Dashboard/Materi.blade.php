@@ -1,9 +1,60 @@
 @extends('layouts.dashboard-layouts')
 
+@php
+    use Carbon\Carbon;
+    $grouped = $materi->groupBy(function ($item) {
+        return Carbon::parse($item->created_at)->translatedFormat('F Y');
+    });
+
+@endphp
+
 @section('content')
+    <x-drawer-layout id="drawer-control-materi" title="Detail Materi" description="Preview dan informasi materi"
+        type="slideOver">
+        <x-pdf-viewer drawerId="drawer-control-materi" />
+    </x-drawer-layout>
     @switch(Auth::user()->role)
         @case('siswa')
-            <p>Ini Halaman Siswa</p>
+            <ol class="relative border-s-2  border-gray-300">
+                @foreach ($grouped as $month => $items)
+                    <li class="md:mb-10 mb-0 mt-5 ms-6">
+                        <span
+                            class="absolute flex items-center justify-center w-6 h-6 bg-teal-100 text-teal-500 font-bold rounded-full -start-3 ring-8 ring-white">{{ $loop->iteration }}</span>
+                        <h3 class="flex items-center mb-1 text-lg font-semibold text-gray-900">
+                            {{ $month }}
+                        </h3>
+
+                        @foreach ($items as $item)
+                            <div class="mb-4 bg-white flex items-center justify-between shadow-md p-3 rounded-xl md:w-1/2">
+                                <div class="flex gap-2 items-center">
+                                    <div class="rounded-full p-3 h-10 flex justify-center items-center w-10 bg-red-100">
+                                        <i class="fa-solid fa-file-pdf text-xl text-red-500"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-base font-medium text-gray-700">{{ $item->judul }}
+                                        </p>
+                                        <small>{{ $item->kelas->nama }} <span
+                                                class="bg-purple-100 text-purple-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-sm border border-purple-400">{{ $item->batch->nama }}</span></small>
+                                        <time class="block mb-2 text-sm text-gray-400">
+                                            {{ Carbon::parse($item->created_at)->translatedFormat('d M Y, H:i') }}
+                                        </time>
+                                    </div>
+                                </div>
+                                <div class="w-10 h-10">
+                                    <x-action-buttons :viewData="[
+                                        'id' => $item->id,
+                                        'fetchEndpoint' => '/materi/pdf/' . $item->id,
+                                        'drawerId' => 'drawer-control-materi',
+                                        'type' => 'slideOver',
+                                        'title' => 'Detail Materi: ' . $item->judul,
+                                        'description' => 'Lihat detail dan preview PDF',
+                                    ]" />
+                                </div>
+                            </div>
+                        @endforeach
+                    </li>
+                @endforeach
+            </ol>
         @break
 
         @default
@@ -14,10 +65,7 @@
                 </x-fragments.modal-button>
             </div>
 
-            <x-drawer-layout id="drawer-control-materi" title="Detail Materi" description="Preview dan informasi materi"
-                type="slideOver">
-                <x-pdf-viewer drawerId="drawer-control-materi" />
-            </x-drawer-layout>
+
             <x-fragments.form-modal id="universal-materi-modal" title="Form Materi" action="{{ route('materi.store') }}"
                 createTitle="Tambah Materi" editTitle="Edit Materi" size="xl">
 
@@ -116,8 +164,6 @@
                         'remove-file-universal'
                     );
 
-
-
                     document.addEventListener('modalUpdate', function(e) {
                         if (e.detail.modalId === 'universal-materi-modal') {
                             const materiData = e.detail.data;
@@ -146,13 +192,7 @@
                         }
                     });
 
-                    document.addEventListener('drawerDataLoaded', function(e) {
-                        if (e.detail.drawerId === 'drawer-control-materi') {
-                            const materiData = e.detail.data;
-                            console.log('Materi data loaded:', materiData);
 
-                        }
-                    });
 
                     const kelasSelect = document.getElementById('kelas_id');
                     if (kelasSelect) {
@@ -287,5 +327,15 @@
                     }
                 });
             </script>
+        @break
     @endswitch
+
+    <script>
+        document.addEventListener('drawerDataLoaded', function(e) {
+            if (e.detail.drawerId === 'drawer-control-materi') {
+                const materiData = e.detail.data;
+                console.log('Materi data loaded:', materiData);
+            }
+        });
+    </script>
 @endsection

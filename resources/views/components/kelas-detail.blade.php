@@ -683,18 +683,7 @@
                     showStep(currentStep);
                 }
             });
-            "
-            Terjadi kesalahan sistem: SQLSTATE[42 S22]: Column not found: 1054 Unknown column &
-                #039;tagihan_per_bulan&# 039;
-            in & #039;field list&# 039;
-            (Connection: mysql, SQL: insert into `pendaftaran_peserta`(`batch_id`, `kelas_id`, `nama_lengkap`,
-                `email`, `no_hp`, `alamat`, `jenis_kelamin`, `pendidikan_terakhir`, `mengetahui_program_dari`,
-                `status`, `total_tagihan`, `jumlah_cicilan`, `tagihan_per_bulan`, `bukti_pembayaran_dp`,
-                `updated_at`, `created_at`) values(1, 1, ferdialfian ferdi, test @gmail.com, 094595494494,
-                jln sematang borang, Laki - laki, SMP, Website, pending, 4500000, 6, 750000, dp /
-                TR4Y1FCJFT7aq0F0ZU7OXYcnuxtu4JzbPeO6UgbV.png, 2025 - 09 - 11 18: 57: 20, 2025 - 09 - 11 18: 57:
-                20))
-            "
+
             // Init
             showStep(currentStep);
 

@@ -67,7 +67,7 @@ class RegisterController extends Controller
             ]);
 
             if ($mode === 'email') {
-                // MODE EMAIL - Kirim verification code
+                
                 $verificationToken = Str::random(64);
                 $verificationCode = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
                 
@@ -95,7 +95,23 @@ class RegisterController extends Controller
                     ->with(AlertHelper::success('Registrasi berhasil! Silakan verifikasi email Anda.', 'Success'));
                     
             } else {
-                // MODE WHATSAPP - Langsung create SiswaDetail dan login
+               
+                log::info('data pendaftaran', [
+                    'siswa_id' => $user->id,
+                    'kelas_id' => $peserta->kelas_id,
+                    'batch_id' => $peserta->batch_id,
+                    'nama_lengkap' => $peserta->nama_lengkap,
+                    'no_hp' => $peserta->no_hp,
+                    'status' => 'active',
+                    'alamat' => $peserta->alamat,
+                    'pendidikan_terakhir' => $peserta->pendidikan_terakhir,
+                    'jenis_kelamin' => $peserta->jenis_kelamin,
+                    'mengetahui_program_dari' => $peserta->mengetahui_program_dari,
+                    'total_tagihan' => $peserta->total_tagihan,
+                    'jumlah_cicilan' => $peserta->jumlah_cicilan,
+                    'tagihan_per_bulan' => $peserta->tagihan_per_bulan,
+                    'ikut_magang' => false,
+                ]);
                 SiswaDetail::create([
                     'siswa_id' => $user->id,
                     'kelas_id' => $peserta->kelas_id,

@@ -24,8 +24,8 @@ class KelasController extends Controller
                 'success' => true,
                 'data' => [
                     'id' => $kelas->id,
-                    'name' => $kelas->nama,
-                    'price' => $kelas->harga,
+                    'name' => $kelas->normal_nama,
+                     'price' => (int) $kelas->harga,
                     'dp_persen' => $kelas->dp_persen,
                     'type' => $kelas->type,
                     'durasi_belajar' => $kelas->durasi_belajar,
@@ -38,21 +38,21 @@ class KelasController extends Controller
                 'message' => 'Data kelas tidak ditemukan'. $e->getMessage()
             ], 404);
         }
-}
+    }
 
     public function store(Request $request) {
         $request->validate([
             'name' => 'required|string',
-            'price_numeric' => 'required|numeric|min:0',
+            'price' => 'required|numeric|min:0', // UBAH DARI price_numeric
             'dp_persen' => 'required|numeric|min:0|max:100',
             'type' => 'nullable|string|in:intensif,partime',
             'durasi_belajar' => 'required|numeric|min:1',
             'waktu_magang' => 'nullable|numeric|min:0'
         ], [
             'name.required' => 'Nama Kelas tidak boleh kosong',
-            'price_numeric.required' => 'Harga kelas tidak boleh kosong',
-            'price_numeric.numeric' => 'Harga harus berupa angka',
-            'price_numeric.min' => 'Harga tidak boleh kurang dari 0',
+            'price.required' => 'Harga kelas tidak boleh kosong', // UBAH
+            'price.numeric' => 'Harga harus berupa angka', // UBAH
+            'price.min' => 'Harga tidak boleh kurang dari 0', // UBAH
             'dp_persen.required' => 'DP persen tidak boleh kosong',
             'dp_persen.numeric' => 'DP persen harus berupa angka',
             'dp_persen.min' => 'DP persen tidak boleh kurang dari 0',
@@ -68,13 +68,13 @@ class KelasController extends Controller
         try {
             Kelas::create([
                 'nama' => $request->name,
-                'harga' => $request->price_numeric,
+                'harga' => $request->price, // UBAH DARI price_numeric
                 'dp_persen' => $request->dp_persen,
                 'type' => $request->type,
                 'durasi_belajar' => $request->durasi_belajar,
-                'waktu_magang' => $request->waktu_magang ?? 0  // Menggunakan default 0 jika null
+                'waktu_magang' => $request->waktu_magang ?? 0
             ]);
-            return back()->with(AlertHelper::success('Berhasil menambahkan kelas '. $request->name , 'Success'));
+            return back()->with(AlertHelper::success('Berhasil menambahkan kelas '. $request->name, 'Success'));
         } catch (\Throwable $th) {
             Log::error('gagal menambahkan data' . $th->getMessage());
             return back()->withErrors(AlertHelper::error('gagal menambahkan data' . $th->getMessage(), 'Error'));
@@ -84,16 +84,16 @@ class KelasController extends Controller
     public function update(Request $request, $id) {
         $request->validate([
             'name' => 'required|string',
-            'price_numeric' => 'required|numeric|min:0',
+            'price' => 'required|numeric|min:0', // UBAH DARI price_numeric
             'dp_persen' => 'required|numeric|min:0|max:100',
             'type' => 'nullable|string|in:intensif,partime',
             'durasi_belajar' => 'required|numeric|min:1',
             'waktu_magang' => 'nullable|numeric|min:0'
         ], [
             'name.required' => 'Nama Kelas tidak boleh kosong',
-            'price_numeric.required' => 'Harga kelas tidak boleh kosong',
-            'price_numeric.numeric' => 'Harga harus berupa angka',
-            'price_numeric.min' => 'Harga tidak boleh kurang dari 0',
+            'price.required' => 'Harga kelas tidak boleh kosong', // UBAH
+            'price.numeric' => 'Harga harus berupa angka', // UBAH
+            'price.min' => 'Harga tidak boleh kurang dari 0', // UBAH
             'dp_persen.required' => 'DP persen tidak boleh kosong',
             'dp_persen.numeric' => 'DP persen harus berupa angka',
             'dp_persen.min' => 'DP persen tidak boleh kurang dari 0',
@@ -115,7 +115,7 @@ class KelasController extends Controller
 
             $kelas->update([
                 'nama' => $request->name,
-                'harga' => $request->price_numeric,
+                'harga' => $request->price, // UBAH DARI price_numeric
                 'dp_persen' => $request->dp_persen,
                 'type' => $request->type,
                 'durasi_belajar' => $request->durasi_belajar,

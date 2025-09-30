@@ -19,18 +19,23 @@ class Kelas extends Model {
         'waktu_magang'
     ];
 
+     public function getNamaAttribute($value)
+    {
+        if (!empty($this->attributes['type'])) {
+            return $value . ' - ' . $this->attributes['type'];
+        }
+        return $value;
+    }
+
+    public function getNormalNamaAttribute()
+    {
+        return $this->attributes['nama']; 
+    }
     public function getFormattedTypeAttribute()
     {
         return $this->type ? ucfirst($this->type) : '-';
     }
 
-    public function getNamaAttribute($value)
-    {
-        if (isset($this->attributes['type']) && !empty($this->attributes['type'])) {
-            return $value . ' - ' . $this->attributes['type'];
-        }
-        return $value;
-    }
 
     public function getFormattedDurationAttribute()
     {
@@ -99,6 +104,8 @@ class Kelas extends Model {
     {
         return $this->hasMany(SiswaDetail::class, 'kelas_id');
     }
+
+   
 
     public function getFormattedKelasAttribute() 
     {

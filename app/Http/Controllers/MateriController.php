@@ -18,9 +18,18 @@ class MateriController extends Controller
 {
     public function index() {
         $role = Auth::user()->role;
+
+        $materi = [];
+        $kelas = [];
          switch ($role) {
             case 'siswa':
-                # code...
+                $kelasId = Auth::user()->siswaDetail->kelas_id;
+                $batchId = Auth::user()->siswaDetail->batch_id;
+
+                $materi = Materi::where('kelas_id', $kelasId)
+                    ->where('batch_id', $batchId)
+                    ->orderby('created_at', 'desc')
+                    ->get();
                 break;
             
             default:

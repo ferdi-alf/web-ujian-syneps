@@ -33,10 +33,10 @@ class SiswaDetail extends Model
     'link_github'
 ];
 
-public function batches(): BelongsTo
-{
-    return $this->belongsTo(Batches::class, 'batch_id');
-}
+    public function batches(): BelongsTo
+    {
+        return $this->belongsTo(Batches::class, 'batch_id');
+    }
 
 
     public function siswa(): BelongsTo
@@ -44,7 +44,7 @@ public function batches(): BelongsTo
         return $this->belongsTo(User::class, 'siswa_id');
     }
 
-    // Relasi ke kelas
+
     public function kelas(): BelongsTo
     {
         return $this->belongsTo(Kelas::class, 'kelas_id');
