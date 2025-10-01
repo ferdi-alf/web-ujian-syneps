@@ -123,41 +123,10 @@
                                     ];
                                 })
                                 ->toArray()
-                            : [
-                                [
-                                    'id' => 'temp-1',
-                                    'nama' => 'Fullstack Android Development (Part-time)',
-                                    'harga' => 5000000,
-                                    'dp' => 30,
-                                    'tipe' => 'Intensif',
-                                    'durasiBelajar' => 6,
-                                    'durasiMagang' => 2,
-                                    'gambar' => asset('images/FSD.jpg'),
-                                ],
-                                [
-                                    'id' => 'temp-2',
-                                    'nama' => 'Fullstack Website Development (Part-time)',
-                                    'harga' => 3500000,
-                                    'dp' => 25,
-                                    'tipe' => 'Regular',
-                                    'durasiBelajar' => 4,
-                                    'durasiMagang' => null,
-                                    'gambar' => asset('images/FL.jpg'),
-                                ],
-                                [
-                                    'id' => 'temp-3',
-                                    'nama' => 'Fullstack Programming (Intensif)',
-                                    'harga' => 4500000,
-                                    'dp' => 20,
-                                    'tipe' => 'Intensif',
-                                    'durasiBelajar' => 5,
-                                    'durasiMagang' => 1,
-                                    'gambar' => asset('images/PBL.jpg'),
-                                ],
-                            ];
+                            : [];
                 @endphp
 
-                @foreach ($kelasData as $kelasItem)
+                @forelse ($kelasData as $kelasItem)
                     <div class="swiper-slide" data-kelas-id="{{ $kelasItem['id'] ?? 'temp-' . $loop->index }}">
                         <div
                             class="kelas-card group relative bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 border border-gray-100">
@@ -287,7 +256,9 @@
                             </div>
                         </div>
                     </div>
-                @endforeach
+                @empty
+                    <h1>Maaf, kami belum membuka pendaftaran kelas</h1>
+                @endforelse
             </div>
         </div>
     </div>

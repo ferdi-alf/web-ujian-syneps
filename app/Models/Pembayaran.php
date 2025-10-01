@@ -12,21 +12,42 @@ class Pembayaran extends Model
     protected $table = 'pembayarans';
 
     protected $fillable = [
-        'tagihan_id',
+        'siswa_detail_id',
         'jumlah_dibayar',
         'bukti_pembayaran',
         'status',
+        'tanggal_jatuh_tempo',
+        'cicilan_ke',
     ];
 
-    // Relasi ke Tagihan
-    public function tagihan()
+    protected $casts = [
+        'tanggal_jatuh_tempo' => 'date',
+    ];
+
+    public function siswaDetail()
     {
-        return $this->belongsTo(Tagihan::class, 'tagihan_id');
+        return $this->belongsTo(SiswaDetail::class, 'siswa_detail_id');
     }
 
-    // Status pembayaran
     public function isDisetujui()
     {
         return $this->status === 'disetujui';
     }
+
+    public function isPending()
+    {
+        return $this->status === 'pending';
+    }
+
+    public function isBelumDibayar()
+    {
+        return $this->status === 'belum dibayar';
+    }
+
+    public function getJumlahFormattedAttribute()
+    {
+        return number_format($this->jumlah_dibayar, 0, ',', '.');
+    }
+
+
 }

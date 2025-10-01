@@ -50,8 +50,15 @@ class SiswaDetail extends Model
         return $this->belongsTo(Kelas::class, 'kelas_id');
     }
 
-     public function tagihans()
+    public function pembayarans()
     {
-        return $this->hasMany(Tagihan::class, 'siswa_id');
+        return $this->hasMany(Pembayaran::class, 'siswa_detail_id');
     }
+    
+    public function getJumlahFormattedAttribute()
+    {
+        return number_format($this->jumlah_dibayar, 2, '.', '');
+    }
+
+
 }

@@ -31,7 +31,6 @@ class Batches extends Model
         return $kelasSlug . '-' . $batchSlug;
     }
     
-    // Static method untuk find by slug
     public static function findActiveBySlug($slug)
     {
         return static::with('kelas')

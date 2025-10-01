@@ -6,35 +6,7 @@
     <div class="">
         <h1 class="text-2xl font-bold text-gray-800 mb-2 text-center sm:hidden block">Manajemen Peserta</h1>
 
-        <div class="flex mb-4 md:flex-row flex-col md:items-center items-end justify-between gap-2">
-            <div class="flex items-center gap-4 md:w-auto w-full">
-                @if ($activeBatch->isNotEmpty())
-                    <div class="bg-green-50 border md:w-auto w-full border-green-200 rounded-lg px-3 py-2">
-                        <div class="flex items-center">
-                            <i class="fas fa-layer-group text-green-600 mr-2"></i>
-                            <span class="text-sm text-green-800">
-                                <strong>Registration Batch:</strong>
-                            </span>
-                        </div>
-                        <ul class="space-y-1 list-disc text-green-800 ml-6">
-                            @foreach ($activeBatch as $batch)
-                                <li>{{ $batch->display_name }}</li>
-                            @endforeach
-                        </ul>
-
-                    </div>
-                @else
-                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2">
-                        <div class="flex items-center">
-                            <i class="fas fa-exclamation-triangle text-yellow-600 mr-2"></i>
-                            <span class="text-sm text-yellow-800">
-                                <strong>Peringatan:</strong> Tidak ada batch dalam status "Registration"
-                            </span>
-                        </div>
-                    </div>
-                @endif
-            </div>
-
+        <div class="flex mb-4 md:flex-row flex-col md:items-center items-end justify-end gap-2">
             <x-fragments.modal-button target="modal-control-peserta" variant="emerald" act="create" :disabled="$activeBatch->isEmpty()">
                 <i class="fa-solid fa-plus mr-2"></i>
                 Tambah Peserta
@@ -67,6 +39,18 @@
                     required />
             </div>
 
+            <x-fragments.text-field label="Nama Lengkap" name="nama_lengkap"
+                placeholder="Masukkan nama lengkap (Opsional)" />
+
+            <div id="isMagang" class="hidden">
+                <x-fragments.select-field label="Magang" name="ikut_magang" :options="[
+                    'belum ditentukan' => 'belum ditentukan',
+                    'tidak' => 'tidak',
+                    'ikut' => 'ikut',
+                ]" />
+
+            </div>
+
             <div class="mt-4">
                 <x-fragments.text-field label="Password" name="password" type="password" placeholder="Masukkan password"
                     required />
@@ -74,8 +58,6 @@
                 </p>
             </div>
 
-            <x-fragments.text-field label="Nama Lengkap" name="nama_lengkap"
-                placeholder="Masukkan nama lengkap (Opsional)" />
 
             <div id="kelas-div" class="mt-4 ">
                 <x-fragments.select-field label="Kelas" name="kelas_id" :options="$kelas->pluck('nama', 'id')->toArray()" required />
@@ -83,7 +65,7 @@
             <p id="text-info" class="text-blue-500 hidden">Kelas yang terdapat pada peserta tidak dapat diubah</p>
         </x-fragments.form-modal>
 
-        <x-reusable-table :searchBar="true" :truncate="false" :headers="['No', 'Avatar', 'Nama Lengkap', 'Email', 'Kelas', 'Batch', 'Status', 'Hasil Ujian']" :data="$pesertaData" :columns="[
+        <x-reusable-table :searchBar="true" :truncate="false" :headers="['No', 'Avatar', 'Nama Lengkap', 'Email', 'Kelas', 'Batch', 'Status', 'Magang', 'Hasil Ujian']" :data="$pesertaData" :columns="[
             fn($row, $i) => $i + 1,
             fn($row) => $row['avatar'],
             fn($row) => $row['nama_lengkap'],
@@ -91,6 +73,7 @@
             fn($row) => $row['kelas'],
             fn($row) => $row['batch'],
             fn($row) => $row['status'],
+            fn($row) => $row['ikut_magang'],
             fn($row) => count($row['hasil']) . ' ujian',
         ]"
             :showActions="true" :actionButtons="fn($row) => view('components.action-buttons', [
@@ -195,10 +178,13 @@
             const passwordInput = document.querySelector('input[name="password"]');
             const namaLengkapInput = document.querySelector('input[name="nama_lengkap"]');
             const kelasSelect = document.querySelector('select[name="kelas_id"]');
+            const isMagang = document.getElementById('isMagang');
+            const magangInput = document.querySelector('select[name="ikut_magang"]');
             const batchInfoSection = document.getElementById('batch-info-section');
             const passwordHelpText = document.getElementById('password-help-text');
             const kelasDiv = document.getElementById('kelas-div');
             const textInfo = document.getElementById('text-info');
+
 
             document.addEventListener('modalCreate', function(e) {
                 if (e.detail.modalId === 'modal-control-peserta') {
@@ -219,6 +205,9 @@
                     namaLengkapInput.value = pesertaData.nama_lengkap || '';
                     kelasSelect.value = pesertaData.kelas_id || '';
                     kelasSelect.disabled = true;
+                    isMagang.classList.remove('hidden')
+                    isMagang.classList.add('block')
+                    magangInput.value = pesertaData.ikut_magang || ''.
                     kelasSelect.removeAttribute('required');
                     textInfo.classList.remove('hidden')
                     kelasDiv.classList.add('opacity-25');

@@ -6,6 +6,7 @@ use App\Models\Batches;
 use App\Models\Kelas;
 use App\Models\Ujian;
 use App\Models\HasilUjian;
+use App\Models\Pembayaran;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -52,6 +53,8 @@ class DashboardController extends Controller {
         } else {
             $data['chartData'] = $this->getSiswaChartData($user);
             $data['leaderboardData'] = $this->getSiswaLeaderboardData($user);
+            $data['pembayaran'] = $this->getSiswaPembayaranData($user);
+
         }
         
         return view('Dashboard.Dashboard', $data);
@@ -619,27 +622,30 @@ class DashboardController extends Controller {
         }
 
         $kelasId = $siswaDetail->kelas_id;
-        
+        $batchId = $siswaDetail->batch_id;
+
         $siswaList = User::where('role', 'siswa')
-            ->whereHas('siswaDetail', function($q) use ($kelasId) {
-                $q->where('kelas_id', $kelasId);
+            ->whereHas('siswaDetail', function($q) use ($kelasId, $batchId) {
+                $q->where('kelas_id', $kelasId)
+                ->where('batch_id', $batchId);
             })
             ->with(['siswaDetail', 'hasilUjian.ujian'])
             ->get();
 
         $leaderboardData = [];
-        
+
         foreach ($siswaList as $siswa) {
             $hasilUjians = $siswa->hasilUjian()
-                ->whereHas('ujian', function($q) use ($kelasId) {
-                    $q->where('kelas_id', $kelasId);
+                ->whereHas('ujian', function($q) use ($kelasId, $batchId) {
+                    $q->where('kelas_id', $kelasId)
+                    ->where('batch_id', $batchId);
                 })
                 ->get();
-            
+
             if ($hasilUjians->count() > 0) {
                 $rataRata = $hasilUjians->avg('nilai');
                 $totalUjian = $hasilUjians->count();
-                
+
                 $leaderboardData[] = [
                     'id' => $siswa->id,
                     'nama' => $siswa->siswaDetail ? $siswa->siswaDetail->nama_lengkap : $siswa->name,
@@ -650,16 +656,39 @@ class DashboardController extends Controller {
                 ];
             }
         }
-        
+
         usort($leaderboardData, function($a, $b) {
             return $b['rata_rata'] <=> $a['rata_rata'];
         });
-        
+
         foreach ($leaderboardData as $index => &$data) {
             $data['rank'] = $index + 1;
             $data['is_top_3'] = $index < 3;
         }
-        
+
         return $leaderboardData;
     }
+
+    private function getSiswaPembayaranData($user)
+    {
+        $siswaDetail = $user->siswaDetail;
+        if (!$siswaDetail) {
+            return [];
+        }
+
+        return Pembayaran::where('siswa_detail_id', $siswaDetail->id)
+            ->orderBy('tanggal_jatuh_tempo', 'asc')
+            ->get()
+            ->map(function($pembayaran) {
+                return [
+                    'id' => $pembayaran->id,
+                    'cicilan_ke' => $pembayaran->cicilan_ke,
+                    'jumlah' => $pembayaran->jumlah_formatted,
+                    'bukti_pembayaran' => $pembayaran->bukti_pembayaran,
+                    'status' => $pembayaran->status,
+                    'tanggal_jatuh_tempo' => $pembayaran->tanggal_jatuh_tempo->format('Y-m-d'),
+                ];
+            });
+    }
+
 }

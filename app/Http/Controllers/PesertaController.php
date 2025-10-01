@@ -11,6 +11,7 @@ use App\Models\Kelas;
 use App\Models\SiswaDetail;
 use App\Models\Batches;
 use App\Helpers\AlertHelper;
+use App\Models\Pembayaran;
 use Illuminate\Support\Facades\Log;
 
 class PesertaController extends Controller
@@ -64,6 +65,7 @@ class PesertaController extends Controller
                 'kelas' => $siswa->siswaDetail?->kelas?->nama ?? '-',
                 'kelas_id' => $siswa->siswaDetail->kelas_id ?? null,
                 'batch' => $siswa->siswaDetail?->batches?->nama ?? '-',
+                'ikut_magang' => $siswa->siswaDetail?->ikut_magang ?? '-',
                 'status' => match ($siswa->siswaDetail?->status) {
                     'active' => '<span class="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">Active</span>',
                     'alumni' => '<span class="px-2 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded-full">Alumni</span>',
@@ -128,6 +130,7 @@ class PesertaController extends Controller
                     'kelas_id' => $siswa->siswaDetail->kelas_id ?? null,
                     'batch_id' => $siswa->siswaDetail->batch_id ?? null,
                     'status' => $siswa->siswaDetail->status ?? 'inactive',
+                    'ikut_magang' => $siswa->siswaDetail->ikut_magang ?? '',
                     'kelas' => $siswa->siswaDetail?->kelas ? [
                         'id' => $siswa->siswaDetail->kelas->id,
                         'nama' => $siswa->siswaDetail->kelas->nama
@@ -245,62 +248,211 @@ class PesertaController extends Controller
     }
 
     public function update(Request $request, $id) {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $id,
-            'nama_lengkap' => 'required|string|max:255',
-            'password' => 'nullable|string|min:6',
+    $request->validate([
+        'name' => 'required|string|max:255',
+        'ikut_magang' => 'required|string|in:belum ditentukan,ikut,tidak',
+        'email' => 'required|email|unique:users,email,' . $id,
+        'nama_lengkap' => 'required|string|max:255',
+        'password' => 'nullable|string|min:6',
+    ]);
+
+    DB::beginTransaction();
+
+    try {
+        $user = Auth::user(); 
+        $siswa = User::siswa()->findOrFail($id); 
+
+        if ($user->role === 'pengajar') {
+            $pengajarDetail = $user->pengajarDetail;
+            $kelasIds = $pengajarDetail ? $pengajarDetail->kelas()->pluck('kelas.id')->toArray() : [];
+            $siswaKelasId = $siswa->siswaDetail->kelas_id ?? null;
+
+            if (!in_array($siswaKelasId, $kelasIds)) {
+                throw new \Exception('Anda tidak memiliki akses untuk mengubah peserta ini.');
+            }
+        }
+
+        $siswa->update([
+            'name' => $request->name,
+            'email' => $request->email,
         ]);
 
-        DB::beginTransaction();
-
-        try {
-            $user = Auth::user(); 
-            $siswa = User::siswa()->findOrFail($id); 
-
-            if ($user->role === 'pengajar') {
-                $pengajarDetail = $user->pengajarDetail;
-                $kelasIds = $pengajarDetail ? $pengajarDetail->kelas()->pluck('kelas.id')->toArray() : [];
-                $siswaKelasId = $siswa->siswaDetail->kelas_id ?? null;
-
-                if (!in_array($siswaKelasId, $kelasIds)) {
-                    throw new \Exception('Anda tidak memiliki akses untuk mengubah peserta ini.');
-                }
-            }
-
+        if ($request->filled('password')) {
             $siswa->update([
-                'name' => $request->name,
-                'email' => $request->email,
+                'password' => Hash::make($request->password),
+            ]);
+        }
+
+        $siswaDetail = $siswa->siswaDetail;
+        if ($siswaDetail) {
+            $ikutMagangLama = $siswaDetail->ikut_magang;
+            $ikutMagangBaru = $request->ikut_magang;
+
+            // Update data siswa detail
+            $siswaDetail->update([
+                'nama_lengkap' => $request->nama_lengkap,
+                'ikut_magang' => $ikutMagangBaru,
             ]);
 
-            if ($request->filled('password')) {
-                $siswa->update([
-                    'password' => Hash::make($request->password),
-                ]);
+            // Jika status magang berubah dari "belum ditentukan" atau "ikut" menjadi "tidak"
+            if ($ikutMagangLama !== 'tidak' && $ikutMagangBaru === 'tidak') {
+                $this->hitungUlangTagihan($siswaDetail);
             }
-
-            $siswaDetail = $siswa->siswaDetail;
-            if ($siswaDetail) {
-                $siswaDetail->update([
-                    'nama_lengkap' => $request->nama_lengkap,
-                ]);
-            } else {
-                SiswaDetail::create([
-                    'siswa_id' => $siswa->id,
-                    'nama_lengkap' => $request->nama_lengkap,
-                ]);
+            
+            // Jika status magang berubah dari "tidak" menjadi "ikut"
+            if ($ikutMagangLama === 'tidak' && $ikutMagangBaru === 'ikut') {
+                $this->kembalikanTagihanNormal($siswaDetail);
             }
+        } else {
+            SiswaDetail::create([
+                'siswa_id' => $siswa->id,
+                'nama_lengkap' => $request->nama_lengkap,
+                'ikut_magang' => $request->ikut_magang,
+            ]);
+        }
 
-            DB::commit();
+        DB::commit();
 
-            return redirect()->back()->with(AlertHelper::success('Data peserta berhasil diupdate.', 'Success'));
-        } catch (\Exception $e) {
-            DB::rollBack();
+        return redirect()->back()->with(AlertHelper::success('Data peserta berhasil diupdate.', 'Success'));
+    } catch (\Exception $e) {
+        DB::rollBack();
 
-            return redirect()->back()->with(AlertHelper::error(
-                'Gagal mengupdate peserta: ' . $e->getMessage(),
-                'Error'
-            ));
+        return redirect()->back()->with(AlertHelper::error(
+            'Gagal mengupdate peserta: ' . $e->getMessage(),
+            'Error'
+        ));
+    }
+}
+
+/**
+ * Hitung ulang tagihan ketika siswa tidak ikut magang
+ */
+    private function hitungUlangTagihan($siswaDetail)
+    {
+        $batch = $siswaDetail->batches;
+        $kelas = $siswaDetail->kelas;
+        
+        // Hitung sisa cicilan yang belum dibayar
+        $cicilanBelumDibayar = Pembayaran::where('siswa_detail_id', $siswaDetail->id)
+            ->where('status', 'belum dibayar')
+            ->count();
+        
+        // Hitung total sisa tagihan
+        $sisaTagihan = $siswaDetail->total_tagihan;
+        
+        // Durasi belajar (dalam bulan)
+        $tanggalMulai = \Carbon\Carbon::parse($batch->tanggal_mulai);
+        $tanggalSelesai = \Carbon\Carbon::parse($batch->tanggal_selesai);
+        $totalBulan = $tanggalMulai->diffInMonths($tanggalSelesai);
+        
+        // Durasi magang (misalnya 2 bulan, bisa disesuaikan dengan data kelas)
+        $durasiMagang = $kelas->durasi_magang ?? 2; // dalam bulan
+        
+        // Jumlah cicilan baru = total bulan - durasi magang
+        $jumlahCicilanBaru = $totalBulan - $durasiMagang;
+        
+        // Hitung tagihan per bulan yang baru
+        $tagihanPerBulanBaru = $cicilanBelumDibayar > 0 
+            ? round($sisaTagihan / $cicilanBelumDibayar) 
+            : 0;
+        
+        // Update siswa detail
+        $siswaDetail->update([
+            'jumlah_cicilan' => $jumlahCicilanBaru,
+            'tagihan_per_bulan' => $tagihanPerBulanBaru,
+        ]);
+        
+        // Update semua pembayaran yang belum dibayar dengan jumlah baru
+        Pembayaran::where('siswa_detail_id', $siswaDetail->id)
+            ->where('status', 'belum dibayar')
+            ->update([
+                'jumlah_dibayar' => $tagihanPerBulanBaru,
+            ]);
+        
+        // Hapus pembayaran yang melebihi jumlah cicilan baru
+        $pembayaranBelumBayar = Pembayaran::where('siswa_detail_id', $siswaDetail->id)
+            ->where('status', 'belum dibayar')
+            ->orderBy('cicilan_ke', 'desc')
+            ->get();
+        
+        $jumlahHapus = $pembayaranBelumBayar->count() - $cicilanBelumDibayar;
+        if ($jumlahHapus > 0) {
+            $pembayaranBelumBayar->take($jumlahHapus)->each(function($pembayaran) {
+                $pembayaran->delete();
+            });
+        }
+    }
+
+
+    private function kembalikanTagihanNormal($siswaDetail)
+    {
+        $batch = $siswaDetail->batches;
+        
+        // Hitung sisa tagihan
+        $sisaTagihan = $siswaDetail->total_tagihan;
+        
+        // Durasi belajar + magang (dalam bulan)
+        $tanggalMulai = \Carbon\Carbon::parse($batch->tanggal_mulai);
+        $tanggalSelesai = \Carbon\Carbon::parse($batch->tanggal_selesai);
+        $totalBulan = $tanggalMulai->diffInMonths($tanggalSelesai);
+        
+        // Hitung sisa cicilan yang belum dibayar
+        $cicilanBelumDibayar = Pembayaran::where('siswa_detail_id', $siswaDetail->id)
+            ->where('status', 'belum dibayar')
+            ->count();
+        
+        // Hitung berapa cicilan yang sudah dibayar
+        $cicilanSudahDibayar = Pembayaran::where('siswa_detail_id', $siswaDetail->id)
+            ->where('status', 'disetujui')
+            ->count();
+        
+        // Jumlah cicilan normal
+        $jumlahCicilanNormal = $totalBulan;
+        
+        // Tagihan per bulan normal
+        $tagihanPerBulanNormal = $jumlahCicilanNormal > 0 
+            ? round(($siswaDetail->kelas->harga * 0.6) / $jumlahCicilanNormal) 
+            : 0;
+        
+        // Update siswa detail
+        $siswaDetail->update([
+            'jumlah_cicilan' => $jumlahCicilanNormal,
+            'tagihan_per_bulan' => $tagihanPerBulanNormal,
+        ]);
+        
+        // Update pembayaran yang belum dibayar
+        Pembayaran::where('siswa_detail_id', $siswaDetail->id)
+            ->where('status', 'belum dibayar')
+            ->update([
+                'jumlah_dibayar' => $tagihanPerBulanNormal,
+            ]);
+        
+        // Generate pembayaran tambahan jika perlu (untuk bulan magang)
+        $sisaCicilan = $jumlahCicilanNormal - $cicilanSudahDibayar - $cicilanBelumDibayar;
+        
+        if ($sisaCicilan > 0) {
+            $pembayaranTerakhir = Pembayaran::where('siswa_detail_id', $siswaDetail->id)
+                ->orderBy('cicilan_ke', 'desc')
+                ->first();
+            
+            $cicilanKeTerakhir = $pembayaranTerakhir ? $pembayaranTerakhir->cicilan_ke : 0;
+            $tanggalJatuhTempoTerakhir = $pembayaranTerakhir 
+                ? \Carbon\Carbon::parse($pembayaranTerakhir->tanggal_jatuh_tempo)
+                : \Carbon\Carbon::parse($batch->tanggal_mulai);
+            
+            for ($i = 1; $i <= $sisaCicilan; $i++) {
+                $tanggalJatuhTempo = $tanggalJatuhTempoTerakhir->copy()->addMonth();
+                
+                Pembayaran::create([
+                    'siswa_detail_id' => $siswaDetail->id,
+                    'jumlah_dibayar' => $tagihanPerBulanNormal,
+                    'status' => 'belum dibayar',
+                    'tanggal_jatuh_tempo' => $tanggalJatuhTempo,
+                    'cicilan_ke' => $cicilanKeTerakhir + $i,
+                ]);
+                
+                $tanggalJatuhTempoTerakhir = $tanggalJatuhTempo;
+            }
         }
     }
 

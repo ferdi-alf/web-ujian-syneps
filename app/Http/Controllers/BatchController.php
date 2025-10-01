@@ -237,11 +237,22 @@ class BatchController extends Controller
                 'status' => $request->status,
             ];
 
-            // Tambahkan tanggal hanya jika status active dan tanggal tersedia
-            if ($request->status === 'active' && $request->tanggal_mulai && $request->tanggal_selesai) {
+           if (
+                ($request->status === 'active' || $request->status === 'registration') 
+                && $request->tanggal_mulai 
+                && $request->tanggal_selesai
+            ) {
                 $updateData['tanggal_mulai'] = $request->tanggal_mulai;
                 $updateData['tanggal_selesai'] = $request->tanggal_selesai;
+            } else {
+                return redirect()->back()
+                    ->with(AlertHelper::error(
+                        "harap mengisi periode batch jika status registration atau active",
+                        'Error'
+                    ))
+                    ->withInput();
             }
+
 
             // Update batch
             $batch->update($updateData);

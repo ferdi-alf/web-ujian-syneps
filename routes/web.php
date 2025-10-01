@@ -29,6 +29,13 @@ Route::get('/', [LandingController::class, 'index'])->name('index');
 Route::get('/kelas/{slug}', [LandingController::class, 'kelasDetail'])->name('kelas.detail');
 Route::post('/daftar', [LandingController::class, 'daftar'])->name('daftar.store');
 
+Route::controller(PembayaranController::class)->prefix('pembayaran')->name('pembayaran.')->group(function () {
+            Route::get('/{id}', 'show')->name('show');
+            Route::post('/', 'store')->name('store');
+            Route::put('/{id}', 'update')->name('update');
+            Route::delete('/{id}', 'destroy')->name('destroy');
+        });
+
 Route::get('/testroute', function () {
     $name = "Funny Coder";
     Mail::to('test.08@gmail.com')->send(new MyTestEmail($name));
@@ -107,6 +114,8 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/{id}', 'destroy')->name('destroy');
         Route::get('/download/{id}', 'download')->name('download');
     });
+
+    
 
     Route::middleware(['deny.roles:siswa'])->group(function () {
         Route::get('/leaderboard', [LeaderboardController::class, 'leaderboard'])->name('leaderboard');

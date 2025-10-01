@@ -30,6 +30,8 @@
                     </div>
                 </div>
 
+
+
                 <div class="md:col-span-7 col-span-10 bg-white rounded-lg shadow-md p-4">
                     <div class="mb-4">
                         <h3 class="text-lg font-semibold text-gray-800 mb-2">Grafik Perkembangan Nilai</h3>
@@ -50,12 +52,117 @@
                     @endif
                 </div>
             </div>
+            <div class="bg-white rounded-lg shadow-md p-4 mt-5">
+                <div class="mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Data Tagihan Pembayaran</h3>
+                    <p class="text-sm text-gray-600">tagihan pembayaran akan masuk disini</p>
+                </div>
+                <x-drawer-layout id="drawer-control-pembayaran" title="Detail Pembayaran" description="Preview dan informasi materi"
+                    type="bottomSheet">
+                    <div x-data="{
+                        pembayaranData: null,
+                        hasBukti: false,
+                    }"
+                        x-on:drawerDataLoaded.window="
+                            if ($event.detail.drawerId === 'drawer-control-pembayaran') {
+                                pembayaranData = $event.detail.data
+                                idPembayaran = pembayaranData.id
+                                hasBukti = pembayaranData && pembayaranData.bukti_pembayaran
+                                console.log('Pembayaran data diterima:', pembayaranData)
+                            }
+                        "
+                        class="p-3">
+                        <!-- Jika belum upload bukti -->
+                        <template x-if="!hasBukti">
 
+                        </template>
+
+
+                        <template x-if="hasBukti">
+                            <div>
+                                <img :src="pembayaranData.bukti_pembayaran" class="h-40 rounded" alt="Bukti Pembayaran">
+                                <p class="text-xs text-gray-500 mt-1">Bukti sudah diupload</p>
+                            </div>
+                        </template>
+                    </div>
+                </x-drawer-layout>
+
+                <table class="min-w-full table-auto">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Bukti Pembayaran</th>
+
+                            <th
+                                class="px-4 py-3truncate py-3 text-left text-xs font-medium   text-gray-500 uppercase tracking-wider">
+                                Jumlah</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase truncate tracking-wider">
+                                Status</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase truncate tracking-wider">
+                                Cicilan ke</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase truncate tracking-wider">
+                                Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @forelse ($pembayaran as $row)
+                            <tr class="text-sm text-gray-800">
+                                <td class="px-4 py-4 whitespace-nowrap">
+                                    @if (!empty($pembayaran['bukti_pembayaran']))
+                                        <img src="{{ asset('storage/' . $pembayaran['bukti_pembayaran']) }}" alt="Bukti Pembayaran"
+                                            class="h-16">
+                                    @else
+                                        <span class="text-gray-400 text-sm">Belum upload</span>
+                                    @endif
+
+                                </td>
+                                <td class="px-4 py-4 whitespace-nowrap">
+                                    {{ $row['jumlah'] }}
+                                </td>
+                                <td class="px-4 py-4 whitespace-nowrap">
+                                    <span @class([
+                                        'text-xs font-medium px-2.5 py-0.5 rounded-sm border',
+                                        'bg-yellow-100 text-yellow-800 border-yellow-400' =>
+                                            $row['status'] === 'belum dibayar',
+                                        'bg-blue-100 text-blue-800 border-blue-400' => $row['status'] === 'pending',
+                                        'bg-green-100 text-green-800 border-green-400' =>
+                                            $row['status'] === 'disetujui',
+                                        'bg-red-100 text-red-800 border-red-400' => $row['status'] === 'ditolak',
+                                    ])>
+                                        {{ ucfirst($row['status']) }}
+                                    </span>
+                                </td>
+
+                                <td class="px-4 py-4 whitespace-nowrap">
+                                    {{ $row['cicilan_ke'] }}
+                                </td>
+                                <td class="px-4 py-4 whitespace-nowrap">
+                                    <x-action-buttons :viewData="[
+                                        'id' => $row['id'],
+                                        'fetchEndpoint' => '/pembayaran/' . $row['id'],
+                                        'drawerTarget' => 'drawer-control-pembayaran',
+                                        'type' => 'bottomSheet',
+                                        'title' => 'Detail Pembayaran',
+                                        'description' => 'Detail Bukti Pembayaran',
+                                    ]" />
+                                </td>
+                            </tr>
+                        @empty
+                            <div class="text-center py-8">
+                                <i class="fa-solid fa-users text-4xl text-gray-400 mb-3"></i>
+                                <p class="text-gray-500">Belum ada data tagihan pembayaran yang masuk</p>
+                            </div>
+                        @endforelse
+                    </tbody>
+                </table>
+
+            </div>
             <div class="mt-6 bg-white rounded-lg shadow-md p-4">
                 <div class="mb-4">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Leaderboard Peserta -
+                    <h3 class="text-lg font-semibold text-gray-800 ">Leaderboard Peserta -
                         {{ Auth::user()->siswaDetail->kelas->nama }}</h3>
                     <p class="text-sm text-gray-600">Peringkat peserta berdasarkan rata-rata nilai ujian</p>
+
                 </div>
 
                 @if (count($leaderboardData) > 0)
@@ -82,7 +189,8 @@
                                 <tr>
                                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Peringkat</th>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Siswa
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Siswa
                                     </th>
                                     dro
                                     <th
@@ -344,6 +452,9 @@
                     <x-fragments.form-modal id="modal-control-batch" title="Tambah Batch Baru"
                         action="{{ route('batch.store') }}" createTitle="Tambah Batch" editTitle="Edit Batch">
                         <x-fragments.text-field label="Nama Batch" name="nama" placeholder="Masukkan nama batch" required />
+                        <div id="select-kelas" class="block">
+                            <x-fragments.select-field required label="Pilih Kelas" name="kelas_id" :options="$kelas" />
+                        </div>
                         <div class="mt-4">
                             <x-fragments.select-field label="Status" name="status" :options="[
                                 'inactive' => 'Inactive',
@@ -352,7 +463,7 @@
                                 'finished' => 'Finished',
                             ]" required />
                         </div>
-                        <div class="hidden" id="periode-batch">
+                        <div>
                             <div class="grid grid-cols-2 gap-3">
                                 <x-fragments.text-field type="date" label="Tanggal Mulai" name="tanggal_mulai"
                                     placeholder="Masukkan tanggal mulai batch" />
@@ -375,9 +486,7 @@
                             <p class="font-medium text-blue-500">Jika sudah menambahkan batch, kelas tidak dapat dirubah lagi dari
                                 batch</p>
                         </div>
-                        <div id="select-kelas" class="block">
-                            <x-fragments.select-field required label="Pilih Kelas" name="kelas_id" :options="$kelas" />
-                        </div>
+
                     </x-fragments.form-modal>
 
                     <x-reusable-table tableId="batch-management" :searchBar="true" :truncate="true" :headers="['No', 'Nama Batch', 'Status', 'kelas', 'Jumlah Peserta', 'Periode', 'Dibuat']"
@@ -480,8 +589,7 @@
                         const formElement = document.querySelector('#modal-control-batch form');
 
                         function resetModalState() {
-                            periodeBatch?.classList.add('hidden');
-                            periodeBatch?.classList.remove('grid');
+
                             document.getElementById('duration-validation')?.classList.add('hidden');
                             tanggalMulaiInput?.removeAttribute('required');
                             tanggalSelesaiInput?.removeAttribute('required');
@@ -537,9 +645,8 @@
 
                                 statusSelect?.setAttribute('data-original-value', batchData.status);
 
-                                if (batchData.status === 'active') {
-                                    periodeBatch?.classList.remove('hidden');
-                                    periodeBatch?.classList.add('grid');
+                                if (batchData.status === 'active' || batchData.status === 'registration') {
+
                                     tanggalMulaiInput?.setAttribute('required', true);
                                     tanggalSelesaiInput?.setAttribute('required', true);
                                 }
@@ -617,13 +724,11 @@
 
                         function handleStatusChange() {
                             if (statusSelect.value === 'active') {
-                                periodeBatch?.classList.remove('hidden');
-                                periodeBatch?.classList.add('grid');
+
                                 tanggalMulaiInput?.setAttribute('required', true);
                                 tanggalSelesaiInput?.setAttribute('required', true);
                             } else {
-                                periodeBatch?.classList.add('hidden');
-                                periodeBatch?.classList.remove('grid');
+
                                 tanggalMulaiInput?.removeAttribute('required');
                                 tanggalSelesaiInput?.removeAttribute('required');
                                 document.getElementById('duration-validation')?.classList.add('hidden');

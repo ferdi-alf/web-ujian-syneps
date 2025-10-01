@@ -12,6 +12,7 @@
         "laravel/sanctum": "^4.2",
         "laravel/tinker": "^2.10.1",
         "nyholm/psr7": "^1.8",
+        "onesignal/onesignal-php-api": "^2.2",
         "railsware/mailtrap-php": "^3.6",
         "symfony/http-client": "^7.3",
         "symfony/mailer": "^7.3"
