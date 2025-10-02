@@ -1,0 +1,74 @@
+[
+    {
+        "color": "brown",
+        "type": "cat",
+        "size": "nano",
+        "name": "Chilli"
+    },
+    {
+        "color": "gray",
+        "type": "rocky",
+        "size": "nano",
+        "name": "Big Granite"
+    },
+    {
+        "color": "red",
+        "type": "fox",
+        "size": "nano",
+        "name": "Autumn"
+    },
+    {
+        "color": "green",
+        "type": "deno",
+        "size": "nano",
+        "name": "Ry"
+    },
+    {
+        "color": "red",
+        "type": "fox",
+        "size": "nano",
+        "name": "Ariel"
+    },
+    {
+        "color": "green",
+        "type": "turtle",
+        "size": "nano",
+        "name": "Leonardo"
+    },
+    {
+        "color": "black",
+        "type": "panda",
+        "size": "nano",
+        "name": "Rifiki"
+    },
+    {
+        "color": "gray",
+        "type": "rocky",
+        "size": "nano",
+        "name": "roky"
+    },
+    {
+        "color": "red",
+        "type": "crab",
+        "size": "nano",
+        "name": "Tuan Crab"
+    },
+    {
+        "color": "gray",
+        "type": "cockatiel",
+        "size": "nano",
+        "name": "Diva"
+    },
+    {
+        "color": "red",
+        "type": "fox",
+        "size": "nano",
+        "name": "Crispin"
+    },
+    {
+        "color": "gray",
+        "type": "rocky",
+        "size": "nano",
+        "name": "Pebbles Sr."
+    }
+]

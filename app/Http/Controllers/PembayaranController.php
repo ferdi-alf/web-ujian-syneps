@@ -11,7 +11,9 @@ use Illuminate\Support\Facades\Storage;
 class PembayaranController extends Controller
 {
     public function index() {
-        return view('Dashboard.Pembayaran-Masuk');
+        $data = Pembayaran::with('siswaDetail')
+            ->where('status', 'pending')->get();
+        return view('Dashboard.Pembayaran-Masuk', compact('data'));
     }
     public function history() {
         return view('Dashboard.History-Pembayaran');
@@ -39,6 +41,8 @@ class PembayaranController extends Controller
 
     public function update(Request $request, $id, $act = null)
     {
+
+        // dd($request->all());
         $pembayaran = Pembayaran::findOrFail($id);
         $user = Auth::user();
 
@@ -64,7 +68,7 @@ class PembayaranController extends Controller
             }
 
             $validated = $request->validate([
-                'bukti_pembayaran' => 'required|image|max:2048',
+                'bukti_pembayaran' => 'required|image|max:5048',
             ]);
 
 
@@ -81,7 +85,7 @@ class PembayaranController extends Controller
             $pembayaran->status = 'pending';
             $pembayaran->save();
 
-            return redirect()->back()->with('success', 'Bukti pembayaran berhasil diupload, menunggu konfirmasi');
+            return redirect()->back()->with(AlertHelper::success('Bukti pembayaran berhasil diupload, menunggu konfirmasi', 'Success'));
         }
 
         return back()->withErrors(AlertHelper::error('Role tidak valid', 'Error'));

@@ -29,12 +29,7 @@ Route::get('/', [LandingController::class, 'index'])->name('index');
 Route::get('/kelas/{slug}', [LandingController::class, 'kelasDetail'])->name('kelas.detail');
 Route::post('/daftar', [LandingController::class, 'daftar'])->name('daftar.store');
 
-Route::controller(PembayaranController::class)->prefix('pembayaran')->name('pembayaran.')->group(function () {
-            Route::get('/{id}', 'show')->name('show');
-            Route::post('/', 'store')->name('store');
-            Route::put('/{id}', 'update')->name('update');
-            Route::delete('/{id}', 'destroy')->name('destroy');
-        });
+
 
 Route::get('/testroute', function () {
     $name = "Funny Coder";
@@ -87,6 +82,13 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/{slug}/save-progress', 'saveProgress')->name('save-progress');
         Route::get('/{slug}/selesai', 'selesai')->name('selesai');
     });
+
+    Route::controller(PembayaranController::class)->prefix('pembayaran')->name('pembayaran.')->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/{id?}', 'show')->name('show');
+        Route::get('/history/data', 'history')->name('history');
+        Route::put('/{id}/{act?}', 'update')->name('update');
+    })->middleware('deny.roles:pengajar');
 
     Route::controller(ForumAlumniController::class)->prefix('forum-alumni')->name('forum-alumni.')->group(function () {
         Route::get('/', 'index')->name('index');
@@ -161,11 +163,7 @@ Route::middleware(['auth'])->group(function () {
             Route::delete('/{id}', 'destroy')->name('destroy');
         });
 
-        Route::controller(PembayaranController::class)->prefix('pembayaran')->name('pembayaran.')->group(function () {
-            Route::get('/', 'index')->name('index');
-            Route::get('/history', 'history')->name('history');
-            Route::put('/{id}', 'store')->name('store');
-        });
+
 
         Route::controller(ApprovalController::class)->prefix('approval')->name('approval.')->group(function () {
             Route::get('/', 'index')->name('index');

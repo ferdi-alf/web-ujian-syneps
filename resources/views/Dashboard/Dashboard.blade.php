@@ -57,6 +57,30 @@
                     <h3 class="text-lg font-semibold text-gray-800 mb-2">Data Tagihan Pembayaran</h3>
                     <p class="text-sm text-gray-600">tagihan pembayaran akan masuk disini</p>
                 </div>
+
+                <x-fragments.form-modal id="universal-pembayaran-modal" title="Upload Bukti Pembayaran"
+                    action="{{ route('materi.store') }}">
+                    <div
+                        class="border-2 border-dashed border-gray-300 rounded-lg p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:border-blue-400">
+                        <input type="file" name="bukti_pembayaran" class="hidden" id="dropzone-file" accept="image/*"
+                            onchange="document.getElementById('preview-upload').src = window.URL.createObjectURL(this.files[0]); document.getElementById('preview-upload').classList.remove('hidden');">
+
+                        <label for="dropzone-file" class="cursor-pointer">
+                            <div class="flex flex-col items-center">
+                                <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" stroke-width="2"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M7 16a4 4 0 01-.88-7.903A5.992 5.992 0 0112 4a5.992 5.992 0 015.88 4.097A4 4 0 1117 16H7z" />
+                                </svg>
+                                <p class="mt-2 text-sm text-gray-600">Klik atau drag file bukti pembayaran</p>
+                            </div>
+                        </label>
+
+                        <img id="preview-upload" class="hidden mt-3 h-40 rounded">
+                    </div>
+
+                </x-fragments.form-modal>
+                {{-- drawer pembayaran --}}
                 <x-drawer-layout id="drawer-control-pembayaran" title="Detail Pembayaran" description="Preview dan informasi materi"
                     type="bottomSheet">
                     <div x-data="{
@@ -72,21 +96,17 @@
                             }
                         "
                         class="p-3">
-                        <!-- Jika belum upload bukti -->
-                        <template x-if="!hasBukti">
-
-                        </template>
-
-
                         <template x-if="hasBukti">
-                            <div>
-                                <img :src="pembayaranData.bukti_pembayaran" class="h-40 rounded" alt="Bukti Pembayaran">
+                            <div class="w-full h-full flex justify-center items-center flex-col ">
+                                <img :src="pembayaranData.bukti_pembayaran" class="w-56 rounded-xl shadow-md"
+                                    alt="Bukti Pembayaran">
                                 <p class="text-xs text-gray-500 mt-1">Bukti sudah diupload</p>
                             </div>
                         </template>
                     </div>
                 </x-drawer-layout>
 
+                {{-- table pembayaran --}}
                 <table class="min-w-full table-auto">
                     <thead class="bg-gray-50">
                         <tr>
@@ -108,9 +128,8 @@
                         @forelse ($pembayaran as $row)
                             <tr class="text-sm text-gray-800">
                                 <td class="px-4 py-4 whitespace-nowrap">
-                                    @if (!empty($pembayaran['bukti_pembayaran']))
-                                        <img src="{{ asset('storage/' . $pembayaran['bukti_pembayaran']) }}" alt="Bukti Pembayaran"
-                                            class="h-16">
+                                    @if (!empty($row['bukti_pembayaran']))
+                                        <img src="{{ asset($row['bukti_pembayaran']) }}" alt="Bukti Pembayaran" class="h-16">
                                     @else
                                         <span class="text-gray-400 text-sm">Belum upload</span>
                                     @endif
@@ -137,14 +156,26 @@
                                     {{ $row['cicilan_ke'] }}
                                 </td>
                                 <td class="px-4 py-4 whitespace-nowrap">
-                                    <x-action-buttons :viewData="[
-                                        'id' => $row['id'],
-                                        'fetchEndpoint' => '/pembayaran/' . $row['id'],
-                                        'drawerTarget' => 'drawer-control-pembayaran',
-                                        'type' => 'bottomSheet',
-                                        'title' => 'Detail Pembayaran',
-                                        'description' => 'Detail Bukti Pembayaran',
-                                    ]" />
+
+                                    @if (!empty($row['bukti_pembayaran']))
+                                        <x-action-buttons :viewData="[
+                                            'id' => $row['id'],
+                                            'fetchEndpoint' => '/pembayaran/' . $row['id'],
+                                            'drawerTarget' => 'drawer-control-pembayaran',
+                                            'type' => 'bottomSheet',
+                                            'title' => 'Detail Pembayaran',
+                                            'description' => 'Detail Bukti Pembayaran',
+                                        ]" />
+                                    @else
+                                        <x-action-buttons modalTarget="universal-pembayaran-modal" :editData="[
+                                            'id' => $row['id'],
+                                            'fetchEndpoint' => '/pembayaran/' . $row['id'],
+                                            'updateEndpoint' => '/pembayaran/' . $row['id'],
+                                            'act' => 'update',
+                                            'title' => 'Upload Pembayaran',
+                                        ]" />
+                                    @endif
+
                                 </td>
                             </tr>
                         @empty
