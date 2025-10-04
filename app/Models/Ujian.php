@@ -19,6 +19,8 @@ class Ujian extends Model
         'batch_id',
     ];
 
+    
+
     public function kelas(): BelongsTo
     {
         return $this->belongsTo(Kelas::class, 'kelas_id');

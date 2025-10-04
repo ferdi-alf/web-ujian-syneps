@@ -67,6 +67,49 @@ class ManajemenUjianController extends Controller
         ]);
     }
 
+    public function show($id)
+    {
+        try {
+            $ujian = Ujian::with(['kelas', 'soals.jawabans', 'batch'])->findOrFail($id);
+            
+            $formattedSoals = $ujian->soals->map(function ($soal, $index) {
+                return [
+                    'id' => $soal->id,
+                    'nomor' => $index + 1,
+                    'teks' => $soal->soal,
+                    'jawabans' => $soal->jawabans->map(function ($jawaban) {
+                        return [
+                            'id' => $jawaban->id,
+                            'pilihan' => $jawaban->pilihan,
+                            'teks' => $jawaban->teks,
+                            'benar' => $jawaban->benar,
+                        ];
+                    })->values(),
+                ];
+            })->values();
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'id' => $ujian->id,
+                    'judul' => $ujian->judul,
+                    'kelas' => optional($ujian->kelas)->nama ?? '-',
+                    'batch' => optional($ujian->batch)->nama ?? '-',
+                    'waktu' => $ujian->waktu ? $ujian->waktu  : '-',
+                    'status' => $ujian->status,
+                    'total_soal' => $ujian->soals->count(),
+                    'soals' => $formattedSoals,
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data ujian tidak ditemukan'
+            ], 404);
+        }
+    }
+
+
     public function update(Request $request, $id)
     {
         $request->validate([

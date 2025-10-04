@@ -187,6 +187,7 @@
                                             <span class="font-medium">{{ $kelasItem['durasiBelajar'] ?? '0' }} bulan
                                                 pembelajaran</span>
                                         </div>
+
                                         @if (isset($kelasItem['durasiMagang']) && $kelasItem['durasiMagang'])
                                             <div
                                                 class="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-700">

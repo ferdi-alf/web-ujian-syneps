@@ -66,11 +66,11 @@
                     colors="emerald">Kelas</x-fragments.sidebar-item>
             @endif
             @if (Auth::user()->role === 'admin' || Auth::user()->role === 'pengajar')
-                <x-sidebar-dropdown id="ujian" title="Setting Ujian" icon="cog"
+                <x-sidebar-dropdown id="ujian" title="Manajemen Ujian" icon="book"
                     routes="manajemen-ujian,tambah-ujian" color="emerald">
 
-                    <x-fragments.sidebar-item route="manajemen-ujian.index" icon="book" colors="emerald">
-                        Manajemen Ujian
+                    <x-fragments.sidebar-item route="manajemen-ujian.index" icon="cog" colors="emerald">
+                        Setting Ujian
                     </x-fragments.sidebar-item>
 
                     <x-fragments.sidebar-item route="tambah-ujian.index" icon="plus" colors="emerald">
@@ -101,13 +101,11 @@
             </x-fragments.sidebar-item>
             @if (
                 (Auth::user()->role === 'siswa' && Auth::user()->siswaDetail && Auth::user()->siswaDetail->status === 'alumni') ||
-
                     Auth::user()->role === 'admin' ||
                     Auth::user()->role === 'pengajar')
                 <x-fragments.sidebar-item route="forum-alumni.index" icon="fa-solid fa-comments" colors="emerald">
                     Forum Alumni
                 </x-fragments.sidebar-item>
-
             @endif
 
         </ul>

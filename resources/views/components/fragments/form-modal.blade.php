@@ -2,13 +2,14 @@
 @props([
     'id',
     'title',
-    'action',
+    'action' => null,
     'method' => 'POST',
     'size' => 'lg',
     'show' => false,
     'fetchEndpoint' => null,
     'createTitle' => 'Tambah Data',
     'editTitle' => 'Edit Data',
+    'updateOnly' => false, // Flag untuk modal update only
 ])
 
 <x-modal-layout :id="$id" :title="$title" :size="$size" :show="$show">
@@ -20,7 +21,7 @@
     </div>
 
     <div id="modal-content-{{ $id }}">
-        <form action="{{ $action }}" method="POST" class="space-y-4 p-2" enctype="multipart/form-data">
+        <form action="{{ $action ?? '#' }}" method="POST" class="space-y-4 p-2" enctype="multipart/form-data">
             @csrf
             @if (in_array(strtoupper($method), ['PUT', 'PATCH', 'DELETE']))
                 @method($method)
@@ -49,7 +50,8 @@
             fetchEndpoint: '{{ $fetchEndpoint }}',
             createTitle: '{{ $createTitle }}',
             editTitle: '{{ $editTitle }}',
-            originalAction: '{{ $action }}'
+            originalAction: '{{ $action }}',
+            updateOnly: {{ $updateOnly ? 'true' : 'false' }}
         };
     });
 
@@ -71,9 +73,19 @@
             return;
         }
 
+        if (action === 'create' && handler.updateOnly) {
+            console.warn('Modal ini hanya untuk update, tidak bisa digunakan untuk create');
+            return;
+        }
+
         if (action === 'create') {
             modalTitle.textContent = handler.createTitle;
-            form.action = handler.originalAction;
+
+            if (handler.originalAction && handler.originalAction !== '#') {
+                form.action = handler.originalAction;
+            } else if (data && data.createEndpoint) {
+                form.action = data.createEndpoint;
+            }
 
             const methodInput = form.querySelector('input[name="_method"]');
             if (methodInput) {

@@ -1,0 +1,39 @@
+[
+    {
+        "title": "history Pembayaran kelas Fullstack - batch 25",
+        "data": [
+            {
+                "bulan": "Juli",
+                "total": "2",
+                "pembayaran": [
+                    {
+                        "nama": "Muhamad Ferdi Alfian",
+                        "total_tagihan": "750.000",
+                        "status": "lunas"
+                    },
+                    {
+                        "nama": "Nanda Luris",
+                        "total_tagihan": "750.000",
+                        "status": "lunas"
+                    }
+                ]
+            },
+            {
+                "bulan": "Agustus",
+                "total": "2",
+                "pembayaran": [
+                    {
+                        "nama": "Muhamad Ferdi Alfian",
+                        "total_tagihan": "750.000",
+                        "status": "lunas"
+                    },
+                    {
+                        "nama": "Nanda Luris",
+                        "total_tagihan": "750.000",
+                        "status": "lunas"
+                    }
+                ]
+            }
+        ]
+    }
+]

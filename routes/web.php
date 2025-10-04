@@ -138,11 +138,12 @@ Route::middleware(['auth'])->group(function () {
             Route::delete('/{id}', 'destroy')->name('destroy');
         });
 
-        Route::controller(ManajemenUjianController::class)->prefix('manajemen-ujian')->name('manajemen-ujian.')->group(function () {
-            Route::get('/', 'index')->name('index');
-            Route::put('/{id}', 'update')->name('update');
-            Route::delete('/{id}', 'destroy')->name('destroy');
-        });
+Route::controller(ManajemenUjianController::class)->prefix('manajemen-ujian')->name('manajemen-ujian.')->group(function () {
+    Route::get('/', 'index')->name('index');
+    Route::get('/{id}', 'show')->name('show');
+    Route::put('/{id}', 'update')->name('update');
+    Route::delete('/{id}', 'destroy')->name('destroy');
+});
 
         Route::controller(PesertaController::class)->prefix('peserta')->name('peserta.')->group(function () {
             Route::get('/', 'index')->name('index');

@@ -42,14 +42,21 @@ class MateriController extends Controller
 
                 } elseif ($user->role === 'pengajar') {
                     $pengajarDetail = $user->pengajarDetail;
-                    $kelasIds = $pengajarDetail ? $pengajarDetail->kelas()->pluck('kelas.id')->toArray() : [];
-                    $kelas = Kelas::select('id', 'nama', 'type')->whereIn('id', $kelasIds)->get();
-                         $materi = Materi::with('kelas')
-                            ->latest()
-                            ->where('kelas_id', $pengajarDetail->kelas_id)
-                            ->get();
 
+                    $kelasIds = $pengajarDetail
+                        ? $pengajarDetail->kelas()->pluck('kelas.id')->toArray()
+                        : [];
+
+                    $kelas = Kelas::select('id', 'nama', 'type')
+                        ->whereIn('id', $kelasIds)
+                        ->get();
+
+                    $materi = Materi::with('kelas')
+                        ->latest()
+                        ->whereIn('kelas_id', $kelasIds)
+                        ->get();
                 }
+
             break;
          }
         return view('Dashboard.Materi', compact('kelas', 'materi'));

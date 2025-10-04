@@ -27,13 +27,7 @@ class DashboardController extends Controller {
             if ($user->role === 'admin') {
                 $kelas = Kelas::select('id', 'nama', 'type', 'waktu_magang', 'durasi_belajar')->get();
                 
-                $kelasOptions = $kelas->mapWithKeys(function ($item) {
-                    $displayName = $item->nama;
-                    if (!empty($item->type)) {
-                        $displayName .= ' - ' . ucfirst($item->type);
-                    }
-                    return [$item->id => $displayName];
-                })->toArray();
+             
                 
                 $kelasData = $kelas->mapWithKeys(function ($item) {
                     return [$item->id => [
@@ -44,7 +38,7 @@ class DashboardController extends Controller {
                     ]];
                 })->toArray();
                 
-                $data['kelas'] = $kelasOptions;
+                $data['kelas'] = $kelas;
                 $data['kelasData'] = $kelasData; 
                 
                 $batchData = $this->getBatchData();

@@ -58,8 +58,7 @@
                     <p class="text-sm text-gray-600">tagihan pembayaran akan masuk disini</p>
                 </div>
 
-                <x-fragments.form-modal id="universal-pembayaran-modal" title="Upload Bukti Pembayaran"
-                    action="{{ route('materi.store') }}">
+                <x-fragments.form-modal id="universal-pembayaran-modal" title="Upload Bukti Pembayaran" :updateOnly="true">
                     <div
                         class="border-2 border-dashed border-gray-300 rounded-lg p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:border-blue-400">
                         <input type="file" name="bukti_pembayaran" class="hidden" id="dropzone-file" accept="image/*"
@@ -110,11 +109,10 @@
                 <table class="min-w-full table-auto">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Bukti Pembayaran</th>
 
-                            <th
-                                class="px-4 py-3truncate py-3 text-left text-xs font-medium   text-gray-500 uppercase tracking-wider">
+                            <th class="px-4 py-3 truncate  text-left text-xs font-medium   text-gray-500 uppercase tracking-wider">
                                 Jumlah</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase truncate tracking-wider">
                                 Status</th>
@@ -127,7 +125,7 @@
                     <tbody class="bg-white divide-y divide-gray-200">
                         @forelse ($pembayaran as $row)
                             <tr class="text-sm text-gray-800">
-                                <td class="px-4 py-4 whitespace-nowrap">
+                                <td class="px-4 py-4 flex justify-center items-center whitespace-nowrap">
                                     @if (!empty($row['bukti_pembayaran']))
                                         <img src="{{ asset($row['bukti_pembayaran']) }}" alt="Bukti Pembayaran" class="h-16">
                                     @else
@@ -484,7 +482,7 @@
                         action="{{ route('batch.store') }}" createTitle="Tambah Batch" editTitle="Edit Batch">
                         <x-fragments.text-field label="Nama Batch" name="nama" placeholder="Masukkan nama batch" required />
                         <div id="select-kelas" class="block">
-                            <x-fragments.select-field required label="Pilih Kelas" name="kelas_id" :options="$kelas" />
+                            <x-fragments.select-field required label="Pilih Kelas" name="kelas_id" :options="$kelas->pluck('nama', 'id')->toArray()" />
                         </div>
                         <div class="mt-4">
                             <x-fragments.select-field label="Status" name="status" :options="[
@@ -520,8 +518,8 @@
 
                     </x-fragments.form-modal>
 
-                    <x-reusable-table tableId="batch-management" :searchBar="true" :truncate="true" :headers="['No', 'Nama Batch', 'Status', 'kelas', 'Jumlah Peserta', 'Periode', 'Dibuat']"
-                        :data="$batchData" :columns="[
+                    <x-reusable-table tableId="batch-management" :searchBar="true" :headers="['No', 'Nama Batch', 'Status', 'kelas', 'Jumlah Peserta', 'Periode', 'Dibuat']" :data="$batchData"
+                        :columns="[
                             fn($row, $i) => $i + 1,
                             fn($row) => $row['nama'],
                             fn($row) => $row['status_badge'],

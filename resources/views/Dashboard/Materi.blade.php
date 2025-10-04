@@ -16,7 +16,7 @@
     @switch(Auth::user()->role)
         @case('siswa')
             <ol class="relative border-s-2  border-gray-300">
-                @foreach ($grouped as $month => $items)
+                @forelse ($grouped as $month => $items)
                     <li class="md:mb-10 mb-0 mt-5 ms-6">
                         <span
                             class="absolute flex items-center justify-center w-6 h-6 bg-teal-100 text-teal-500 font-bold rounded-full -start-3 ring-8 ring-white">{{ $loop->iteration }}</span>
@@ -53,7 +53,13 @@
                             </div>
                         @endforeach
                     </li>
-                @endforeach
+                @empty
+                    <div class="bg-gray-100 rounded-xl p-2 flex flex-col justify-center items-center gap-2">
+                        <h1 class="text-gray-800 text-lg">
+                            Belum Ada Materi Yang Tersedia
+                        </h1>
+                    </div>
+                @endforelse
             </ol>
         @break
 

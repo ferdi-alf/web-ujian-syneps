@@ -41,7 +41,8 @@
             </button>
         </div>
 
-        <x-fragments.text-field label="Masukan Judul Materi Ujian" name="judul" required />
+        <x-fragments.text-field label="Masukan Judul Materi Ujian" name="judul" placeholder="Masukan Judul Ujian"
+            required />
 
         <div id="soalContainer" class="mt-5 space-y-4">
             <div class="soal-item bg-white w-full flex rounded-lg shadow-md flex-col space-y-2 items-end p-3 transform transition-all duration-300 ease-in-out"

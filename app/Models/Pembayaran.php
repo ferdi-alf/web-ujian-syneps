@@ -21,7 +21,7 @@ class Pembayaran extends Model
     ];
 
     protected $casts = [
-        'tanggal_jatuh_tempo' => 'date',
+    'tanggal_jatuh_tempo' => 'datetime', // Ganti dari 'date' ke 'datetime'
     ];
 
     public function siswaDetail()

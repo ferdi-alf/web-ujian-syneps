@@ -110,7 +110,6 @@ class RegisterController extends Controller
                     'total_tagihan' => $peserta->total_tagihan,
                     'jumlah_cicilan' => $peserta->jumlah_cicilan,
                     'tagihan_per_bulan' => $peserta->tagihan_per_bulan,
-                    'ikut_magang' => false,
                 ]);
                 SiswaDetail::create([
                     'siswa_id' => $user->id,
@@ -126,7 +125,6 @@ class RegisterController extends Controller
                     'total_tagihan' => $peserta->total_tagihan,
                     'jumlah_cicilan' => $peserta->jumlah_cicilan,
                     'tagihan_per_bulan' => $peserta->tagihan_per_bulan,
-                    'ikut_magang' => false,
                 ]);
                 
                 // Hapus data pendaftaran dan registration token

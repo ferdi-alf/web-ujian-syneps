@@ -6,12 +6,14 @@
     <div class="">
         <h1 class="text-2xl font-bold text-gray-800 mb-2 text-center sm:hidden block">Manajemen Peserta</h1>
 
-        <div class="flex mb-4 md:flex-row flex-col md:items-center items-end justify-end gap-2">
-            <x-fragments.modal-button target="modal-control-peserta" variant="emerald" act="create" :disabled="$activeBatch->isEmpty()">
-                <i class="fa-solid fa-plus mr-2"></i>
-                Tambah Peserta
-            </x-fragments.modal-button>
-        </div>
+        @if (Auth::user()->role === 'admin')
+            <div class="flex mb-4 md:flex-row flex-col md:items-center items-end justify-end gap-2">
+                <x-fragments.modal-button target="modal-control-peserta" variant="emerald" act="create" :disabled="$activeBatch->isEmpty()">
+                    <i class="fa-solid fa-plus mr-2"></i>
+                    Tambah Peserta
+                </x-fragments.modal-button>
+            </div>
+        @endif
 
         <x-fragments.form-modal id="modal-control-peserta" title="Form Peserta" createTitle="Tambah Peserta Baru"
             editTitle="Edit Peserta" action="{{ route('peserta.store') }}">
@@ -29,6 +31,16 @@
                             <li class="text-sm text-blue-800"><strong>{{ $batch->display_name }}</strong></li>
                         @endforeach
                     </ul>
+                </div>
+            @else
+                <div id="batch-info-section" class="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+                    <div class="flex items-center">
+                        <i class="fas fa-info-circle text-red-600 mr-2"></i>
+                        <span class="text-sm text-red-800">
+                            tidak ada batch dalam status registrasi
+                        </span>
+                    </div>
+
                 </div>
             @endif
 
