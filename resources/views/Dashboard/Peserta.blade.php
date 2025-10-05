@@ -97,91 +97,157 @@
                     'act' => 'update',
                 ],
                 'deleteRoute' => route('peserta.destroy', $row['id']),
-                'drawerId' => 'drawer-detail-peserta-' . $row['id'],
-            ])" :autoFilter="[4 => 'Kelas']" :filterPlaceholder="'Semua'" />
+                'viewData' => [
+                    'id' => $row['id'],
+                    'fetchEndpoint' => '/peserta/' . $row['id'],
+                    'drawerTarget' => 'drawer-detail-peserta',
+                    'type' => 'bottomSheet',
+                    'title' => 'Detail Peserta: ' . $row['nama_lengkap'],
+                    'description' => 'Informasi lengkap peserta dan hasil ujian',
+                ],
+            ])" :autoFilter="[4 => 'Kelas', 6 => 'Batch']" :filterPlaceholder="'Semua'" />
     </div>
 
-    @foreach ($pesertaData as $peserta)
-        <x-drawer-layout id="drawer-detail-peserta-{{ $peserta['id'] }}" title="Detail Hasil Ujian: {{ $peserta['name'] }}"
-            description="Informasi lengkap tentang hasil ujian {{ $peserta['nama_lengkap'] }}">
-            <div class="space-y-6">
-                <div class="bg-gray-50 p-4 rounded-lg">
-                    <h3 class="text-lg font-semibold mb-4">Informasi Peserta</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <p class="text-sm text-gray-600">Nama User:</p>
-                            <p class="font-medium">{{ $peserta['name'] }}</p>
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-600">Email:</p>
-                            <p class="font-medium">{{ $peserta['email'] }}</p>
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-600">Nama Lengkap:</p>
-                            <p class="font-medium">{{ $peserta['nama_lengkap'] }}</p>
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-600">Kelas:</p>
-                            <p class="font-medium">{{ $peserta['kelas'] }}</p>
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-600">Batch:</p>
-                            <p class="font-medium">{{ $peserta['batch'] }}</p>
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-600">Status:</p>
-                            <p class="font-medium"> {!! Str::of($peserta['status'])->stripTags('<span>')->toString() !!}</p>
-                        </div>
+    {{-- Ganti semua bagian @foreach drawer dengan single drawer ini --}}
+    <x-drawer-layout type="bottomSheet" id="drawer-detail-peserta" title="Detail Peserta"
+        description="Informasi lengkap peserta dan hasil ujian">
+        <div x-data="{
+            pesertaData: null,
+            hasilList: [],
+        }"
+            x-on:drawerDataLoaded.window="
+            if ($event.detail.drawerId === 'drawer-detail-peserta') {
+                pesertaData = $event.detail.data
+                hasilList = pesertaData.hasil || []
+                console.log('Peserta data diterima:', pesertaData)
+            }
+        "
+            class="space-y-6">
+
+            {{-- Informasi Peserta --}}
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <div class="flex items-center mb-4">
+                    <template x-if="pesertaData">
+                        <img :src="pesertaData.avatar" :alt="pesertaData.nama_lengkap"
+                            class="h-16 w-16 rounded-full object-cover mr-4">
+                    </template>
+                    <div>
+                        <h3 class="text-lg font-semibold" x-text="pesertaData?.nama_lengkap"></h3>
+                        <p class="text-sm text-gray-600" x-text="pesertaData?.email"></p>
                     </div>
                 </div>
 
-                <div class="bg-gray-50 p-4 rounded-lg">
-                    <h3 class="text-lg font-semibold mb-4">Riwayat Hasil Ujian</h3>
-                    @if (count($peserta['hasil']) > 0)
-                        <div class="space-y-4">
-                            @foreach ($peserta['hasil'] as $hasil)
-                                <div class="bg-white p-4 rounded-lg border">
-                                    <div class="flex justify-between items-start mb-3">
-                                        <h4 class="font-semibold text-blue-600">{{ $hasil['judul'] }}</h4>
-                                        <span
-                                            class="px-3 py-1 rounded-full text-sm font-medium
-                                            {{ $hasil['nilai'] >= 80
-                                                ? 'bg-green-100 text-green-800'
-                                                : ($hasil['nilai'] >= 70
-                                                    ? 'bg-yellow-100 text-yellow-800'
-                                                    : 'bg-red-100 text-red-800') }}">
-                                            {{ $hasil['nilai'] }}
-                                        </span>
-                                    </div>
-                                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-                                        <div>
-                                            <p class="text-gray-600">Waktu Pengerjaan:</p>
-                                            <p class="font-medium">{{ $hasil['waktu'] }}</p>
-                                        </div>
-                                        <div>
-                                            <p class="text-gray-600">Jawaban Benar:</p>
-                                            <p class="font-medium text-green-600">{{ $hasil['benar'] }}</p>
-                                        </div>
-                                        <div>
-                                            <p class="text-gray-600">Jawaban Salah:</p>
-                                            <p class="font-medium text-red-600">{{ $hasil['salah'] }}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    @else
-                        <div class="text-center py-8">
-                            <div class="text-gray-400 mb-4">
-                                <i class="fas fa-clipboard-list text-4xl"></i>
-                            </div>
-                            <p class="text-gray-500 text-sm">Belum ada hasil ujian yang tersedia.</p>
-                        </div>
-                    @endif
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-sm text-gray-600">Nama User:</p>
+                        <p class="font-medium" x-text="pesertaData?.name"></p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">Kelas:</p>
+                        <p class="font-medium" x-text="pesertaData?.kelas"></p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">Batch:</p>
+                        <p class="font-medium" x-text="pesertaData?.batch"></p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">Status:</p>
+                        <span x-show="pesertaData?.status === 'active'"
+                            class="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">Active</span>
+                        <span x-show="pesertaData?.status === 'alumni'"
+                            class="px-2 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded-full">Alumni</span>
+                        <span x-show="pesertaData?.status === 'inactive'"
+                            class="px-2 py-1 bg-gray-100 text-gray-800 text-xs font-medium rounded-full">Inactive</span>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">Ikut Magang:</p>
+                        <p class="font-medium" x-text="pesertaData?.ikut_magang"></p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">NISN:</p>
+                        <p class="font-medium" x-text="pesertaData?.nisn"></p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">Tempat, Tanggal Lahir:</p>
+                        <p class="font-medium"
+                            x-text="(pesertaData?.tempat_lahir || '-') + ', ' + (pesertaData?.tanggal_lahir || '-')"></p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">Jenis Kelamin:</p>
+                        <p class="font-medium" x-text="pesertaData?.jenis_kelamin"></p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">No. Telepon:</p>
+                        <p class="font-medium" x-text="pesertaData?.no_telepon"></p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">Asal Sekolah:</p>
+                        <p class="font-medium" x-text="pesertaData?.asal_sekolah"></p>
+                    </div>
+                    <div class="md:col-span-2">
+                        <p class="text-sm text-gray-600">Alamat:</p>
+                        <p class="font-medium" x-text="pesertaData?.alamat"></p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">Total Tagihan:</p>
+                        <p class="font-medium" x-text="pesertaData?.total_tagihan"></p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">Tagihan Per Bulan:</p>
+                        <p class="font-medium" x-text="pesertaData?.tagihan_per_bulan"></p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">Jumlah Cicilan:</p>
+                        <p class="font-medium" x-text="pesertaData?.jumlah_cicilan"></p>
+                    </div>
                 </div>
             </div>
-        </x-drawer-layout>
-    @endforeach
+
+            {{-- Riwayat Hasil Ujian --}}
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <h3 class="text-lg font-semibold mb-4">Riwayat Hasil Ujian</h3>
+                <template x-if="hasilList.length > 0">
+                    <div class="space-y-4">
+                        <template x-for="hasil in hasilList" :key="hasil.id">
+                            <div class="bg-white p-4 rounded-lg border">
+                                <div class="flex justify-between items-start mb-3">
+                                    <h4 class="font-semibold text-blue-600" x-text="hasil.judul"></h4>
+                                    <span
+                                        :class="hasil.nilai >= 80 ? 'bg-green-100 text-green-800' :
+                                            (hasil.nilai >= 70 ? 'bg-yellow-100 text-yellow-800' :
+                                                'bg-red-100 text-red-800')"
+                                        class="px-3 py-1 rounded-full text-sm font-medium" x-text="hasil.nilai">
+                                    </span>
+                                </div>
+                                <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                                    <div>
+                                        <p class="text-gray-600">Waktu Pengerjaan:</p>
+                                        <p class="font-medium" x-text="hasil.waktu"></p>
+                                    </div>
+                                    <div>
+                                        <p class="text-gray-600">Jawaban Benar:</p>
+                                        <p class="font-medium text-green-600" x-text="hasil.benar"></p>
+                                    </div>
+                                    <div>
+                                        <p class="text-gray-600">Jawaban Salah:</p>
+                                        <p class="font-medium text-red-600" x-text="hasil.salah"></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+                <template x-if="hasilList.length === 0">
+                    <div class="text-center py-8">
+                        <div class="text-gray-400 mb-4">
+                            <i class="fas fa-clipboard-list text-4xl"></i>
+                        </div>
+                        <p class="text-gray-500 text-sm">Belum ada hasil ujian yang tersedia.</p>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </x-drawer-layout>
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {

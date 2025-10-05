@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Kelas;
 use App\Models\User;
-use Illuminate\Http\Request;
+
 use Illuminate\Support\Facades\Auth;
 
 class LeaderboardController extends Controller
@@ -27,6 +27,99 @@ class LeaderboardController extends Controller
         return view('Dashboard.Leaderboard', compact('data', 'user'));
     }
 
+    public function show($siswaId)
+    {
+        try {
+            $user = Auth::user();
+            $siswa = User::findOrFail($siswaId);
+            
+
+            if ($user->role === 'pengajar') {
+                $pengajarDetail = $user->pengajarDetail;
+                if (!$pengajarDetail) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Unauthorized access'
+                    ], 403);
+                }
+                
+                $siswaKelasId = optional($siswa->siswaDetail)->kelas_id;
+                $allowedKelasIds = $pengajarDetail->kelas()->pluck('kelas.id')->toArray();
+                
+                if (!in_array($siswaKelasId, $allowedKelasIds)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Unauthorized access to this student'
+                    ], 403);
+                }
+            }
+            
+
+            $kelasId = optional($siswa->siswaDetail)->kelas_id;
+            if (!$kelasId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Siswa belum memiliki kelas'
+                ], 404);
+            }
+            
+
+            $hasilUjians = $siswa->hasilUjian()
+                ->whereHas('ujian', function($q) use ($kelasId) {
+                    $q->where('kelas_id', $kelasId)
+                      ->whereHas('batch', function ($query) {
+                          $query->where('status', 'active');
+                      });
+                })
+                ->with('ujian')
+                ->orderBy('created_at', 'asc')
+                ->get();
+
+            $chartData = [];
+            $tableData = [];
+            
+            foreach ($hasilUjians as $hasil) {
+                $chartData[] = [
+                    'judul' => $hasil->ujian->judul,
+                    'nilai' => $hasil->nilai
+                ];
+                
+                $tableData[] = [
+                    'judul' => $hasil->ujian->judul,
+                    'nilai' => $hasil->nilai,
+                    'benar' => $hasil->jumlah_benar,
+                    'salah' => $hasil->jumlah_salah
+                ];
+            }
+
+            $rataRata = $hasilUjians->count() > 0 
+                ? number_format($hasilUjians->avg('nilai'), 1)
+                : '0.0';
+            
+            $status = $this->getStatusPerubahan($hasilUjians);
+            $kelas = Kelas::find($kelasId);
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'id' => $siswa->id,
+                    'nama' => $siswa->siswaDetail ? $siswa->siswaDetail->nama_lengkap : $siswa->name,
+                    'avatar' => $siswa->getAvatarUrl(),
+                    'kelas' => $kelas ? $kelas->nama : '-',
+                    'rata_rata' => $rataRata,
+                    'status' => $status,
+                    'chart_ujian' => $chartData,
+                    'table_data' => $tableData
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data siswa tidak ditemukan: ' . $e->getMessage()
+            ], 404);
+        }
+    }
+
     private function getAdminLeaderboardData()
     {
         $result = [];
@@ -38,7 +131,7 @@ class LeaderboardController extends Controller
                 ->whereHas('siswaDetail', function($q) use ($kelas) {
                     $q->where('kelas_id', $kelas->id);
                 })
-                ->with(['siswaDetail', 'hasilUjian.ujian'])
+                ->with(['siswaDetail'])
                 ->get();
             
             $kelasData = [];
@@ -58,21 +151,6 @@ class LeaderboardController extends Controller
                 if ($hasilUjians->count() > 0) {
                     $rataRata = $hasilUjians->avg('nilai');
                     $status = $this->getStatusPerubahan($hasilUjians);
-                    $chartUjian = [];
-                    $tableData = [];
-                    foreach ($hasilUjians as $hasil) {
-                        $chartUjian[] = [
-                            'judul' => $hasil->ujian->judul,
-                            'nilai' => $hasil->nilai
-                        ];
-                        $tableData[] = [
-                            'id' => $hasil->id,
-                            'judul' => $hasil->ujian->judul,
-                            'nilai' => $hasil->nilai,
-                            'benar' => $hasil->jumlah_benar,
-                            'salah' => $hasil->jumlah_salah
-                        ];
-                    }
                     
                     $kelasData[] = [
                         'id' => $siswa->id,
@@ -80,8 +158,6 @@ class LeaderboardController extends Controller
                         'avatar' => $siswa->getAvatarUrl(),
                         'rata_rata' => number_format($rataRata, 1),
                         'status' => $status,
-                        'chart_ujian' => $chartUjian,
-                        'table_data' => $tableData
                     ];
                 }
             }
@@ -117,7 +193,7 @@ class LeaderboardController extends Controller
                 ->whereHas('siswaDetail', function($q) use ($kelas) {
                     $q->where('kelas_id', $kelas->id);
                 })
-                ->with(['siswaDetail', 'hasilUjian.ujian'])
+                ->with(['siswaDetail'])
                 ->get();
             
             $kelasData = [];
@@ -137,21 +213,6 @@ class LeaderboardController extends Controller
                 if ($hasilUjians->count() > 0) {
                     $rataRata = $hasilUjians->avg('nilai');
                     $status = $this->getStatusPerubahan($hasilUjians);
-                    $chartUjian = [];
-                    $tableData = [];
-                    foreach ($hasilUjians as $hasil) {
-                        $chartUjian[] = [
-                            'judul' => $hasil->ujian->judul,
-                            'nilai' => $hasil->nilai
-                        ];
-                        $tableData[] = [
-                            'id' => $hasil->id,
-                            'judul' => $hasil->ujian->judul,
-                            'nilai' => $hasil->nilai,
-                            'benar' => $hasil->jumlah_benar,
-                            'salah' => $hasil->jumlah_salah
-                        ];
-                    }
                     
                     $kelasData[] = [
                         'id' => $siswa->id,
@@ -159,8 +220,6 @@ class LeaderboardController extends Controller
                         'avatar' => $siswa->getAvatarUrl(),
                         'rata_rata' => number_format($rataRata, 1),
                         'status' => $status,
-                        'chart_ujian' => $chartUjian,
-                        'table_data' => $tableData
                     ];
                 }
             }

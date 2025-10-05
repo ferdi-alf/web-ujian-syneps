@@ -30,7 +30,7 @@ class Ujian extends Model
     {
         return $this->belongsTo(Batches::class, 'batch_id');
     }
-
+ 
     public function soals(): HasMany
     {
         return $this->hasMany(Soal::class, 'ujian_id');

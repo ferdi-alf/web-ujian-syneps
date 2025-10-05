@@ -52,6 +52,109 @@
                     @endif
                 </div>
             </div>
+            <div class="mt-6 bg-white rounded-lg shadow-md p-4">
+                <div class="mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800 ">Leaderboard Peserta -
+                        {{ Auth::user()->siswaDetail->kelas->nama }}</h3>
+                    <p class="text-sm text-gray-600">Peringkat peserta berdasarkan rata-rata nilai ujian</p>
+
+                </div>
+
+                @if (count($leaderboardData) > 0)
+                    @php
+                        $currentUserRank =
+                            collect($leaderboardData)->where('is_current_user', true)->first()['rank'] ?? null;
+                    @endphp
+
+                    @if ($currentUserRank && $currentUserRank <= 3)
+                        <div class="mb-4 p-3 bg-green-100 border-l-4 border-green-500 rounded">
+                            <div class="flex items-center">
+                                <i class="fa-solid fa-trophy text-yellow-500 mr-2"></i>
+                                <p class="text-green-800 font-semibold">
+                                    Selamat! Anda berada di peringkat {{ $currentUserRank }} dari {{ count($leaderboardData) }}
+                                    peserta!
+                                </p>
+                            </div>
+                        </div>
+                    @endif
+
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full table-auto">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Peringkat</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Siswa
+                                    </th>
+                                    dro
+                                    <th
+                                        class=" px-10 truncate py-3 text-left text-xs font-medium   text-gray-500 uppercase tracking-wider">
+                                        Rata-rata Nilai</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase truncate tracking-wider">
+                                        Total
+                                        Ujian</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                @foreach ($leaderboardData as $siswa)
+                                    <tr
+                                        class="{{ $siswa['is_current_user'] ? 'bg-blue-50 border-l-4 border-blue-500' : '' }} 
+                                       {{ $siswa['is_top_3'] ? 'bg-gradient-to-r from-yellow-50 to-yellow-100' : '' }}">
+                                        <td class="px-4 py-4 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                @if ($siswa['rank'] == 1)
+                                                    <i class="fa-solid fa-crown text-yellow-500 text-lg mr-2"></i>
+                                                @elseif($siswa['rank'] == 2)
+                                                    <i class="fa-solid fa-medal text-gray-400 text-lg mr-2"></i>
+                                                @elseif($siswa['rank'] == 3)
+                                                    <i class="fa-solid fa-medal text-orange-500 text-lg mr-2"></i>
+                                                @else
+                                                    <span class="w-6 text-center mr-2"></span>
+                                                @endif
+                                                <span class="text-sm font-bold text-gray-900">{{ $siswa['rank'] }}</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-4 py-4 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <img src="{{ $siswa['avatar'] }}" alt="avatar"
+                                                    class="w-10 h-10 rounded-full object-cover mr-3">
+                                                <div>
+                                                    <div class="text-sm font-medium text-gray-900">
+                                                        {{ $siswa['nama'] }}
+                                                        @if ($siswa['is_current_user'])
+                                                            <span
+                                                                class="ml-2 px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">Anda</span>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-4 py-4 whitespace-nowrap">
+                                            <div class="flex items-center md:px-0 px-5">
+                                                <span class="text-sm font-bold text-gray-900">{{ $siswa['rata_rata'] }}</span>
+                                                <div class="ml-2 w-20 bg-gray-200 rounded-full h-2">
+                                                    <div class="bg-gradient-to-r from-green-400 to-blue-500 h-2 rounded-full"
+                                                        style="width: {{ $siswa['rata_rata'] }}%"></div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-4 py-4 whitespace-nowrap">
+                                            <span class="text-sm text-gray-900">{{ $siswa['total_ujian'] }} ujian</span>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @else
+                    <div class="text-center py-8">
+                        <i class="fa-solid fa-users text-4xl text-gray-400 mb-3"></i>
+                        <p class="text-gray-500">Belum ada data leaderboard</p>
+                    </div>
+                @endif
+            </div>
             <div class="bg-white rounded-lg shadow-md p-4 mt-5">
                 <div class="mb-4">
                     <h3 class="text-lg font-semibold text-gray-800 mb-2">Data Tagihan Pembayaran</h3>
@@ -186,109 +289,7 @@
                 </table>
 
             </div>
-            <div class="mt-6 bg-white rounded-lg shadow-md p-4">
-                <div class="mb-4">
-                    <h3 class="text-lg font-semibold text-gray-800 ">Leaderboard Peserta -
-                        {{ Auth::user()->siswaDetail->kelas->nama }}</h3>
-                    <p class="text-sm text-gray-600">Peringkat peserta berdasarkan rata-rata nilai ujian</p>
 
-                </div>
-
-                @if (count($leaderboardData) > 0)
-                    @php
-                        $currentUserRank =
-                            collect($leaderboardData)->where('is_current_user', true)->first()['rank'] ?? null;
-                    @endphp
-
-                    @if ($currentUserRank && $currentUserRank <= 3)
-                        <div class="mb-4 p-3 bg-green-100 border-l-4 border-green-500 rounded">
-                            <div class="flex items-center">
-                                <i class="fa-solid fa-trophy text-yellow-500 mr-2"></i>
-                                <p class="text-green-800 font-semibold">
-                                    Selamat! Anda berada di peringkat {{ $currentUserRank }} dari {{ count($leaderboardData) }}
-                                    peserta!
-                                </p>
-                            </div>
-                        </div>
-                    @endif
-
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full table-auto">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Peringkat</th>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Siswa
-                                    </th>
-                                    dro
-                                    <th
-                                        class=" px-10 truncate py-3 text-left text-xs font-medium   text-gray-500 uppercase tracking-wider">
-                                        Rata-rata Nilai</th>
-                                    <th
-                                        class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase truncate tracking-wider">
-                                        Total
-                                        Ujian</th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
-                                @foreach ($leaderboardData as $siswa)
-                                    <tr
-                                        class="{{ $siswa['is_current_user'] ? 'bg-blue-50 border-l-4 border-blue-500' : '' }} 
-                                       {{ $siswa['is_top_3'] ? 'bg-gradient-to-r from-yellow-50 to-yellow-100' : '' }}">
-                                        <td class="px-4 py-4 whitespace-nowrap">
-                                            <div class="flex items-center">
-                                                @if ($siswa['rank'] == 1)
-                                                    <i class="fa-solid fa-crown text-yellow-500 text-lg mr-2"></i>
-                                                @elseif($siswa['rank'] == 2)
-                                                    <i class="fa-solid fa-medal text-gray-400 text-lg mr-2"></i>
-                                                @elseif($siswa['rank'] == 3)
-                                                    <i class="fa-solid fa-medal text-orange-500 text-lg mr-2"></i>
-                                                @else
-                                                    <span class="w-6 text-center mr-2"></span>
-                                                @endif
-                                                <span class="text-sm font-bold text-gray-900">{{ $siswa['rank'] }}</span>
-                                            </div>
-                                        </td>
-                                        <td class="px-4 py-4 whitespace-nowrap">
-                                            <div class="flex items-center">
-                                                <img src="{{ $siswa['avatar'] }}" alt="avatar"
-                                                    class="w-10 h-10 rounded-full object-cover mr-3">
-                                                <div>
-                                                    <div class="text-sm font-medium text-gray-900">
-                                                        {{ $siswa['nama'] }}
-                                                        @if ($siswa['is_current_user'])
-                                                            <span
-                                                                class="ml-2 px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">Anda</span>
-                                                        @endif
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td class="px-4 py-4 whitespace-nowrap">
-                                            <div class="flex items-center md:px-0 px-5">
-                                                <span class="text-sm font-bold text-gray-900">{{ $siswa['rata_rata'] }}</span>
-                                                <div class="ml-2 w-20 bg-gray-200 rounded-full h-2">
-                                                    <div class="bg-gradient-to-r from-green-400 to-blue-500 h-2 rounded-full"
-                                                        style="width: {{ $siswa['rata_rata'] }}%"></div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td class="px-4 py-4 whitespace-nowrap">
-                                            <span class="text-sm text-gray-900">{{ $siswa['total_ujian'] }} ujian</span>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                @else
-                    <div class="text-center py-8">
-                        <i class="fa-solid fa-users text-4xl text-gray-400 mb-3"></i>
-                        <p class="text-gray-500">Belum ada data leaderboard</p>
-                    </div>
-                @endif
-            </div>
 
             @if (count($chartData['labels']) > 0)
                 <script>

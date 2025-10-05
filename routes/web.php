@@ -102,11 +102,11 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/comment/{commentId}', 'deleteComment')->name('comment.delete');
     });
 
-    Route::controller(NilaiController::class)->prefix('nilai')->name('nilai.')->group(function () {
-        Route::get('/', 'index')->name('index');
-        Route::get('/download', 'download')->name('download');
-    });
-
+   Route::controller(NilaiController::class)->prefix('nilai')->name('nilai.')->group(function () {
+    Route::get('/', 'index')->name('index');
+    Route::get('/download', 'download')->name('download');
+    Route::get('/{id}', 'show')->name('show');
+});
     Route::controller(MateriController::class)->prefix('materi')->name('materi.')->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/{id}', 'show')->name('show'); 
@@ -121,6 +121,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::middleware(['deny.roles:siswa'])->group(function () {
         Route::get('/leaderboard', [LeaderboardController::class, 'leaderboard'])->name('leaderboard');
+        Route::get('/leaderboard/{id}', [LeaderboardController::class, 'show'])->name('leaderboard.show');
         Route::post('/admin/reset-data', [AdminResetController::class, 'resetData'])->name('admin.reset.data');
 
         Route::controller(TambahUjianController::class)->prefix('tambah-ujian')->name('tambah-ujian.')->group(function () {
@@ -145,7 +146,7 @@ Route::controller(ManajemenUjianController::class)->prefix('manajemen-ujian')->n
     Route::delete('/{id}', 'destroy')->name('destroy');
 });
 
-        Route::controller(PesertaController::class)->prefix('peserta')->name('peserta.')->group(function () {
+    Route::controller(PesertaController::class)->prefix('peserta')->name('peserta.')->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/{id}', 'show')->name('show');
             Route::get('/approval', 'approval')->name('approval');

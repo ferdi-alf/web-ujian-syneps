@@ -120,25 +120,42 @@ class PesertaController extends Controller
                 }
             }
 
+            $siswaDetail = $siswa->siswaDetail;
+            
             return response()->json([
                 'success' => true,
                 'data' => [
                     'id' => $siswa->id,
                     'name' => $siswa->name,
                     'email' => $siswa->email,
-                    'nama_lengkap' => $siswa->siswaDetail->nama_lengkap ?? '',
-                    'kelas_id' => $siswa->siswaDetail->kelas_id ?? null,
-                    'batch_id' => $siswa->siswaDetail->batch_id ?? null,
-                    'status' => $siswa->siswaDetail->status ?? 'inactive',
-                    'ikut_magang' => $siswa->siswaDetail->ikut_magang ?? '',
-                    'kelas' => $siswa->siswaDetail?->kelas ? [
-                        'id' => $siswa->siswaDetail->kelas->id,
-                        'nama' => $siswa->siswaDetail->kelas->nama
-                    ] : null,
-                    'batch' => $siswa->siswaDetail?->batches ? [
-                        'id' => $siswa->siswaDetail->batches->id,
-                        'nama' => $siswa->siswaDetail->batches->nama
-                    ] : null
+                    'avatar' => $siswa->getAvatarUrl(),
+                    'nama_lengkap' => $siswaDetail->nama_lengkap ?? '-',
+                    'kelas' => $siswaDetail?->kelas?->nama ?? '-',
+                    'batch' => $siswaDetail?->batches?->nama ?? '-',
+                    'status' => $siswaDetail?->status ?? 'inactive',
+                    'ikut_magang' => $siswaDetail?->ikut_magang ?? '-',
+                    // Detail tambahan dari SiswaDetail
+                    'nisn' => $siswaDetail?->nisn ?? '-',
+                    'tempat_lahir' => $siswaDetail?->tempat_lahir ?? '-',
+                    'tanggal_lahir' => $siswaDetail?->tanggal_lahir ? \Carbon\Carbon::parse($siswaDetail->tanggal_lahir)->format('d F Y') : '-',
+                    'jenis_kelamin' => $siswaDetail?->jenis_kelamin ?? '-',
+                    'alamat' => $siswaDetail?->alamat ?? '-',
+                    'no_telepon' => $siswaDetail?->no_telepon ?? '-',
+                    'asal_sekolah' => $siswaDetail?->asal_sekolah ?? '-',
+                    'total_tagihan' => $siswaDetail?->total_tagihan ? 'Rp ' . number_format($siswaDetail->total_tagihan, 0, ',', '.') : '-',
+                    'tagihan_per_bulan' => $siswaDetail?->tagihan_per_bulan ? 'Rp ' . number_format($siswaDetail->tagihan_per_bulan, 0, ',', '.') : '-',
+                    'jumlah_cicilan' => $siswaDetail?->jumlah_cicilan ?? '-',
+                    // Hasil ujian
+                    'hasil' => $siswa->hasilUjian->map(function ($hasil) {
+                        return [
+                            'id' => $hasil->id,
+                            'judul' => $hasil->ujian->judul ?? '-',
+                            'nilai' => $hasil->nilai,
+                            'waktu' => $this->formatWaktuPengerjaanDetik($hasil->waktu_pengerjaan),
+                            'benar' => $hasil->jumlah_benar,
+                            'salah' => $hasil->jumlah_salah
+                        ];
+                    })
                 ]
             ]);
         } catch (\Exception $e) {

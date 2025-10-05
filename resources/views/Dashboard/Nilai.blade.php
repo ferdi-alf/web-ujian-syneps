@@ -13,6 +13,7 @@
                 </div>
             @endif
         </div>
+
         <h1 class="text-2xl font-bold text-gray-800 mb-2 text-center sm:hidden block">
             @switch($user->role)
                 @case('admin')
@@ -80,8 +81,7 @@
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap">
                                                 <span
-                                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                                    {{ $ujian['batch_status'] === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' }}">
+                                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $ujian['batch_status'] === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' }}">
                                                     {{ $ujian['batch_nama'] }}
                                                 </span>
                                             </td>
@@ -89,8 +89,7 @@
                                                 soal</td>
                                             <td class="px-6 py-4 whitespace-nowrap">
                                                 <span
-                                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                                    {{ $ujian['nilai'] >= 80 ? 'bg-green-100 text-green-800' : ($ujian['nilai'] >= 70 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800') }}">
+                                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $ujian['nilai'] >= 80 ? 'bg-green-100 text-green-800' : ($ujian['nilai'] >= 70 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800') }}">
                                                     {{ $ujian['nilai'] }}
                                                 </span>
                                             </td>
@@ -156,7 +155,20 @@
                                     fn($row) => $row['total_hasil'] . ' siswa',
                                     fn($row) => $row['rata_rata'],
                                 ]" :showActions="true" :actionButtons="fn($row) => view('components.action-buttons', [
-                                    'drawerId' => 'drawer-detail-admin-' . $row['id'],
+                                    'viewData' => [
+                                        'id' => $row['id'],
+                                        'fetchEndpoint' => '/nilai/' . $row['id'],
+                                        'drawerTarget' => 'drawer-detail-nilai',
+                                        'type' => 'bottomSheet',
+                                        'title' => 'Detail Hasil Ujian: ' . $row['judul'],
+                                        'description' =>
+                                            'Kelas ' .
+                                            $namaKelas .
+                                            ' - ' .
+                                            $row['total_hasil'] .
+                                            ' siswa dengan rata-rata ' .
+                                            $row['rata_rata'],
+                                    ],
                                     'hideEdit' => true,
                                     'hideDelete' => true,
                                 ])" />
@@ -172,122 +184,133 @@
                     </div>
                 @endif
 
-                @foreach ($data as $namaKelas => $ujianList)
-                    @foreach ($ujianList as $ujian)
-                        <x-drawer-layout id="drawer-detail-admin-{{ $ujian['id'] }}"
-                            title="Detail Hasil Ujian: {{ $ujian['judul'] }}"
-                            description="Kelas {{ $namaKelas }} - {{ $ujian['total_hasil'] }} siswa dengan rata-rata {{ $ujian['rata_rata'] }}">
-                            <div class="space-y-6">
-                                <div class="bg-gray-50 p-4 rounded-lg">
-                                    <h3 class="text-lg font-semibold mb-4">Informasi Ujian</h3>
-                                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                        <div>
-                                            <p class="text-sm text-gray-600">Judul Ujian:</p>
-                                            <p class="font-medium">{{ $ujian['judul'] }}</p>
-                                        </div>
-                                        <div>
-                                            <p class="text-sm text-gray-600">Kelas:</p>
-                                            <p class="font-medium">{{ $namaKelas }}</p>
-                                        </div>
-                                        <div>
-                                            <p class="text-sm text-gray-600">Batch:</p>
-                                            <p class="font-medium">{{ $ujian['batch_nama'] }}</p>
-                                        </div>
-                                        <div>
-                                            <p class="text-sm text-gray-600">Total Siswa:</p>
-                                            <p class="font-medium">{{ $ujian['total_hasil'] }} siswa</p>
-                                        </div>
-                                        <div>
-                                            <p class="text-sm text-gray-600">Rata-rata Nilai:</p>
-                                            <p class="font-medium">{{ $ujian['rata_rata'] }}</p>
-                                        </div>
+                {{-- Universal Drawer dengan Fetch API --}}
+                <x-drawer-layout type="bottomSheet" id="drawer-detail-nilai" title="Detail Hasil Ujian"
+                    description="Informasi hasil ujian siswa">
+                    <div x-data="{
+                        ujianData: null,
+                        siswaList: [],
+                    }"
+                        x-on:drawerDataLoaded.window="
+                            if ($event.detail.drawerId === 'drawer-detail-nilai') {
+                                ujianData = $event.detail.data
+                                siswaList = ujianData.siswa || []
+                                console.log('Ujian data diterima:', ujianData)
+                            }
+                        "
+                        class="space-y-6">
+
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h3 class="text-lg font-semibold mb-4">Informasi Ujian</h3>
+                            <template x-if="ujianData">
+                                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                    <div>
+                                        <p class="text-sm text-gray-600">Judul Ujian:</p>
+                                        <p class="font-medium" x-text="ujianData.judul"></p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-600">Kelas:</p>
+                                        <p class="font-medium" x-text="ujianData.kelas"></p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-600">Batch:</p>
+                                        <p class="font-medium" x-text="ujianData.batch_nama"></p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-600">Total Siswa:</p>
+                                        <p class="font-medium" x-text="ujianData.total_hasil + ' siswa'"></p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-600">Rata-rata Nilai:</p>
+                                        <p class="font-medium" x-text="ujianData.rata_rata"></p>
                                     </div>
                                 </div>
+                            </template>
+                        </div>
 
-                                <div class="bg-gray-50 p-4 rounded-lg">
-                                    <h3 class="text-lg font-semibold mb-4">Hasil Siswa</h3>
-                                    @if (count($ujian['siswa']) > 0)
-                                        <div class="overflow-x-auto">
-                                            <table class="min-w-full divide-y divide-gray-200">
-                                                <thead class="bg-white">
-                                                    <tr>
-                                                        <th
-                                                            class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                            No</th>
-                                                        <th
-                                                            class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                            Siswa</th>
-                                                        <th
-                                                            class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                            Batch</th>
-                                                        <th
-                                                            class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                            Nilai</th>
-                                                        <th
-                                                            class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                            Benar</th>
-                                                        <th
-                                                            class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                            Salah</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody class="bg-white divide-y divide-gray-200">
-                                                    @foreach ($ujian['siswa'] as $index => $siswa)
-                                                        <tr>
-                                                            <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                                {{ $index + 1 }}</td>
-                                                            <td class="px-4 py-4 whitespace-nowrap">
-                                                                <div class="flex items-center">
-                                                                    <div class="h-8 w-8">
-                                                                        <img class="h-8 w-8 rounded-full object-cover"
-                                                                            src="{{ $siswa['avatar'] }}"
-                                                                            alt="{{ $siswa['nama_lengkap'] }}">
-                                                                    </div>
-                                                                    <div class="ml-2">
-                                                                        <div class="text-sm font-medium text-gray-900">
-                                                                            {{ $siswa['nama_lengkap'] }}
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </td>
-                                                            <td class="px-4 py-4 whitespace-nowrap">
-                                                                <span
-                                                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                                                    {{ $siswa['batch_status'] === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' }}">
-                                                                    {{ $siswa['batch_nama'] }}
-                                                                </span>
-                                                            </td>
-                                                            <td class="px-4 py-4 whitespace-nowrap">
-                                                                <span
-                                                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                                                    {{ $siswa['nilai'] >= 80 ? 'bg-green-100 text-green-800' : ($siswa['nilai'] >= 70 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800') }}">
-                                                                    {{ $siswa['nilai'] }}
-                                                                </span>
-                                                            </td>
-                                                            <td
-                                                                class="px-4 py-4 whitespace-nowrap text-sm text-green-600 font-medium">
-                                                                {{ $siswa['benar'] }}</td>
-                                                            <td
-                                                                class="px-4 py-4 whitespace-nowrap text-sm text-red-600 font-medium">
-                                                                {{ $siswa['salah'] }}</td>
-                                                        </tr>
-                                                    @endforeach
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    @else
-                                        <div class="text-center py-8">
-                                            <div class="text-gray-400 mb-4">
-                                                <i class="fas fa-user-slash text-4xl"></i>
-                                            </div>
-                                            <p class="text-gray-500 text-sm">Belum ada siswa yang mengerjakan ujian ini.</p>
-                                        </div>
-                                    @endif
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h3 class="text-lg font-semibold mb-4">Hasil Siswa</h3>
+                            <template x-if="siswaList.length > 0">
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-gray-200">
+                                        <thead class="bg-white">
+                                            <tr>
+                                                <th
+                                                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    No</th>
+                                                <th
+                                                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Siswa</th>
+                                                <th
+                                                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Batch</th>
+                                                <th
+                                                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Nilai</th>
+                                                <th
+                                                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Benar</th>
+                                                <th
+                                                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Salah</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="bg-white divide-y divide-gray-200">
+                                            <template x-for="(siswa, index) in siswaList" :key="index">
+                                                <tr>
+                                                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900"
+                                                        x-text="index + 1"></td>
+                                                    <td class="px-4 py-4 whitespace-nowrap">
+                                                        <div class="flex items-center">
+                                                            <div class="h-8 w-8">
+                                                                <img class="h-8 w-8 rounded-full object-cover"
+                                                                    :src="siswa.avatar" :alt="siswa.nama_lengkap">
+                                                            </div>
+                                                            <div class="ml-2">
+                                                                <div class="text-sm font-medium text-gray-900"
+                                                                    x-text="siswa.nama_lengkap"></div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td class="px-4 py-4 whitespace-nowrap">
+                                                        <span
+                                                            :class="siswa.batch_status === 'active' ?
+                                                                'bg-green-100 text-green-800' :
+                                                                'bg-gray-100 text-gray-800'"
+                                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                                                            x-text="siswa.batch_nama">
+                                                        </span>
+                                                    </td>
+                                                    <td class="px-4 py-4 whitespace-nowrap">
+                                                        <span
+                                                            :class="siswa.nilai >= 80 ? 'bg-green-100 text-green-800' : (siswa
+                                                                .nilai >= 70 ? 'bg-yellow-100 text-yellow-800' :
+                                                                'bg-red-100 text-red-800')"
+                                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                                                            x-text="siswa.nilai">
+                                                        </span>
+                                                    </td>
+                                                    <td class="px-4 py-4 whitespace-nowrap text-sm text-green-600 font-medium"
+                                                        x-text="siswa.benar"></td>
+                                                    <td class="px-4 py-4 whitespace-nowrap text-sm text-red-600 font-medium"
+                                                        x-text="siswa.salah"></td>
+                                                </tr>
+                                            </template>
+                                        </tbody>
+                                    </table>
                                 </div>
-                            </div>
-                        </x-drawer-layout>
-                    @endforeach
-                @endforeach
+                            </template>
+                            <template x-if="siswaList.length === 0">
+                                <div class="text-center py-8">
+                                    <div class="text-gray-400 mb-4">
+                                        <i class="fas fa-user-slash text-4xl"></i>
+                                    </div>
+                                    <p class="text-gray-500 text-sm">Belum ada siswa yang mengerjakan ujian ini.</p>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </x-drawer-layout>
             @break
         @endswitch
 

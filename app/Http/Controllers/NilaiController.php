@@ -2,18 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Batches;
-use App\Models\HasilUjian;
 use App\Models\Kelas;
 use App\Models\Ujian;
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\HasilUjian;
+use App\Models\Batches;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Barryvdh\DomPDF\Facade\Pdf;
 use ZipArchive;
 
 class NilaiController extends Controller
 {
-     public function index()
+    public function index()
     {
         $user = Auth::user();
         
@@ -31,12 +31,80 @@ class NilaiController extends Controller
                 $data = [];
         }
         
-        $batchOptions = $this->getBatchOptionsFromData($data);
-        
-        return view('Dashboard.Nilai', compact('data', 'user', 'batchOptions'));
+        return view('Dashboard.Nilai', compact('data', 'user'));
+    }
+
+    public function show($ujianId)
+    {
+        try {
+            $user = Auth::user();
+            $ujian = Ujian::with(['batch', 'kelas'])->findOrFail($ujianId);
+            
+
+            if ($user->role === 'pengajar') {
+                $pengajarDetail = $user->pengajarDetail;
+                if (!$pengajarDetail) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Unauthorized access'
+                    ], 403);
+                }
+                
+                $allowedKelasIds = $pengajarDetail->kelas()->pluck('kelas.id')->toArray();
+                
+                if (!in_array($ujian->kelas_id, $allowedKelasIds)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Unauthorized access to this exam'
+                    ], 403);
+                }
+            }
+            
+            // Get hasil ujian untuk ujian ini
+            $hasilUjians = HasilUjian::where('ujian_id', $ujianId)
+                ->with(['siswa.siswaDetail'])
+                ->get();
+            
+            $siswaData = [];
+            foreach ($hasilUjians as $hasil) {
+                $siswaDetail = $hasil->siswa->siswaDetail;
+                $siswaData[] = [
+                    'avatar' => $hasil->siswa->getAvatarUrl(),
+                    'nama_lengkap' => $siswaDetail ? $siswaDetail->nama_lengkap : $hasil->siswa->name,
+                    'nilai' => $hasil->nilai,
+                    'benar' => $hasil->jumlah_benar,
+                    'salah' => $hasil->jumlah_salah,
+                    'batch_nama' => optional($ujian->batch)->nama ?? '-',
+                    'batch_status' => optional($ujian->batch)->status ?? '-',
+                ];
+            }
+            
+            $totalHasil = $hasilUjians->count();
+            $rataRata = $totalHasil > 0 ? $hasilUjians->avg('nilai') : 0;
+            
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'id' => $ujian->id,
+                    'judul' => $ujian->judul,
+                    'kelas' => optional($ujian->kelas)->nama ?? '-',
+                    'batch_nama' => optional($ujian->batch)->nama ?? '-',
+                    'batch_status' => optional($ujian->batch)->status ?? '-',
+                    'total_hasil' => $totalHasil,
+                    'rata_rata' => number_format($rataRata, 1),
+                    'siswa' => $siswaData
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data ujian tidak ditemukan: ' . $e->getMessage()
+            ], 404);
+        }
     }
     
-    private function getAdminData() {
+    private function getAdminData()
+    {
         $result = [];
         
         $kelasList = Kelas::all();
@@ -55,24 +123,10 @@ class NilaiController extends Controller
             $kelasData = [];
             
             foreach ($ujianList as $ujian) {
-                $hasilUjians = $ujian->hasilUjians()->with(['siswa.siswaDetail'])->get();
+                $hasilUjians = $ujian->hasilUjians;
                 
                 $totalHasil = $hasilUjians->count();
                 $rataRata = $totalHasil > 0 ? $hasilUjians->avg('nilai') : 0;
-                
-                $siswaData = [];
-                foreach ($hasilUjians as $hasil) {
-                    $siswaDetail = $hasil->siswa->siswaDetail;
-                    $siswaData[] = [
-                        'avatar' => $hasil->siswa->getAvatarUrl(),
-                        'nama_lengkap' => $siswaDetail ? $siswaDetail->nama_lengkap : $hasil->siswa->name,
-                        'nilai' => $hasil->nilai,
-                        'benar' => $hasil->jumlah_benar,
-                        'salah' => $hasil->jumlah_salah,
-                        'batch_nama' => optional($ujian->batch)->nama ?? '-',
-                        'batch_status' => optional($ujian->batch)->status ?? '-',
-                    ];
-                }
                 
                 $batchNama = optional($ujian->batch)->nama ?? '-';
                 $batchStatus = optional($ujian->batch)->status ?? '-';
@@ -84,7 +138,6 @@ class NilaiController extends Controller
                     'judul' => $ujian->judul,
                     'total_hasil' => (string) $totalHasil,
                     'rata_rata' => number_format($rataRata, 1),
-                    'siswa' => $siswaData,
                     'batch_nama' => $batchNama,
                     'batch_status' => $batchStatus,
                     'batch_badge' => $batchBadge,
@@ -127,24 +180,10 @@ class NilaiController extends Controller
             $kelasData = [];
             
             foreach ($ujianList as $ujian) {
-                $hasilUjians = $ujian->hasilUjians()->with(['siswa.siswaDetail'])->get();
+                $hasilUjians = $ujian->hasilUjians;
                 
                 $totalHasil = $hasilUjians->count();
                 $rataRata = $totalHasil > 0 ? $hasilUjians->avg('nilai') : 0;
-                
-                $siswaData = [];
-                foreach ($hasilUjians as $hasil) {
-                    $siswaDetail = $hasil->siswa->siswaDetail;
-                    $siswaData[] = [
-                        'avatar' => $hasil->siswa->getAvatarUrl(),
-                        'nama_lengkap' => $siswaDetail ? $siswaDetail->nama_lengkap : $hasil->siswa->name,
-                        'nilai' => $hasil->nilai,
-                        'benar' => $hasil->jumlah_benar,
-                        'salah' => $hasil->jumlah_salah,
-                        'batch_nama' => optional($ujian->batch)->nama ?? '-',
-                        'batch_status' => optional($ujian->batch)->status ?? '-',
-                    ];
-                }
                 
                 $batchNama = optional($ujian->batch)->nama ?? '-';
                 $batchStatus = optional($ujian->batch)->status ?? '-';
@@ -156,7 +195,6 @@ class NilaiController extends Controller
                     'judul' => $ujian->judul,
                     'total_hasil' => (string) $totalHasil,
                     'rata_rata' => number_format($rataRata, 1),
-                    'siswa' => $siswaData,
                     'batch_nama' => $batchNama,
                     'batch_status' => $batchStatus,
                     'batch_badge' => $batchBadge,
@@ -169,20 +207,6 @@ class NilaiController extends Controller
         }
         
         return $result;
-    }
-
-    private function getBatchOptionsFromData($data) {
-        $batchNames = [];
-        
-        foreach ($data as $namaKelas => $ujianList) {
-            foreach ($ujianList as $ujian) {
-                if (!empty($ujian['batch_nama']) && $ujian['batch_nama'] !== '-') {
-                    $batchNames[] = $ujian['batch_nama'];
-                }
-            }
-        }
-        
-        return array_values(array_unique($batchNames));
     }
 
     private function getSiswaData($user)
@@ -214,7 +238,7 @@ class NilaiController extends Controller
         return $result;
     }
 
-    public function download(Request $request)
+       public function download(Request $request)
     {
         $user = Auth::user();
         
@@ -236,10 +260,15 @@ class NilaiController extends Controller
 
     private function downloadForAdmin($batchOption)
     {
-        $activeBatch = $batchOption === 'active' ? Batches::aktif()->first() : null;
-        $zipFileName = $batchOption === 'active' && $activeBatch
-            ? 'hasil_' . $this->sanitizeFileName($activeBatch->nama) . '_' . date('d-m-y') . '.zip'
-            : 'hasil_ujian_semua_kelas_' . date('Y-m-d_H-i-s') . '.zip';
+
+        $activeBatches = $batchOption === 'active' 
+            ? Batches::where('status', 'active')->get()
+            : Batches::all();
+        
+        $zipFileName = $batchOption === 'active'
+            ? 'hasil_batch_active_' . date('d-m-Y_H-i-s') . '.zip'
+            : 'hasil_ujian_semua_batch_' . date('d-m-Y_H-i-s') . '.zip';
+        
         $zipPath = storage_path('app/temp/' . $zipFileName);
         
         if (!file_exists(storage_path('app/temp'))) {
@@ -252,12 +281,11 @@ class NilaiController extends Controller
         }
 
         $kelasList = Kelas::all();
-        $batches = $batchOption === 'active' && $activeBatch ? collect([$activeBatch]) : Batches::all();
 
         foreach ($kelasList as $kelas) {
             $ujianList = Ujian::where('kelas_id', $kelas->id)
-                ->when($batchOption === 'active' && $activeBatch, function ($query) use ($activeBatch) {
-                    $query->where('batch_id', $activeBatch->id);
+                ->when($batchOption === 'active', function ($query) use ($activeBatches) {
+                    $query->whereIn('batch_id', $activeBatches->pluck('id'));
                 })
                 ->with(['hasilUjians.siswa.siswaDetail', 'batch'])
                 ->get();
@@ -270,10 +298,9 @@ class NilaiController extends Controller
                     $pdfContent = $this->generatePdfContent($hasil->siswa, $kelas->nama);
                     $pdf = Pdf::loadHtml($pdfContent);
                     
-                    $pathInZip = $batchOption === 'active' && $activeBatch
-                        ? $this->sanitizeFileName($kelas->nama) . '/nilai_' . $this->sanitizeFileName($namaSiswa) . '.pdf'
-                        : $this->sanitizeFileName(optional($ujian->batch)->nama ?? 'No Batch') . '/' . 
-                          $this->sanitizeFileName($kelas->nama) . '/nilai_' . $this->sanitizeFileName($namaSiswa) . '.pdf';
+                    $batchFolder = $this->sanitizeFileName(optional($ujian->batch)->nama ?? 'No_Batch');
+                    $kelasFolder = $this->sanitizeFileName($kelas->nama);
+                    $pathInZip = "{$batchFolder}/{$kelasFolder}/nilai_" . $this->sanitizeFileName($namaSiswa) . '.pdf';
                     
                     $zip->addFromString($pathInZip, $pdf->output());
                 }
@@ -297,10 +324,14 @@ class NilaiController extends Controller
             return response()->json(['error' => 'No classes found for pengajar'], 404);
         }
         
-        $activeBatch = $batchOption === 'active' ? Batches::aktif()->first() : null;
-        $zipFileName = $batchOption === 'active' && $activeBatch
-            ? 'hasil_' . $this->sanitizeFileName($activeBatch->nama) . '_' . date('d-m-y') . '.zip'
-            : 'hasil_ujian_kelas_' . date('Y-m-d_H-i-s') . '.zip';
+        $activeBatches = $batchOption === 'active'
+            ? Batches::where('status', 'active')->get()
+            : Batches::all();
+        
+        $zipFileName = $batchOption === 'active'
+            ? 'hasil_batch_active_' . date('d-m-Y_H-i-s') . '.zip'
+            : 'hasil_ujian_kelas_' . date('d-m-Y_H-i-s') . '.zip';
+        
         $zipPath = storage_path('app/temp/' . $zipFileName);
         
         if (!file_exists(storage_path('app/temp'))) {
@@ -314,8 +345,8 @@ class NilaiController extends Controller
         
         foreach ($kelasList as $kelas) {
             $ujianList = Ujian::where('kelas_id', $kelas->id)
-                ->when($batchOption === 'active' && $activeBatch, function ($query) use ($activeBatch) {
-                    $query->where('batch_id', $activeBatch->id);
+                ->when($batchOption === 'active', function ($query) use ($activeBatches) {
+                    $query->whereIn('batch_id', $activeBatches->pluck('id'));
                 })
                 ->with(['hasilUjians.siswa.siswaDetail', 'batch'])
                 ->get();
@@ -328,10 +359,9 @@ class NilaiController extends Controller
                     $pdfContent = $this->generatePdfContent($hasil->siswa, $kelas->nama);
                     $pdf = Pdf::loadHtml($pdfContent);
                     
-                    $pathInZip = $batchOption === 'active' && $activeBatch
-                        ? $this->sanitizeFileName($kelas->nama) . '/nilai_' . $this->sanitizeFileName($namaSiswa) . '.pdf'
-                        : $this->sanitizeFileName(optional($ujian->batch)->nama ?? 'No Batch') . '/' . 
-                          $this->sanitizeFileName($kelas->nama) . '/nilai_' . $this->sanitizeFileName($namaSiswa) . '.pdf';
+                    $batchFolder = $this->sanitizeFileName(optional($ujian->batch)->nama ?? 'No_Batch');
+                    $kelasFolder = $this->sanitizeFileName($kelas->nama);
+                    $pathInZip = "{$batchFolder}/{$kelasFolder}/nilai_" . $this->sanitizeFileName($namaSiswa) . '.pdf';
                     
                     $zip->addFromString($pathInZip, $pdf->output());
                 }
