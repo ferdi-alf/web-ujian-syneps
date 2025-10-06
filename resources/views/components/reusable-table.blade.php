@@ -34,22 +34,24 @@
                     placeholder="Search...">
             </div>
         @endif
+        <div class="space-x-1.5 flex">
 
-        @if ($autoFilter)
-            @foreach ($autoFilter as $columnIndex => $filterLabel)
-                <div class="flex-shrink-0 md:w-64">
-                    <label for="auto-filter-{{ $uniqueTableId }}-{{ $columnIndex }}"
-                        class="block text-sm font-medium text-gray-700 mb-1">
-                        Filter by {{ $filterLabel }}
-                    </label>
-                    <select id="auto-filter-{{ $uniqueTableId }}-{{ $columnIndex }}"
-                        class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                        data-column-index="{{ $columnIndex }}">
-                        <option value="all">{{ $filterPlaceholder }}</option>
-                    </select>
-                </div>
-            @endforeach
-        @endif
+            @if ($autoFilter)
+                @foreach ($autoFilter as $columnIndex => $filterLabel)
+                    <div class="flex-shrink-0 md:w-64">
+                        <label for="auto-filter-{{ $uniqueTableId }}-{{ $columnIndex }}"
+                            class="block text-sm font-medium text-gray-700 mb-1">
+                            Filter by {{ $filterLabel }}
+                        </label>
+                        <select id="auto-filter-{{ $uniqueTableId }}-{{ $columnIndex }}"
+                            class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                            data-column-index="{{ $columnIndex }}">
+                            <option value="all">{{ $filterPlaceholder }}</option>
+                        </select>
+                    </div>
+                @endforeach
+            @endif
+        </div>
     </div>
 
     <div class="relative overflow-x-auto shadow-md sm:rounded-lg">

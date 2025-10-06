@@ -142,36 +142,35 @@
                 @if (count($data) > 0)
                     @foreach ($data as $namaKelas => $ujianList)
                         <div class="mb-8">
-                            <div class="flex bg-white p-2 rounded-lg items-center justify-between mb-4">
+                            <div class="flex flex-col bg-white p-2 rounded-lg items-start justify-between mb-4">
                                 <h2 class="text-xl font-semibold text-gray-800">Kelas {{ $namaKelas }}</h2>
                                 <span class="text-sm text-blue-500 font-bold">{{ count($ujianList) }} ujian</span>
+                                <x-reusable-table :searchBar="true" :truncate="true" :headers="['No', 'Judul Ujian', 'Batch', 'Total Hasil', 'Rata-rata']" :data="$ujianList"
+                                    :columns="[
+                                        fn($row, $i) => $i + 1,
+                                        fn($row) => $row['judul'],
+                                        fn($row) => $row['batch_badge'],
+                                        fn($row) => $row['total_hasil'] . ' siswa',
+                                        fn($row) => $row['rata_rata'],
+                                    ]" :showActions="true" :actionButtons="fn($row) => view('components.action-buttons', [
+                                        'viewData' => [
+                                            'id' => $row['id'],
+                                            'fetchEndpoint' => '/nilai/' . $row['id'],
+                                            'drawerTarget' => 'drawer-detail-nilai',
+                                            'type' => 'bottomSheet',
+                                            'title' => 'Detail Hasil Ujian: ' . $row['judul'],
+                                            'description' =>
+                                                'Kelas ' .
+                                                $namaKelas .
+                                                ' - ' .
+                                                $row['total_hasil'] .
+                                                ' siswa dengan rata-rata ' .
+                                                $row['rata_rata'],
+                                        ],
+                                        'hideEdit' => true,
+                                        'hideDelete' => true,
+                                    ])" />
                             </div>
-
-                            <x-reusable-table :searchBar="true" :truncate="true" :headers="['No', 'Judul Ujian', 'Batch', 'Total Hasil', 'Rata-rata']" :data="$ujianList"
-                                :columns="[
-                                    fn($row, $i) => $i + 1,
-                                    fn($row) => $row['judul'],
-                                    fn($row) => $row['batch_badge'],
-                                    fn($row) => $row['total_hasil'] . ' siswa',
-                                    fn($row) => $row['rata_rata'],
-                                ]" :showActions="true" :actionButtons="fn($row) => view('components.action-buttons', [
-                                    'viewData' => [
-                                        'id' => $row['id'],
-                                        'fetchEndpoint' => '/nilai/' . $row['id'],
-                                        'drawerTarget' => 'drawer-detail-nilai',
-                                        'type' => 'bottomSheet',
-                                        'title' => 'Detail Hasil Ujian: ' . $row['judul'],
-                                        'description' =>
-                                            'Kelas ' .
-                                            $namaKelas .
-                                            ' - ' .
-                                            $row['total_hasil'] .
-                                            ' siswa dengan rata-rata ' .
-                                            $row['rata_rata'],
-                                    ],
-                                    'hideEdit' => true,
-                                    'hideDelete' => true,
-                                ])" />
                         </div>
                     @endforeach
                 @else

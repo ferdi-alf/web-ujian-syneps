@@ -369,14 +369,30 @@
 
             <div class="grid grid-cols-12 gap-3 mt-10">
                 <div class="md:col-span-8 col-span-12">
-                    <div class="bg-white p-4 rounded-lg shadow-md" style="height: 520px;">
+                    @if (Auth::user()->role === 'admin')
+                        <div class="bg-white mb-3 p-4 rounded-lg shadow-md"
+                            style="height: 540px; overflow-x: auto; overflow-y: hidden;">
+                            <h3 class="text-lg font-semibold mb-4">Chart Perbandingan total peserta kelas</h3>
+                            <div style="min-width: 700px;">
+                                <canvas id="lineBar" style="height: 450px; width: 100%;"></canvas>
+                            </div>
+                        </div>
+                    @endif
+
+                    <div class="bg-whitep p-4 rounded-lg shadow-md" style="height: 520px;">
                         <h3 class="text-lg font-semibold mb-4">Rata-rata Nilai Per Kelas</h3>
                         <canvas id="stackedBarChart" style="max-height: 450px; width: 100%"></canvas>
                     </div>
                 </div>
 
-                <div class="md:col-span-4 col-span-12">
-                    <div class="md:col-span-4 shadow-md bg-white p-4 rounded-lg">
+                <div class="md:col-span-4  col-span-12">
+                    @if (Auth::user()->role === 'admin')
+                        <div class="shadow-md mb-3 bg-white rounded-lg p-4 md:h-[540px] ">
+                            <h3 class="text-lg font-semibold mb-4">Referensi program kelas </h3>
+                            <canvas id="pieChart" style="max-height: 450px; width: 100%"></canvas>
+                        </div>
+                    @endif
+                    <div class=" shadow-md bg-white p-4 rounded-lg">
                         <h3 class="text-lg font-semibold mb-4">Peserta yang baru selesai ujian</h3>
                         <p>diambil berdasarkan ujian active saat ini:
                             {{ $recentSubmissions['active_exam_titles'] ?: 'Tidak ada ujian aktif' }}</p>
@@ -447,7 +463,14 @@
                             fn($row) => $row['total_hasil'],
                         ]" :showActions="true"
                         :actionButtons="fn($row) => view('components.action-buttons', [
-                            'drawerId' => 'drawer-detail-active-exam-'.$row['id'],
+                            'viewData' => [
+                                'id' => $row['id'],
+                                'fetchEndpoint' => '/dashboard/active-exam/'.$row['id'],
+                                'drawerTarget' => 'drawer-detail-active-exam',
+                                'type' => 'bottomSheet',
+                                'title' => 'Detail Ujian Aktif',
+                                'description' => 'Informasi lengkap ujian dan hasil peserta',
+                            ],
                             'hideEdit' => true,
                             'hideDelete' => true,
                         ])" />
@@ -467,6 +490,147 @@
                     </div>
                 @endif
             </div>
+
+
+            <x-drawer-layout type="bottomSheet" id="drawer-detail-active-exam" title="Detail Ujian Aktif"
+                description="Informasi lengkap ujian dan hasil peserta">
+
+                <div x-data="{
+                    examData: null,
+                    siswaResults: [],
+                }"
+                    x-on:drawerDataLoaded.window="
+            if ($event.detail.drawerId === 'drawer-detail-active-exam') {
+                examData = $event.detail.data
+                siswaResults = examData.siswa_results || []
+                console.log('Exam data diterima:', examData)
+            }
+        "
+                    class="space-y-6">
+
+                    <template x-if="examData">
+                        <div>
+                            {{-- Informasi Ujian --}}
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <h3 class="text-lg font-semibold mb-4">Informasi Ujian</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                    <div>
+                                        <p class="text-sm text-gray-600">Judul Ujian:</p>
+                                        <p class="font-medium" x-text="examData.judul"></p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-600">Kelas:</p>
+                                        <p class="font-medium" x-text="examData.kelas"></p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-600">Waktu Pengerjaan:</p>
+                                        <p class="font-medium" x-text="examData.waktu_pengerjaan"></p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-600">Status:</p>
+                                        <span
+                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
+                                            x-text="examData.status"></span>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 pt-4 border-t border-gray-200">
+                                    <div>
+                                        <p class="text-sm text-gray-600">Total Soal:</p>
+                                        <p class="font-medium" x-text="(examData.total_soal || 0) + ' soal'"></p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-600">Total Peserta:</p>
+                                        <p class="font-medium" x-text="siswaResults.length + ' Peserta'"></p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-600">Rata-rata Nilai:</p>
+                                        <p class="font-medium" x-text="examData.rata_rata_nilai || '-'"></p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Hasil Peserta --}}
+                            <div class="bg-gray-50 p-4 rounded-lg mt-6">
+                                <h3 class="text-lg font-semibold mb-4">Hasil Peserta</h3>
+                                <template x-if="siswaResults.length > 0">
+                                    <div class="overflow-x-auto">
+                                        <table class="min-w-full divide-y divide-gray-200">
+                                            <thead class="bg-white">
+                                                <tr>
+                                                    <th
+                                                        class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        No</th>
+                                                    <th
+                                                        class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        Peserta</th>
+                                                    <th
+                                                        class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        Nilai</th>
+                                                    <th
+                                                        class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        Benar</th>
+                                                    <th
+                                                        class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        Salah</th>
+                                                    <th
+                                                        class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        Waktu Pengerjaan</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="bg-white divide-y divide-gray-200">
+                                                <template x-for="(siswa, index) in siswaResults" :key="siswa.id">
+                                                    <tr class="hover:bg-gray-50">
+                                                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900"
+                                                            x-text="index + 1"></td>
+                                                        <td class="px-4 py-4 whitespace-nowrap">
+                                                            <div class="flex items-center">
+                                                                <div class="h-8 w-8">
+                                                                    <img class="h-8 w-8 rounded-full object-cover"
+                                                                        :src="siswa.avatar" :alt="siswa.nama_lengkap">
+                                                                </div>
+                                                                <div class="ml-2">
+                                                                    <div class="text-sm font-medium text-gray-900"
+                                                                        x-text="siswa.nama_lengkap"></div>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td class="px-4 py-4 whitespace-nowrap">
+                                                            <span
+                                                                :class="{
+                                                                    'bg-green-100 text-green-800': siswa.nilai >= 80,
+                                                                    'bg-yellow-100 text-yellow-800': siswa.nilai >=
+                                                                        70 && siswa.nilai < 80,
+                                                                    'bg-red-100 text-red-800': siswa.nilai < 70
+                                                                }"
+                                                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                                                                x-text="siswa.nilai"></span>
+                                                        </td>
+                                                        <td class="px-4 py-4 whitespace-nowrap text-sm text-green-600 font-medium"
+                                                            x-text="siswa.benar"></td>
+                                                        <td class="px-4 py-4 whitespace-nowrap text-sm text-red-600 font-medium"
+                                                            x-text="siswa.salah"></td>
+                                                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900"
+                                                            x-text="siswa.waktu_pengerjaan_siswa"></td>
+                                                    </tr>
+                                                </template>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </template>
+                                <template x-if="siswaResults.length === 0">
+                                    <div class="text-center py-8">
+                                        <div class="text-gray-400 mb-4">
+                                            <i class="fas fa-user-slash text-4xl"></i>
+                                        </div>
+                                        <p class="text-gray-500 text-sm">Belum ada peserta yang mengerjakan ujian ini.</p>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </x-drawer-layout>
 
             @if (Auth::user()->role === 'admin')
                 <div class="mt-8 p-6 bg-white rounded-lg shadow-md">
@@ -548,7 +712,7 @@
                             'downloadPdfRoute' => route('batch.downloadPdf', $row['id']),
                             'deleteMessage' =>
                                 'Menghapus batch ini juga akan menghapus seluruh data peserta dan ujian terkait. Yakin?',
-                        ])" :autoFilter="[2 => 'Status']" />
+                        ])" />
                     <x-drawer-layout type="bottomSheet" id="drawer-detail-batch" title="Detail Batch"
                         description="Informasi lengkap batch">
                         <div x-data="{
@@ -870,6 +1034,14 @@
 
                         const chartData = Alpine.$data(ctx.closest('[x-data]')).chartData;
 
+                        // fungsi buat warna random transparan
+                        const getRandomColor = () => {
+                            const r = Math.floor(Math.random() * 255);
+                            const g = Math.floor(Math.random() * 255);
+                            const b = Math.floor(Math.random() * 255);
+                            return `rgba(${r}, ${g}, ${b}, 0.5)`; // transparan
+                        };
+
                         new Chart(ctx, {
                             type: 'bar',
                             data: {
@@ -877,16 +1049,8 @@
                                 datasets: [{
                                     label: 'Rata-rata Nilai',
                                     data: chartData.map(item => item.rata_rata),
-                                    backgroundColor: chartData.map(item => {
-                                        if (item.rata_rata >= 80) return 'rgba(34, 197, 94, 0.8)';
-                                        if (item.rata_rata >= 70) return 'rgba(234, 179, 8, 0.8)';
-                                        return 'rgba(239, 68, 68, 0.8)';
-                                    }),
-                                    borderColor: chartData.map(item => {
-                                        if (item.rata_rata >= 80) return 'rgba(34, 197, 94, 1)';
-                                        if (item.rata_rata >= 70) return 'rgba(234, 179, 8, 1)';
-                                        return 'rgba(239, 68, 68, 1)';
-                                    }),
+                                    backgroundColor: chartData.map(() => getRandomColor()),
+                                    borderColor: 'rgba(0, 0, 0, 0.2)', // border bawaan lembut
                                     borderWidth: 1
                                 }]
                             },
@@ -916,6 +1080,7 @@
                             }
                         });
                     }
+
 
 
                     document.addEventListener('DOMContentLoaded', function() {
@@ -963,6 +1128,171 @@
                                 validateAddBatch();
                             }
                         });
+                        const lineBar = document.getElementById('lineBar').getContext('2d');
+                        const pieChart = document.getElementById('pieChart').getContext('2d');
+                        const chartData = @json($chartData);
+                        const kelasChartData = @json($kelasChartData ?? []);
+                        const sumberChartData = @json($sumberChartData ?? []);
+
+                        let gradientLine = null;
+                        let gradientFill = null;
+                        let width, height;
+
+                        function getGradient(ctx, chartArea, type = 'line') {
+                            const chartWidth = chartArea.right - chartArea.left;
+                            const chartHeight = chartArea.bottom - chartArea.top;
+
+                            if (!gradientLine || width !== chartWidth || height !== chartHeight) {
+                                width = chartWidth;
+                                height = chartHeight;
+
+                                gradientLine = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+                                gradientLine.addColorStop(0, '#ef4444');
+                                gradientLine.addColorStop(0.5, '#14b8a6');
+                                gradientLine.addColorStop(1, '#10b981');
+
+                                gradientFill = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+                                gradientFill.addColorStop(0, 'rgba(239, 68, 68, 0.2)');
+                                gradientFill.addColorStop(0.5, 'rgba(20, 184, 166, 0.20)');
+                                gradientFill.addColorStop(1, 'rgba(16, 185, 129, 0.5)');
+                            }
+
+                            return type === 'line' ? gradientLine : gradientFill;
+                        }
+
+                        const processedData = {
+                            labels: chartData.labels,
+                            datasets: chartData.datasets.map(dataset => {
+                                const newDataset = {
+                                    ...dataset
+                                };
+
+                                if (dataset.borderColor === 'gradient') {
+                                    newDataset.borderColor = function(context) {
+                                        const chart = context.chart;
+                                        const {
+                                            ctx,
+                                            chartArea
+                                        } = chart;
+                                        if (!chartArea) return '#14b8a6';
+                                        return getGradient(ctx, chartArea, 'line');
+                                    };
+                                }
+
+                                if (dataset.backgroundColor === 'gradient-fill') {
+                                    newDataset.backgroundColor = function(context) {
+                                        const chart = context.chart;
+                                        const {
+                                            ctx,
+                                            chartArea
+                                        } = chart;
+                                        if (!chartArea) return 'rgba(20, 184, 166, 0.1)';
+                                        return getGradient(ctx, chartArea, 'fill');
+                                    };
+                                }
+
+                                return newDataset;
+                            })
+                        };
+
+                        new Chart(lineBar, {
+                            type: 'bar',
+                            data: {
+                                labels: kelasChartData.labels || [],
+                                datasets: [{
+                                        label: 'Total Peserta',
+                                        data: kelasChartData.counts || [],
+                                        borderWidth: 2,
+                                        backgroundColor: function(context) {
+                                            const chart = context.chart;
+                                            const {
+                                                ctx,
+                                                chartArea
+                                            } = chart;
+                                            if (!chartArea) return '#14b8a6';
+                                            return getGradient(ctx, chartArea, 'fill');
+                                        },
+                                        borderColor: function(context) {
+                                            const chart = context.chart;
+                                            const {
+                                                ctx,
+                                                chartArea
+                                            } = chart;
+                                            if (!chartArea) return '#14b8a6';
+                                            return getGradient(ctx, chartArea, 'line');
+                                        },
+                                        borderRadius: 6,
+                                        borderSkipped: false
+                                    },
+                                    {
+                                        label: 'Garis Total',
+                                        data: kelasChartData.counts || [],
+                                        type: 'line',
+                                        borderColor: function(context) {
+                                            const chart = context.chart;
+                                            const {
+                                                ctx,
+                                                chartArea
+                                            } = chart;
+                                            if (!chartArea) return '#14b8a6';
+                                            return getGradient(ctx, chartArea, 'line');
+                                        },
+                                        backgroundColor: 'transparent',
+                                        tension: 0.3,
+                                        pointRadius: 4,
+                                        pointBackgroundColor: '#14b8a6'
+                                    }
+                                ]
+                            },
+                            options: {
+                                responsive: false,
+                                scales: {
+                                    y: {
+                                        beginAtZero: true
+                                    }
+                                },
+                                plugins: {
+                                    legend: {
+                                        labels: {
+                                            usePointStyle: true
+                                        }
+                                    }
+                                }
+                            }
+                        });
+
+
+                        const pieColors = [
+                            'rgba(255, 99, 132, 0.6)',
+                            'rgba(54, 162, 235, 0.6)',
+                            'rgba(255, 206, 86, 0.6)',
+                            'rgba(75, 192, 192, 0.6)',
+                            'rgba(153, 102, 255, 0.6)',
+                            'rgba(255, 159, 64, 0.6)',
+                            'rgba(201, 203, 207, 0.6)'
+                        ];
+
+                        new Chart(pieChart, {
+                            type: 'pie',
+                            data: {
+                                labels: sumberChartData.labels || [],
+                                datasets: [{
+                                    data: sumberChartData.counts || [],
+                                    backgroundColor: pieColors,
+                                    borderColor: pieColors.map(c => c.replace('0.6', '1')),
+                                    borderWidth: 2
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                plugins: {
+                                    legend: {
+                                        position: 'bottom'
+                                    }
+                                }
+                            }
+                        });
+
 
                         document.addEventListener('modalUpdate', function(e) {
                             if (e.detail.modalId === 'modal-control-batch') {
@@ -1096,147 +1426,12 @@
                 </script>
             @endif
 
-            @foreach ($activeExamData as $exam)
-                <x-drawer-layout id="drawer-detail-active-exam-{{ $exam['id'] }}" title="Detail Ujian: {{ $exam['judul'] }}"
-                    description="Ujian aktif untuk kelas {{ $exam['kelas'] }} dengan {{ $exam['total_hasil'] }}">
 
-                    <div class="space-y-6">
-                        <div class="bg-gray-50 p-4 rounded-lg">
-                            <h3 class="text-lg font-semibold mb-4">Informasi Ujian</h3>
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                <div>
-                                    <p class="text-sm text-gray-600">Judul Ujian:</p>
-                                    <p class="font-medium">{{ $exam['judul'] }}</p>
-                                </div>
-                                <div>
-                                    <p class="text-sm text-gray-600">Kelas:</p>
-                                    <p class="font-medium">{{ $exam['kelas'] }}</p>
-                                </div>
-                                <div>
-                                    <p class="text-sm text-gray-600">Waktu Pengerjaan:</p>
-                                    <p class="font-medium">{{ $exam['waktu_pengerjaan'] }}</p>
-                                </div>
-                                <div>
-                                    <p class="text-sm text-gray-600">Status:</p>
-                                    <span
-                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                        {{ $exam['status'] }}
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 pt-4 border-t border-gray-200">
-                                <div>
-                                    <p class="text-sm text-gray-600">Total Soal:</p>
-                                    <p class="font-medium">{{ $exam['ujian_detail']->soals->count() ?? 0 }} soal</p>
-                                </div>
-                                <div>
-                                    <p class="text-sm text-gray-600">Total Peserta:</p>
-                                    <p class="font-medium">{{ count($exam['siswa_results']) }} Peserta</p>
-                                </div>
-                                <div>
-                                    <p class="text-sm text-gray-600">Rata-rata Nilai:</p>
-                                    <p class="font-medium">
-                                        @if (count($exam['siswa_results']) > 0)
-                                            {{ number_format(collect($exam['siswa_results'])->avg('nilai'), 1) }}
-                                        @else
-                                            -
-                                        @endif
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="bg-gray-50 p-4 rounded-lg">
-                            <h3 class="text-lg font-semibold mb-4">Hasil Peserta</h3>
-                            @if (count($exam['siswa_results']) > 0)
-                                <div class="overflow-x-auto">
-                                    <table class="min-w-full divide-y divide-gray-200">
-                                        <thead class="bg-white">
-                                            <tr>
-                                                <th
-                                                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    No</th>
-                                                <th
-                                                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Peserta</th>
-                                                <th
-                                                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Nilai</th>
-                                                <th
-                                                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Benar</th>
-                                                <th
-                                                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Salah</th>
-                                                <th
-                                                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Waktu Pengerjaan</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody class="bg-white divide-y divide-gray-200">
-                                            @foreach ($exam['siswa_results'] as $index => $siswa)
-                                                <tr class="hover:bg-gray-50">
-                                                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {{ $index + 1 }}
-                                                    </td>
-                                                    <td class="px-4 py-4 whitespace-nowrap">
-                                                        <div class="flex items-center">
-                                                            <div class="h-8 w-8">
-                                                                <img class="h-8 w-8 rounded-full object-cover"
-                                                                    src="{{ $siswa['avatar'] }}"
-                                                                    alt="{{ $siswa['nama_lengkap'] }}">
-                                                            </div>
-                                                            <div class="ml-2">
-                                                                <div class="text-sm font-medium text-gray-900">
-                                                                    {{ $siswa['nama_lengkap'] }}
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </td>
-                                                    <td class="px-4 py-4 whitespace-nowrap">
-                                                        <span
-                                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                                        {{ $siswa['nilai'] >= 80
-                                                            ? 'bg-green-100 text-green-800'
-                                                            : ($siswa['nilai'] >= 70
-                                                                ? 'bg-yellow-100 text-yellow-800'
-                                                                : 'bg-red-100 text-red-800') }}">
-                                                            {{ $siswa['nilai'] }}
-                                                        </span>
-                                                    </td>
-                                                    <td class="px-4 py-4 whitespace-nowrap text-sm text-green-600 font-medium">
-                                                        {{ $siswa['benar'] }}
-                                                    </td>
-                                                    <td class="px-4 py-4 whitespace-nowrap text-sm text-red-600 font-medium">
-                                                        {{ $siswa['salah'] }}
-                                                    </td>
-                                                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {{ $siswa['waktu_pengerjaan_siswa'] }}
-                                                    </td>
-                                                </tr>
-                                            @endforeach
-                                        </tbody>
-                                    </table>
-                                </div>
-                            @else
-                                <div class="text-center py-8">
-                                    <div class="text-gray-400 mb-4">
-                                        <i class="fas fa-user-slash text-4xl"></i>
-                                    </div>
-                                    <p class="text-gray-500 text-sm">Belum ada peserta yang mengerjakan ujian ini.</p>
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-                </x-drawer-layout>
-            @endforeach
 
             <script>
                 document.addEventListener('DOMContentLoaded', function() {
                     const ctx = document.getElementById('stackedBarChart').getContext('2d');
                     const chartData = @json($chartData);
-
 
 
                     let gradientLine = null;

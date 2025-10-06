@@ -60,7 +60,7 @@ class NilaiController extends Controller
                 }
             }
             
-            // Get hasil ujian untuk ujian ini
+       
             $hasilUjians = HasilUjian::where('ujian_id', $ujianId)
                 ->with(['siswa.siswaDetail'])
                 ->get();

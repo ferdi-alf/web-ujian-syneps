@@ -37,7 +37,9 @@
             ])"
             :autoFilter="[
                 2 => 'Kelas',
-            ]" :filterPlaceholder="'Semua'" />
+                5 => 'Status'
+            ]"
+            :filterPlaceholder="'Semua'" />
 
         {{-- Modal untuk Update Ujian Only --}}
         <x-fragments.form-modal id="modal-control-ujian" title="Edit Ujian" editTitle="Edit Ujian" :updateOnly="true">

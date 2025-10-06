@@ -15,12 +15,15 @@ class ManajemenUjianController extends Controller
         $ujians = collect();
 
         if ($user->role === 'admin') {
-            $ujians = Ujian::with(['kelas', 'soals.jawabans', 'batch'])->get();
+            $ujians = Ujian::with(['kelas', 'soals.jawabans', 'batch'])
+                ->orderBy('created_at', 'desc')
+                ->get();
         } elseif ($user->role === 'pengajar') {
             $pengajarDetail = $user->pengajarDetail;
             $kelasIds = $pengajarDetail ? $pengajarDetail->kelas()->pluck('kelas.id')->toArray() : [];
             $ujians = Ujian::with(['kelas', 'soals.jawabans', 'batch'])
                 ->whereIn('kelas_id', $kelasIds)
+                ->orderBy('created_at', 'desc')
                 ->get();
         }
 

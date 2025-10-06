@@ -7,6 +7,7 @@ use App\Models\Kelas;
 use App\Models\Ujian;
 use App\Models\HasilUjian;
 use App\Models\Pembayaran;
+use App\Models\SiswaDetail;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -19,15 +20,13 @@ class DashboardController extends Controller {
         $data = ['user' => $user];
         
         if (in_array($user->role, ['admin', 'pengajar'])) {
-
             $data['cardData'] = $this->getCardData($user);
             $data['chartData'] = $this->getStackedBarChartData($user);
             $data['recentSubmissions'] = $this->getRecentExamSubmissions($user);
             $data['activeExamData'] = $this->getActiveExamData($user);
+            
             if ($user->role === 'admin') {
                 $kelas = Kelas::select('id', 'nama', 'type', 'waktu_magang', 'durasi_belajar')->get();
-                
-             
                 
                 $kelasData = $kelas->mapWithKeys(function ($item) {
                     return [$item->id => [
@@ -42,18 +41,53 @@ class DashboardController extends Controller {
                 $data['kelasData'] = $kelasData; 
                 
                 $batchData = $this->getBatchData();
+                $data['kelasChartData'] = $this->getKelasChartData();
+                $data['sumberChartData'] = $this->getSumberChartData();
                 $data['batchData'] = $batchData;
             }
         } else {
             $data['chartData'] = $this->getSiswaChartData($user);
             $data['leaderboardData'] = $this->getSiswaLeaderboardData($user);
             $data['pembayaran'] = $this->getSiswaPembayaranData($user);
-
         }
         
         return view('Dashboard.Dashboard', $data);
     }
 
+
+    private function getKelasChartData()
+    {
+        $kelasLabels = [];
+        $kelasCounts = [];
+
+        $kelasList = Kelas::withCount('siswaDetails')->get();
+        foreach ($kelasList as $kelas) {
+            $kelasLabels[] = $kelas->nama;
+            $kelasCounts[] = $kelas->siswa_details_count;
+        }
+
+        return [
+            'labels' => $kelasLabels,
+            'counts' => $kelasCounts
+        ];
+    }
+
+    private function getSumberChartData()
+    {
+        $sources = [
+            'instagram', 'tiktok', 'facebook', 'website', 'teman/keluarga', 'google', 'lain_lain'
+        ];
+
+        $sourceCounts = [];
+        foreach ($sources as $src) {
+            $sourceCounts[] = SiswaDetail::where('mengetahui_program_dari', $src)->count();
+        }
+
+        return [
+            'labels' => $sources,
+            'counts' => $sourceCounts
+        ];
+    }
 
     private function getBatchData()
     {
@@ -194,137 +228,137 @@ class DashboardController extends Controller {
     }
 
     private function getStackedBarChartData($user)
-{
-    $currentYear = now()->year;
+    {
+        $currentYear = now()->year;
 
-    if ($user->role === 'admin') {
-        // Ambil kelas yang memiliki batch active
-        $kelasList = Kelas::whereHas('batches', function ($q) {
-            $q->where('status', 'active');
-        })->with(['batches' => function ($q) {
-            $q->where('status', 'active');
-        }])->get();
+        if ($user->role === 'admin') {
+            // Ambil kelas yang memiliki batch active
+            $kelasList = Kelas::whereHas('batches', function ($q) {
+                $q->where('status', 'active');
+            })->with(['batches' => function ($q) {
+                $q->where('status', 'active');
+            }])->get();
 
-        if ($kelasList->isEmpty()) {
-            return [
-                'labels' => ['Tidak ada kelas dengan batch aktif'],
-                'datasets' => []
-            ];
-        }
-
-        $chartData = [
-            'labels' => [],
-            'datasets' => [
-                [
-                    'label' => 'Rata-rata Nilai',
-                    'data' => [],
-                    'borderColor' => 'gradient', // Marker untuk gradient
-                    'backgroundColor' => 'gradient-fill', // Marker untuk area fill
-                    'borderWidth' => 3,
-                    'tension' => 0.4,
-                    'fill' => true,
-                    'pointRadius' => 6,
-                    'pointHoverRadius' => 8,
-                    'pointBackgroundColor' => '#fff',
-                    'pointBorderWidth' => 3,
-                    'type' => 'line'
-                ]
-            ]
-        ];
-
-        foreach ($kelasList as $kelas) {
-            $activeBatch = $kelas->batches->first();
-            
-            if ($activeBatch) {
-                // Tambahkan nama kelas ke labels
-                $chartData['labels'][] = $kelas->nama;
-
-                // Hitung rata-rata nilai untuk kelas dengan batch active
-                $averageScore = HasilUjian::whereHas('siswa.siswaDetail', function ($q) use ($kelas, $activeBatch) {
-                        $q->where('kelas_id', $kelas->id)
-                          ->where('batch_id', $activeBatch->id);
-                    })
-                    ->whereHas('ujian', function ($q) use ($kelas, $activeBatch) {
-                        $q->where('kelas_id', $kelas->id)
-                          ->where('batch_id', $activeBatch->id);
-                    })
-                    ->whereYear('created_at', $currentYear)
-                    ->avg('nilai');
-
-                $chartData['datasets'][0]['data'][] = $averageScore ? round($averageScore, 1) : 0;
+            if ($kelasList->isEmpty()) {
+                return [
+                    'labels' => ['Tidak ada kelas dengan batch aktif'],
+                    'datasets' => []
+                ];
             }
-        }
 
-    } else if ($user->role === 'pengajar') {
-        $pengajarDetail = $user->pengajarDetail;
-        if (!$pengajarDetail) {
-            return [
+            $chartData = [
                 'labels' => [],
-                'datasets' => []
-            ];
-        }
-
-        // Ambil kelas pengajar yang memiliki batch active
-        $kelasList = $pengajarDetail->kelas()
-            ->whereHas('batches', function ($q) {
-                $q->where('status', 'active');
-            })
-            ->with(['batches' => function ($q) {
-                $q->where('status', 'active');
-            }])
-            ->get();
-
-        if ($kelasList->isEmpty()) {
-            return [
-                'labels' => ['Tidak ada kelas dengan batch aktif'],
-                'datasets' => []
-            ];
-        }
-
-        $chartData = [
-            'labels' => [],
-            'datasets' => [
-                [
-                    'label' => 'Rata-rata Nilai',
-                    'data' => [],
-                    'borderColor' => 'gradient',
-                    'backgroundColor' => 'gradient-fill',
-                    'borderWidth' => 3,
-                    'tension' => 0.4,
-                    'fill' => true,
-                    'pointRadius' => 6,
-                    'pointHoverRadius' => 8,
-                    'pointBackgroundColor' => '#fff',
-                    'pointBorderWidth' => 3,
-                    'type' => 'line'
+                'datasets' => [
+                    [
+                        'label' => 'Rata-rata Nilai',
+                        'data' => [],
+                        'borderColor' => 'gradient', // Marker untuk gradient
+                        'backgroundColor' => 'gradient-fill', // Marker untuk area fill
+                        'borderWidth' => 3,
+                        'tension' => 0.4,
+                        'fill' => true,
+                        'pointRadius' => 6,
+                        'pointHoverRadius' => 8,
+                        'pointBackgroundColor' => '#fff',
+                        'pointBorderWidth' => 3,
+                        'type' => 'line'
+                    ]
                 ]
-            ]
-        ];
+            ];
 
-        foreach ($kelasList as $kelas) {
-            $activeBatch = $kelas->batches->first();
-            
-            if ($activeBatch) {
-                $chartData['labels'][] = $kelas->normal_nama;
+            foreach ($kelasList as $kelas) {
+                $activeBatch = $kelas->batches->first();
+                
+                if ($activeBatch) {
+                    // Tambahkan nama kelas ke labels
+                    $chartData['labels'][] = $kelas->nama;
 
-                $averageScore = HasilUjian::whereHas('siswa.siswaDetail', function ($q) use ($kelas, $activeBatch) {
-                        $q->where('kelas_id', $kelas->id)
-                          ->where('batch_id', $activeBatch->id);
-                    })
-                    ->whereHas('ujian', function ($q) use ($kelas, $activeBatch) {
-                        $q->where('kelas_id', $kelas->id)
-                          ->where('batch_id', $activeBatch->id);
-                    })
-                    ->whereYear('created_at', $currentYear)
-                    ->avg('nilai');
+                    // Hitung rata-rata nilai untuk kelas dengan batch active
+                    $averageScore = HasilUjian::whereHas('siswa.siswaDetail', function ($q) use ($kelas, $activeBatch) {
+                            $q->where('kelas_id', $kelas->id)
+                            ->where('batch_id', $activeBatch->id);
+                        })
+                        ->whereHas('ujian', function ($q) use ($kelas, $activeBatch) {
+                            $q->where('kelas_id', $kelas->id)
+                            ->where('batch_id', $activeBatch->id);
+                        })
+                        ->whereYear('created_at', $currentYear)
+                        ->avg('nilai');
 
-                $chartData['datasets'][0]['data'][] = $averageScore ? round($averageScore, 1) : 0;
+                    $chartData['datasets'][0]['data'][] = $averageScore ? round($averageScore, 1) : 0;
+                }
+            }
+
+        } else if ($user->role === 'pengajar') {
+            $pengajarDetail = $user->pengajarDetail;
+            if (!$pengajarDetail) {
+                return [
+                    'labels' => [],
+                    'datasets' => []
+                ];
+            }
+
+            // Ambil kelas pengajar yang memiliki batch active
+            $kelasList = $pengajarDetail->kelas()
+                ->whereHas('batches', function ($q) {
+                    $q->where('status', 'active');
+                })
+                ->with(['batches' => function ($q) {
+                    $q->where('status', 'active');
+                }])
+                ->get();
+
+            if ($kelasList->isEmpty()) {
+                return [
+                    'labels' => ['Tidak ada kelas dengan batch aktif'],
+                    'datasets' => []
+                ];
+            }
+
+            $chartData = [
+                'labels' => [],
+                'datasets' => [
+                    [
+                        'label' => 'Rata-rata Nilai',
+                        'data' => [],
+                        'borderColor' => 'gradient',
+                        'backgroundColor' => 'gradient-fill',
+                        'borderWidth' => 3,
+                        'tension' => 0.4,
+                        'fill' => true,
+                        'pointRadius' => 6,
+                        'pointHoverRadius' => 8,
+                        'pointBackgroundColor' => '#fff',
+                        'pointBorderWidth' => 3,
+                        'type' => 'line'
+                    ]
+                ]
+            ];
+
+            foreach ($kelasList as $kelas) {
+                $activeBatch = $kelas->batches->first();
+                
+                if ($activeBatch) {
+                    $chartData['labels'][] = $kelas->normal_nama;
+
+                    $averageScore = HasilUjian::whereHas('siswa.siswaDetail', function ($q) use ($kelas, $activeBatch) {
+                            $q->where('kelas_id', $kelas->id)
+                            ->where('batch_id', $activeBatch->id);
+                        })
+                        ->whereHas('ujian', function ($q) use ($kelas, $activeBatch) {
+                            $q->where('kelas_id', $kelas->id)
+                            ->where('batch_id', $activeBatch->id);
+                        })
+                        ->whereYear('created_at', $currentYear)
+                        ->avg('nilai');
+
+                    $chartData['datasets'][0]['data'][] = $averageScore ? round($averageScore, 1) : 0;
+                }
             }
         }
-    }
 
-    return $chartData;
-}
+        return $chartData;
+    }
 
     private function getRecentExamSubmissions($user)
     {
@@ -383,6 +417,72 @@ class DashboardController extends Controller {
         ];
     }
 
+    public function showActiveExam($id)
+    {
+        try {
+            $user = Auth::user();
+            
+            // Double check authorization (middleware already blocks siswa)
+            if (!in_array($user->role, ['admin', 'pengajar'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized access'
+                ], 403);
+            }
+            
+            // Check authorization based on role
+            $ujian = Ujian::with(['kelas', 'soals', 'hasilUjians'])
+                ->where('status', 'active')
+                ->findOrFail($id);
+            
+            // For pengajar, verify they have access to this kelas
+            if ($user->role === 'pengajar') {
+                $pengajarDetail = $user->pengajarDetail;
+                if (!$pengajarDetail) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Unauthorized access'
+                    ], 403);
+                }
+                
+                $kelasIds = $pengajarDetail->kelas()->pluck('kelas.id')->toArray();
+                if (!in_array($ujian->kelas_id, $kelasIds)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Unauthorized access'
+                    ], 403);
+                }
+            }
+            
+            $siswaResults = $this->getSiswaResultsForExam($ujian->id);
+            $avgNilai = count($siswaResults) > 0 
+                ? number_format(collect($siswaResults)->avg('nilai'), 1) 
+                : '-';
+            
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'id' => $ujian->id,
+                    'judul' => $ujian->judul,
+                    'waktu_pengerjaan' => $ujian->waktu . ' menit',
+                    'status' => ucfirst($ujian->status),
+                    'kelas' => $ujian->kelas->nama ?? '-',
+                    'total_soal' => $ujian->soals->count(),
+                    'rata_rata_nilai' => $avgNilai,
+                    'siswa_results' => $siswaResults,
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data tidak ditemukan'
+            ], 404);
+        }
+    }
+
+/**
+ * Get active exam data for table display
+ */
     private function getActiveExamData($user)
     {
         $result = [];
@@ -401,6 +501,9 @@ class DashboardController extends Controller {
         return $result;
     }
 
+/**
+ * Get active exam data for admin
+ */
     private function getAdminActiveExamData()
     {
         $result = [];
@@ -411,26 +514,26 @@ class DashboardController extends Controller {
             ->get();
         
         foreach ($ujianList as $index => $ujian) {
-            $hasilUjians = $ujian->hasilUjians;
-            $totalHasil = $hasilUjians->count();
-            $waktuPengerjaan = $ujian->waktu;
+            $totalHasil = $ujian->hasilUjians->count();
             
             $result[] = [
                 'no' => $index + 1,
                 'id' => $ujian->id,
                 'judul' => $ujian->judul,
-                'waktu_pengerjaan' => $waktuPengerjaan . " menit",
+                'waktu_pengerjaan' => $ujian->waktu . " menit",
                 'status' => ucfirst($ujian->status),
                 'kelas' => $ujian->kelas->nama ?? '-',
                 'total_hasil' => $totalHasil . ' siswa',
-                'ujian_detail' => $ujian, 
-                'siswa_results' => $this->getSiswaResultsForExam($ujian->id)
+            
             ];
         }
         
         return $result;
     }
 
+/**
+ * Get active exam data for pengajar
+ */
     private function getPengajarActiveExamData($user)
     {
         $result = [];
@@ -452,80 +555,75 @@ class DashboardController extends Controller {
             ->get();
         
         foreach ($ujianList as $index => $ujian) {
-            $hasilUjians = $ujian->hasilUjians;
-            $totalHasil = $hasilUjians->count();
-            
-           $waktuPengerjaan = $ujian->waktu;
-
+            $totalHasil = $ujian->hasilUjians->count();
             
             $result[] = [
                 'no' => $index + 1,
                 'id' => $ujian->id,
                 'judul' => $ujian->judul,
-                'waktu_pengerjaan' => $waktuPengerjaan . " menit",
+                'waktu_pengerjaan' => $ujian->waktu . " menit",
                 'status' => ucfirst($ujian->status),
                 'kelas' => $ujian->kelas->nama ?? '-',
                 'total_hasil' => $totalHasil . ' siswa',
-                'ujian_detail' => $ujian, 
-                'siswa_results' => $this->getSiswaResultsForExam($ujian->id)
             ];
         }
         
         return $result;
     }
+
 
     private function getSiswaResultsForExam($ujianId)
     {
+        Log::info("====START===");
+
+        $ujian = Ujian::findOrFail($ujianId);
+
+        Log::info("data ujian ditemukan", ['data' => $ujian]);
+
         $hasilUjians = HasilUjian::where('ujian_id', $ujianId)
-            ->with(['siswa.siswaDetail'])
+            ->with(['siswa.siswaDetail']) 
             ->orderBy('nilai', 'desc')
             ->get();
-        
-        $siswaData = [];
+
+        if ($hasilUjians->isNotEmpty()) {
+            Log::info("data hasil ujian ditemukan", [
+                'data' => $hasilUjians
+            ]);
+        } else {
+            Log::info("data hasil ujian tidak ditemukan");
+        }
+
+        $results = [];
+
         foreach ($hasilUjians as $hasil) {
-            $siswaDetail = $hasil->siswa->siswaDetail;
-            $siswaData[] = [
-                'avatar' => $hasil->siswa->getAvatarUrl(),
-                'nama_lengkap' => $siswaDetail ? $siswaDetail->nama_lengkap : $hasil->siswa->name,
+            $user = $hasil->siswa;
+
+            if (!$user) {
+                continue;
+            }
+
+            $siswaDetail = $user->siswaDetail;
+
+            $results[] = [
+                'id' => $hasil->id,
+                'nama_lengkap' => $siswaDetail->nama_lengkap ?? $user->name,
+                'avatar' => $user->avatar 
+                    ? asset('images/avatar/' . $user->avatar) 
+                    : asset('images/default-avatar.png'),
                 'nilai' => $hasil->nilai,
                 'benar' => $hasil->jumlah_benar,
                 'salah' => $hasil->jumlah_salah,
-                'waktu_pengerjaan_siswa' => $this->formatWaktuPengerjaanDetik($hasil->waktu_pengerjaan ?? 0)
+                'waktu_pengerjaan_siswa' => $hasil->waktu_pengerjaan 
+                    ? gmdate("H:i:s", $hasil->waktu_pengerjaan) 
+                    : '-',
             ];
         }
-        
-        return $siswaData;
+
+        Log::info('total hasil dikembalikan: ' . count($results));
+
+        return $results;
     }
 
-    private function formatWaktuPengerjaanDetik($waktuDetik)
-    {
-        if ($waktuDetik < 60) {
-            return $waktuDetik . ' detik';
-        }
-        
-        $menit = floor($waktuDetik / 60);
-        $sisaDetik = $waktuDetik % 60;
-        
-        if ($menit < 60) {
-            if ($sisaDetik == 0) {
-                return $menit . ' menit';
-            }
-            return $menit . ' menit ' . $sisaDetik . ' detik';
-        }
-        
-        $jam = floor($menit / 60);
-        $sisaMenit = $menit % 60;
-        
-        $result = $jam . ' jam';
-        if ($sisaMenit > 0) {
-            $result .= ' ' . $sisaMenit . ' menit';
-        }
-        if ($sisaDetik > 0) {
-            $result .= ' ' . $sisaDetik . ' detik';
-        }
-        
-        return $result;
-    }
 
     private function getSiswaChartData($user)
     {

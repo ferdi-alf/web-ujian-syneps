@@ -24,7 +24,7 @@
             </a>
         </div>
 
-        <ul class="space-y-2 font-medium mt-10">
+        <ul class="space-y-2 font-medium mt-2">
             <x-fragments.sidebar-item route="dashboard" icon="gauge"
                 colors="emerald">Dashboard</x-fragments.sidebar-item>
             @if (Auth::user()->role === 'admin')
@@ -88,6 +88,11 @@
                         Modul Materi
                 @endswitch
             </x-fragments.sidebar-item>
+            @if (Auth::user()->role === 'admin')
+                <x-fragments.sidebar-item route="blog.index" icon="blog" colors="emerald">
+                    Blog
+                </x-fragments.sidebar-item>
+            @endif
             @if (Auth::user()->role === 'siswa')
                 <x-fragments.sidebar-item route="ujian.index" icon="book" colors="emerald">
                     Ujian</x-fragments.sidebar-item>

@@ -21,6 +21,7 @@ use App\Http\Controllers\ForumAlumniController;
 use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\TambahUjianController;
 use App\Http\Controllers\AuthenticationController;
+use App\Http\Controllers\BlogController;
 use App\Http\Controllers\ManajemenUjianController;
 use App\Http\Controllers\MateriController;
 
@@ -67,7 +68,12 @@ Route::middleware(['web', 'guest'])->group(function () {
 });
 
 Route::middleware(['auth'])->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::controller(DashboardController::class)->group(function () {
+    Route::get('/dashboard', 'index')->name('dashboard');
+    Route::get('/dashboard/active-exam/{id}', 'showActiveExam')
+        ->name('dashboard.active-exam.show')
+        ->middleware('deny.roles:siswa');
+});
     Route::get('/leaderboard-siswa', [DashboardController::class, 'index'])->name('leaderboard.siswa');
 
     Route::controller(ProfileController::class)->prefix('profile')->name('profile.')->group(function () {
@@ -161,6 +167,14 @@ Route::controller(ManajemenUjianController::class)->prefix('manajemen-ujian')->n
         Route::controller(UserController::class)->prefix('users')->name('users.')->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/{id}', 'show')->name('show');
+            Route::post('/', 'store')->name('store');
+            Route::put('/{id}', 'update')->name('update');
+            Route::delete('/{id}', 'destroy')->name('destroy');
+        });
+
+        Route::controller(BlogController::class)->prefix('blog')->name('blog.')->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/{slug}/{act?}', 'show')->name('show');
             Route::post('/', 'store')->name('store');
             Route::put('/{id}', 'update')->name('update');
             Route::delete('/{id}', 'destroy')->name('destroy');
