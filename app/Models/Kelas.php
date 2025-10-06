@@ -27,6 +27,7 @@ class Kelas extends Model {
         return $value;
     }
 
+
     public function getNormalNamaAttribute()
     {
         return $this->attributes['nama']; 

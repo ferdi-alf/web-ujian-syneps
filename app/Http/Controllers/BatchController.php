@@ -4,7 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Helpers\AlertHelper;
 use App\Models\Batches;
+use App\Models\HasilUjian;
 use App\Models\Kelas;
+use App\Models\Pembayaran;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Bus\Batch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -18,27 +21,153 @@ class BatchController extends Controller
     /**
      * Store a newly created batch
      */
-     public function show($id)
+    public function show($id)
     {
         try {
-            $materi = Batches::with(['kelas'])->findOrFail($id);
+            $batch = Batches::with([
+                'kelas',
+                'siswaDetails.siswa',
+                'siswaDetails.pembayarans',
+                'materis',
+                'ujians.soals',
+                'ujians.hasilUjians'
+            ])->findOrFail($id);
+            
+            $siswaData = $batch->siswaDetails->map(function ($siswaDetail) use ($batch) {
+                $siswa = $siswaDetail->siswa;
+                if (!$siswa) return null;
+                
+                $hasilUjians = HasilUjian::where('siswa_id', $siswa->id)
+                    ->whereHas('ujian', function($q) use ($batch) {
+                        $q->where('batch_id', $batch->id);
+                    })
+                    ->get();
+                
+                $rataRata = $hasilUjians->count() > 0 
+                    ? number_format($hasilUjians->avg('nilai'), 1) 
+                    : '0.0';
+                
+                return [
+                    'id' => $siswa->id,
+                    'nama' => $siswaDetail->nama_lengkap ?? $siswa->name,
+                    'email' => $siswa->email,
+                    'avatar' => $siswa->getAvatarUrl(),
+                    'rata_rata' => $rataRata,
+                    'status' => $siswaDetail->status,
+                    'ikut_magang' => $siswaDetail->ikut_magang ?? '-',
+                ];
+            })->filter()->values();
+            
+            // Data Materi
+            $materiData = $batch->materis->map(function ($materi) {
+                return [
+                    'id' => $materi->id,
+                    'judul' => $materi->judul,
+                    'created_at' => $materi->created_at->format('d M Y'),
+                ];
+            });
+            
+            // Data Pembayaran (hanya yang disetujui)
+            $pembayaranData = Pembayaran::whereHas('siswaDetail', function($q) use ($batch) {
+                    $q->where('batch_id', $batch->id);
+                })
+                ->where('status', 'disetujui')
+                ->with('siswaDetail.siswa')
+                ->get()
+                ->map(function ($pembayaran) {
+                    $siswaDetail = $pembayaran->siswaDetail;
+                    return [
+                        'id' => $pembayaran->id,
+                        'siswa' => $siswaDetail->nama_lengkap ?? $siswaDetail->siswa->name,
+                        'jumlah' => 'Rp ' . number_format($pembayaran->jumlah_dibayar, 0, ',', '.'),
+                        'cicilan_ke' => $pembayaran->cicilan_ke,
+                        'tanggal' => \Carbon\Carbon::parse($pembayaran->updated_at)->format('d M Y'),
+                    ];
+                });
+            
+            // Data Ujian
+            $ujianData = $batch->ujians->map(function ($ujian) {
+                $totalSoal = $ujian->soals->count();
+                $totalSiswa = $ujian->hasilUjians->count();
+                $rataRata = $totalSiswa > 0 
+                    ? number_format($ujian->hasilUjians->avg('nilai'), 1) 
+                    : '0.0';
+                
+                return [
+                    'id' => $ujian->id,
+                    'judul' => $ujian->judul,
+                    'total_soal' => $totalSoal,
+                    'total_siswa' => $totalSiswa,
+                    'rata_rata' => $rataRata,
+                    'status' => $ujian->status,
+                ];
+            });
+            
+            // Data untuk Chart - Rata-rata nilai per ujian
+            $chartData = $batch->ujians->map(function ($ujian) {
+                $totalSiswa = $ujian->hasilUjians->count();
+                $rataRata = $totalSiswa > 0 
+                    ? $ujian->hasilUjians->avg('nilai') 
+                    : 0;
+                
+                return [
+                    'judul' => $ujian->judul,
+                    'rata_rata' => round($rataRata, 1),
+                ];
+            })->filter(function($item) {
+                return $item['rata_rata'] > 0;
+            })->values();
+            
+            // Statistik
+            $totalSiswa = $batch->siswaDetails->count();
+            $totalMateri = $batch->materis->count();
+            $totalUjian = $batch->ujians->count();
+            $totalPembayaranDisetujui = $pembayaranData->count();
             
             return response()->json([
                 'success' => true,
                 'data' => [
-                    'id' => $materi->id,
-                    'nama' => $materi->nama,
-                    'status' => $materi->status,
-                    'tanggal_mulai' => $materi->tanggal_mulai,
-                    'tanggal_selesai' => $materi->tanggal_selesai,
-                    'kelas' => $materi->kelas->nama,
+                    'id' => $batch->id,
+                    'nama' => $batch->nama,
+                    'kelas' => $batch->kelas->nama,
+                    'status' => $batch->status,
+                    'tanggal_mulai' => $batch->tanggal_mulai ? \Carbon\Carbon::parse($batch->tanggal_mulai)->format('d F Y') : '-',
+                    'tanggal_selesai' => $batch->tanggal_selesai ? \Carbon\Carbon::parse($batch->tanggal_selesai)->format('d F Y') : '-',
+                    'periode' => $batch->tanggal_mulai && $batch->tanggal_selesai 
+                        ? \Carbon\Carbon::parse($batch->tanggal_mulai)->format('d M Y') . ' - ' . \Carbon\Carbon::parse($batch->tanggal_selesai)->format('d M Y')
+                        : '-',
+                    // Statistik
+                    'total_siswa' => $totalSiswa,
+                    'total_materi' => $totalMateri,
+                    'total_ujian' => $totalUjian,
+                    'total_pembayaran' => $totalPembayaranDisetujui,
+                    // Detail Data
+                    'siswa' => $siswaData,
+                    'materi' => $materiData,
+                    'pembayaran' => $pembayaranData,
+                    'ujian' => $ujianData,
+                    'chart_data' => $chartData,
                 ]
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Data tidak ditemukan'
+                'message' => 'Data batch tidak ditemukan: ' . $e->getMessage()
             ], 404);
+        }
+    }
+
+    public function downloadPdf($id)
+    {
+        try {
+            $response = $this->show($id);
+            $data = json_decode($response->content(), true)['data'];
+            
+            $pdf = Pdf::loadView('pdf.batch-detail', ['batch' => $data]);
+            
+            return $pdf->download('batch_' . $data['nama'] . '_' . date('Y-m-d') . '.pdf');
+        } catch (\Exception $e) {
+            return redirect()->back()->with(AlertHelper::error('Gagal generate PDF: ' . $e->getMessage(), 'Error'));
         }
     }
 
@@ -353,38 +482,38 @@ class BatchController extends Controller
             ->with(AlertHelper::error("Terjadi kesalahan saat mengubah batch. {$e->getMessage()}", 'Error'))
             ->withInput();
     }
-}
-
-
-
-   public function destroy($id)
-{
-    try {
-        $batch = Batches::with(['siswaDetails.siswa', 'ujians'])->findOrFail($id);
-        foreach ($batch->siswaDetails as $siswaDetail) {
-            if ($siswaDetail->siswa) {
-                $siswaDetail->siswa->delete();
-            }
-        }
-
-
-        $batch->siswaDetails()->delete();
-
-
-        $batch->ujians()->delete();
-
-
-        $batch->delete();
-
-        return redirect()->back()
-            ->with(AlertHelper::success('Batch dan seluruh data terkait berhasil dihapus!', 'Success'));
-    } catch (\Exception $e) {
-        Log::error($e->getMessage());
-
-        return redirect()->back()
-            ->with(AlertHelper::error('Terjadi kesalahan saat menghapus batch.', 'Error'));
     }
-}
+
+
+
+    public function destroy($id)
+    {
+        try {
+            $batch = Batches::with(['siswaDetails.siswa', 'ujians'])->findOrFail($id);
+            foreach ($batch->siswaDetails as $siswaDetail) {
+                if ($siswaDetail->siswa) {
+                    $siswaDetail->siswa->delete();
+                }
+            }
+
+
+            $batch->siswaDetails()->delete();
+
+
+            $batch->ujians()->delete();
+
+
+            $batch->delete();
+
+            return redirect()->back()
+                ->with(AlertHelper::success('Batch dan seluruh data terkait berhasil dihapus!', 'Success'));
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+
+            return redirect()->back()
+                ->with(AlertHelper::error('Terjadi kesalahan saat menghapus batch.', 'Error'));
+        }
+    }   
 
 
 }

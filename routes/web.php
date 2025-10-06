@@ -134,6 +134,7 @@ Route::middleware(['auth'])->group(function () {
 
         Route::controller(BatchController::class)->prefix('batch')->name('batch.')->group(function () {
             Route::get('/{id}', 'show')->name('show');
+            Route::get('/{id}/download-pdf', 'downloadPdf')->name('downloadPdf');
             Route::post('/', 'store')->name('store');
             Route::put('/{id}', 'update')->name('update');
             Route::delete('/{id}', 'destroy')->name('destroy');

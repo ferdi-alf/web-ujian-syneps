@@ -194,121 +194,137 @@ class DashboardController extends Controller {
     }
 
     private function getStackedBarChartData($user)
-    {
-        $currentYear = now()->year;
+{
+    $currentYear = now()->year;
 
-        if ($user->role === 'admin') {
-            $months = [
-                'January', 'February', 'March', 'April', 'May', 'June',
-                'July', 'August', 'September', 'October', 'November', 'December'
-            ];
-            $currentMonth = now()->month;
+    if ($user->role === 'admin') {
+        // Ambil kelas yang memiliki batch active
+        $kelasList = Kelas::whereHas('batches', function ($q) {
+            $q->where('status', 'active');
+        })->with(['batches' => function ($q) {
+            $q->where('status', 'active');
+        }])->get();
 
-            $chartData = [
-                'labels' => $months,
+        if ($kelasList->isEmpty()) {
+            return [
+                'labels' => ['Tidak ada kelas dengan batch aktif'],
                 'datasets' => []
             ];
+        }
 
-            $colors = [
-                '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
-                '#FF9F40', '#FF6384', '#C9CBCF', '#4BC0C0', '#FF6384'
-            ];
+        $chartData = [
+            'labels' => [],
+            'datasets' => [
+                [
+                    'label' => 'Rata-rata Nilai',
+                    'data' => [],
+                    'borderColor' => 'gradient', // Marker untuk gradient
+                    'backgroundColor' => 'gradient-fill', // Marker untuk area fill
+                    'borderWidth' => 3,
+                    'tension' => 0.4,
+                    'fill' => true,
+                    'pointRadius' => 6,
+                    'pointHoverRadius' => 8,
+                    'pointBackgroundColor' => '#fff',
+                    'pointBorderWidth' => 3,
+                    'type' => 'line'
+                ]
+            ]
+        ];
 
-            $kelasList = Kelas::all();
+        foreach ($kelasList as $kelas) {
+            $activeBatch = $kelas->batches->first();
+            
+            if ($activeBatch) {
+                // Tambahkan nama kelas ke labels
+                $chartData['labels'][] = $kelas->nama;
 
-            foreach ($kelasList as $index => $kelas) {
-                $monthlyAverages = [];
+                // Hitung rata-rata nilai untuk kelas dengan batch active
+                $averageScore = HasilUjian::whereHas('siswa.siswaDetail', function ($q) use ($kelas, $activeBatch) {
+                        $q->where('kelas_id', $kelas->id)
+                          ->where('batch_id', $activeBatch->id);
+                    })
+                    ->whereHas('ujian', function ($q) use ($kelas, $activeBatch) {
+                        $q->where('kelas_id', $kelas->id)
+                          ->where('batch_id', $activeBatch->id);
+                    })
+                    ->whereYear('created_at', $currentYear)
+                    ->avg('nilai');
 
-                for ($month = 1; $month <= 12; $month++) {
-                    if ($month <= $currentMonth) {
-                        $average = HasilUjian::whereHas('siswa.siswaDetail', function ($q) use ($kelas) {
-                                $q->where('kelas_id', $kelas->id);
-                            })
-                            ->whereHas('ujian', function ($q) use ($kelas) {
-                                $q->where('kelas_id', $kelas->id);
-                            })
-                            ->whereMonth('created_at', $month)
-                            ->whereYear('created_at', $currentYear)
-                            ->avg('nilai');
-
-                        $monthlyAverages[] = $average ? round($average, 1) : 0;
-                    } else {
-                        $monthlyAverages[] = 0;
-                    }
-                }
-
-                $chartData['datasets'][] = [
-                    'label' => $kelas->nama,
-                    'data' => $monthlyAverages,
-                    'backgroundColor' => $colors[$index % count($colors)],
-                    'type' => 'bar'
-                ];
-            }
-        } else if ($user->role === 'pengajar') {
-            $pengajarDetail = $user->pengajarDetail;
-            if (!$pengajarDetail) {
-                return [
-                    'labels' => [],
-                    'datasets' => []
-                ];
-            }
-
-            $kelasList = $pengajarDetail->kelas()->get();
-            if ($kelasList->isEmpty()) {
-                return [
-                    'labels' => ['Tidak ada kelas'],
-                    'datasets' => []
-                ];
-            }
-
-            $months = [
-                'January', 'February', 'March', 'April', 'May', 'June',
-                'July', 'August', 'September', 'October', 'November', 'December'
-            ];
-            $currentMonth = now()->month;
-
-            $chartData = [
-                'labels' => $months,
-                'datasets' => []
-            ];
-
-            $colors = [
-                '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
-                '#FF9F40', '#FF6384', '#C9CBCF', '#4BC0C0', '#FF6384'
-            ];
-
-            foreach ($kelasList as $index => $kelas) {
-                $monthlyAverages = [];
-
-                for ($month = 1; $month <= 12; $month++) {
-                    if ($month <= $currentMonth) {
-                        $average = HasilUjian::whereHas('siswa.siswaDetail', function ($q) use ($kelas) {
-                                $q->where('kelas_id', $kelas->id);
-                            })
-                            ->whereHas('ujian', function ($q) use ($kelas) {
-                                $q->where('kelas_id', $kelas->id);
-                            })
-                            ->whereMonth('created_at', $month)
-                            ->whereYear('created_at', $currentYear)
-                            ->avg('nilai');
-
-                        $monthlyAverages[] = $average ? round($average, 1) : 0;
-                    } else {
-                        $monthlyAverages[] = 0;
-                    }
-                }
-
-                $chartData['datasets'][] = [
-                    'label' => $kelas->nama,
-                    'data' => $monthlyAverages,
-                    'backgroundColor' => $colors[$index % count($colors)],
-                    'type' => 'bar'
-                ];
+                $chartData['datasets'][0]['data'][] = $averageScore ? round($averageScore, 1) : 0;
             }
         }
 
-        return $chartData;
+    } else if ($user->role === 'pengajar') {
+        $pengajarDetail = $user->pengajarDetail;
+        if (!$pengajarDetail) {
+            return [
+                'labels' => [],
+                'datasets' => []
+            ];
+        }
+
+        // Ambil kelas pengajar yang memiliki batch active
+        $kelasList = $pengajarDetail->kelas()
+            ->whereHas('batches', function ($q) {
+                $q->where('status', 'active');
+            })
+            ->with(['batches' => function ($q) {
+                $q->where('status', 'active');
+            }])
+            ->get();
+
+        if ($kelasList->isEmpty()) {
+            return [
+                'labels' => ['Tidak ada kelas dengan batch aktif'],
+                'datasets' => []
+            ];
+        }
+
+        $chartData = [
+            'labels' => [],
+            'datasets' => [
+                [
+                    'label' => 'Rata-rata Nilai',
+                    'data' => [],
+                    'borderColor' => 'gradient',
+                    'backgroundColor' => 'gradient-fill',
+                    'borderWidth' => 3,
+                    'tension' => 0.4,
+                    'fill' => true,
+                    'pointRadius' => 6,
+                    'pointHoverRadius' => 8,
+                    'pointBackgroundColor' => '#fff',
+                    'pointBorderWidth' => 3,
+                    'type' => 'line'
+                ]
+            ]
+        ];
+
+        foreach ($kelasList as $kelas) {
+            $activeBatch = $kelas->batches->first();
+            
+            if ($activeBatch) {
+                $chartData['labels'][] = $kelas->normal_nama;
+
+                $averageScore = HasilUjian::whereHas('siswa.siswaDetail', function ($q) use ($kelas, $activeBatch) {
+                        $q->where('kelas_id', $kelas->id)
+                          ->where('batch_id', $activeBatch->id);
+                    })
+                    ->whereHas('ujian', function ($q) use ($kelas, $activeBatch) {
+                        $q->where('kelas_id', $kelas->id)
+                          ->where('batch_id', $activeBatch->id);
+                    })
+                    ->whereYear('created_at', $currentYear)
+                    ->avg('nilai');
+
+                $chartData['datasets'][0]['data'][] = $averageScore ? round($averageScore, 1) : 0;
+            }
+        }
     }
+
+    return $chartData;
+}
 
     private function getRecentExamSubmissions($user)
     {

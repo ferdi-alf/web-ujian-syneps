@@ -52,9 +52,10 @@ class Batches extends Model
     
 
 
-      public function materis()
+
+    public function materis()
     {
-        return $this->hasMany(Materi::class);
+        return $this->hasMany(Materi::class, 'batch_id'); // Tambahkan foreign key explisit
     }
 
     /**

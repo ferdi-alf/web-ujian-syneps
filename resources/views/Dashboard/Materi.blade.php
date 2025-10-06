@@ -5,7 +5,6 @@
     $grouped = $materi->groupBy(function ($item) {
         return Carbon::parse($item->created_at)->translatedFormat('F Y');
     });
-
 @endphp
 
 @section('content')

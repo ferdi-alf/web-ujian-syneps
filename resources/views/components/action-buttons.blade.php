@@ -8,6 +8,7 @@
     'showView' => true,
     'editData' => null,
     'viewData' => null,
+    'downloadPdfRoute' => null,
 ])
 
 <div class="flex space-x-2">
@@ -38,6 +39,14 @@
             title="Lihat Detail">
             <i class="fa-solid fa-eye"></i>
         </button>
+    @endif
+
+    @if (isset($downloadPdfRoute))
+        <a href="{{ $downloadPdfRoute }}"
+            class="inline-flex items-center p-3 text-xs font-medium text-red-600 bg-red-100 rounded-md hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1 transition-colors duration-200"
+            title="Download PDF">
+            <i class="fa-solid fa-file-pdf"></i>
+        </a>
     @endif
 
     @if ($modalTarget && $editData)

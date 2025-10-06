@@ -371,7 +371,7 @@
                 <div class="md:col-span-8 col-span-12">
                     <div class="bg-white p-4 rounded-lg shadow-md" style="height: 520px;">
                         <h3 class="text-lg font-semibold mb-4">Rata-rata Nilai Per Kelas</h3>
-                        <canvas id="stackedBarChart" style="max-height: 450px;"></canvas>
+                        <canvas id="stackedBarChart" style="max-height: 450px; width: 100%"></canvas>
                     </div>
                 </div>
 
@@ -537,9 +537,265 @@
                                 'updateEndpoint' => '/batch/' . $row['id'],
                                 'act' => 'update',
                             ],
+                            'viewData' => [
+                                'id' => $row['id'],
+                                'fetchEndpoint' => '/batch/' . $row['id'],
+                                'drawerTarget' => 'drawer-detail-batch',
+                                'type' => 'bottomSheet',
+                                'title' => 'Detail Batch: ' . $row['nama'],
+                                'description' => 'Informasi lengkap tentang batch ' . $row['nama'],
+                            ],
+                            'downloadPdfRoute' => route('batch.downloadPdf', $row['id']),
                             'deleteMessage' =>
                                 'Menghapus batch ini juga akan menghapus seluruh data peserta dan ujian terkait. Yakin?',
-                        ])" />
+                        ])" :autoFilter="[2 => 'Status']" />
+                    <x-drawer-layout type="bottomSheet" id="drawer-detail-batch" title="Detail Batch"
+                        description="Informasi lengkap batch">
+                        <div x-data="{
+                            batchData: null,
+                            siswaList: [],
+                            materiList: [],
+                            pembayaranList: [],
+                            ujianList: [],
+                            chartData: [],
+                            chartInstance: null,
+                        }"
+                            x-on:drawerDataLoaded.window="
+                            if ($event.detail.drawerId === 'drawer-detail-batch') {
+                                batchData = $event.detail.data
+                                siswaList = batchData.siswa || []
+                                materiList = batchData.materi || []
+                                pembayaranList = batchData.pembayaran || []
+                                ujianList = batchData.ujian || []
+                                chartData = batchData.chart_data || []
+                                console.log('Batch data diterima:', batchData)
+                                
+                                $nextTick(() => {
+                                    if (chartData.length > 0) {
+                                        initBatchChart()
+                                    }
+                                })
+                            }
+                        "
+                            class="space-y-6">
+
+                            {{-- Info Batch --}}
+                            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg border border-blue-200">
+                                <template x-if="batchData">
+                                    <div>
+                                        <h3 class="text-xl font-bold text-gray-800 mb-4" x-text="batchData.nama"></h3>
+                                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                            <div class="text-center p-3 bg-white rounded-lg shadow-sm">
+                                                <p class="text-2xl font-bold text-blue-600" x-text="batchData.total_siswa"></p>
+                                                <p class="text-xs text-gray-600">Siswa</p>
+                                            </div>
+                                            <div class="text-center p-3 bg-white rounded-lg shadow-sm">
+                                                <p class="text-2xl font-bold text-green-600" x-text="batchData.total_materi"></p>
+                                                <p class="text-xs text-gray-600">Materi</p>
+                                            </div>
+                                            <div class="text-center p-3 bg-white rounded-lg shadow-sm">
+                                                <p class="text-2xl font-bold text-purple-600" x-text="batchData.total_ujian"></p>
+                                                <p class="text-xs text-gray-600">Ujian</p>
+                                            </div>
+                                            <div class="text-center p-3 bg-white rounded-lg shadow-sm">
+                                                <p class="text-2xl font-bold text-yellow-600" x-text="batchData.total_pembayaran">
+                                                </p>
+                                                <p class="text-xs text-gray-600">Pembayaran</p>
+                                            </div>
+                                        </div>
+                                        <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+                                            <div>
+                                                <span class="text-gray-600">Kelas:</span>
+                                                <span class="font-medium ml-2" x-text="batchData.kelas"></span>
+                                            </div>
+                                            <div>
+                                                <span class="text-gray-600">Status:</span>
+                                                <span class="font-medium ml-2 capitalize" x-text="batchData.status"></span>
+                                            </div>
+                                            <div>
+                                                <span class="text-gray-600">Periode:</span>
+                                                <span class="font-medium ml-2" x-text="batchData.periode"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+
+                            {{-- Chart Rata-rata Nilai per Ujian --}}
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <h3 class="text-lg font-semibold mb-4">Rata-rata Nilai per Ujian</h3>
+                                <template x-if="chartData.length > 0">
+                                    <div class="h-64">
+                                        <canvas id="chart-batch-detail"></canvas>
+                                    </div>
+                                </template>
+                                <template x-if="chartData.length === 0">
+                                    <div class="text-center py-8">
+                                        <i class="fas fa-chart-bar text-gray-400 text-4xl mb-4"></i>
+                                        <p class="text-gray-500 text-sm">Belum ada data ujian</p>
+                                    </div>
+                                </template>
+                            </div>
+
+                            {{-- Daftar Peserta --}}
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <h3 class="text-lg font-semibold mb-4">Daftar Siswa (<span x-text="siswaList.length"></span>)</h3>
+                                <template x-if="siswaList.length > 0">
+                                    <div class="overflow-x-auto">
+                                        <table class="min-w-full divide-y divide-gray-200">
+                                            <thead class="bg-white">
+                                                <tr>
+                                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">No
+                                                    </th>
+                                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                                        Nama</th>
+                                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                                        Email</th>
+                                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                                        Rata-rata</th>
+                                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                                        Status</th>
+                                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                                        Magang</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="bg-white divide-y divide-gray-200">
+                                                <template x-for="(siswa, index) in siswaList" :key="siswa.id">
+                                                    <tr>
+                                                        <td class="px-4 py-3 text-sm" x-text="index + 1"></td>
+                                                        <td class="px-4 py-3 text-sm" x-text="siswa.nama"></td>
+                                                        <td class="px-4 py-3 text-sm" x-text="siswa.email"></td>
+                                                        <td class="px-4 py-3 text-sm" x-text="siswa.rata_rata"></td>
+                                                        <td class="px-4 py-3 text-sm capitalize" x-text="siswa.status"></td>
+                                                        <td class="px-4 py-3 text-sm" x-text="siswa.ikut_magang"></td>
+                                                    </tr>
+                                                </template>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </template>
+                                <template x-if="siswaList.length === 0">
+                                    <p class="text-center text-gray-500 py-8">Belum ada siswa</p>
+                                </template>
+                            </div>
+
+                            {{-- Daftar Materi --}}
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <h3 class="text-lg font-semibold mb-4">Daftar Materi (<span x-text="materiList.length"></span>)
+                                </h3>
+                                <template x-if="materiList.length > 0">
+                                    <div class="overflow-x-auto">
+                                        <table class="min-w-full divide-y divide-gray-200">
+                                            <thead class="bg-white">
+                                                <tr>
+                                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">No
+                                                    </th>
+                                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                                        Judul Materi</th>
+                                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                                        Ditambahkan</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="bg-white divide-y divide-gray-200">
+                                                <template x-for="(materi, index) in materiList" :key="materi.id">
+                                                    <tr>
+                                                        <td class="px-4 py-3 text-sm" x-text="index + 1"></td>
+                                                        <td class="px-4 py-3 text-sm" x-text="materi.judul"></td>
+                                                        <td class="px-4 py-3 text-sm" x-text="materi.created_at"></td>
+                                                    </tr>
+                                                </template>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </template>
+                                <template x-if="materiList.length === 0">
+                                    <p class="text-center text-gray-500 py-8">Belum ada materi</p>
+                                </template>
+                            </div>
+
+                            {{-- History Pembayaran --}}
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <h3 class="text-lg font-semibold mb-4">History Pembayaran Disetujui (<span
+                                        x-text="pembayaranList.length"></span>)</h3>
+                                <template x-if="pembayaranList.length > 0">
+                                    <div class="overflow-x-auto">
+                                        <table class="min-w-full divide-y divide-gray-200">
+                                            <thead class="bg-white">
+                                                <tr>
+                                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">No
+                                                    </th>
+                                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                                        Siswa</th>
+                                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                                        Jumlah</th>
+                                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                                        Cicilan Ke</th>
+                                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                                        Tanggal</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="bg-white divide-y divide-gray-200">
+                                                <template x-for="(pembayaran, index) in pembayaranList" :key="pembayaran.id">
+                                                    <tr>
+                                                        <td class="px-4 py-3 text-sm" x-text="index + 1"></td>
+                                                        <td class="px-4 py-3 text-sm" x-text="pembayaran.siswa"></td>
+                                                        <td class="px-4 py-3 text-sm" x-text="pembayaran.jumlah"></td>
+                                                        <td class="px-4 py-3 text-sm" x-text="pembayaran.cicilan_ke"></td>
+                                                        <td class="px-4 py-3 text-sm" x-text="pembayaran.tanggal"></td>
+                                                    </tr>
+                                                </template>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </template>
+                                <template x-if="pembayaranList.length === 0">
+                                    <p class="text-center text-gray-500 py-8">Belum ada pembayaran yang disetujui</p>
+                                </template>
+                            </div>
+
+                            {{-- Daftar Ujian --}}
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <h3 class="text-lg font-semibold mb-4">Daftar Ujian (<span x-text="ujianList.length"></span>)</h3>
+                                <template x-if="ujianList.length > 0">
+                                    <div class="overflow-x-auto">
+                                        <table class="min-w-full divide-y divide-gray-200">
+                                            <thead class="bg-white">
+                                                <tr>
+                                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">No
+                                                    </th>
+                                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                                        Judul Ujian</th>
+                                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                                        Total Soal</th>
+                                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                                        Total Siswa</th>
+                                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                                        Rata-rata</th>
+                                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                                        Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="bg-white divide-y divide-gray-200">
+                                                <template x-for="(ujian, index) in ujianList" :key="ujian.id">
+                                                    <tr>
+                                                        <td class="px-4 py-3 text-sm" x-text="index + 1"></td>
+                                                        <td class="px-4 py-3 text-sm" x-text="ujian.judul"></td>
+                                                        <td class="px-4 py-3 text-sm" x-text="ujian.total_soal"></td>
+                                                        <td class="px-4 py-3 text-sm" x-text="ujian.total_siswa"></td>
+                                                        <td class="px-4 py-3 text-sm" x-text="ujian.rata_rata"></td>
+                                                        <td class="px-4 py-3 text-sm capitalize" x-text="ujian.status"></td>
+                                                    </tr>
+                                                </template>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </template>
+                                <template x-if="ujianList.length === 0">
+                                    <p class="text-center text-gray-500 py-8">Belum ada ujian</p>
+                                </template>
+                            </div>
+                        </div>
+                    </x-drawer-layout>
                 </div>
 
                 <script>
@@ -603,6 +859,65 @@
                         }
                     }
 
+                    function initBatchChart() {
+                        const ctx = document.getElementById('chart-batch-detail');
+                        if (!ctx) return;
+
+                        const existingChart = Chart.getChart(ctx);
+                        if (existingChart) {
+                            existingChart.destroy();
+                        }
+
+                        const chartData = Alpine.$data(ctx.closest('[x-data]')).chartData;
+
+                        new Chart(ctx, {
+                            type: 'bar',
+                            data: {
+                                labels: chartData.map(item => item.judul),
+                                datasets: [{
+                                    label: 'Rata-rata Nilai',
+                                    data: chartData.map(item => item.rata_rata),
+                                    backgroundColor: chartData.map(item => {
+                                        if (item.rata_rata >= 80) return 'rgba(34, 197, 94, 0.8)';
+                                        if (item.rata_rata >= 70) return 'rgba(234, 179, 8, 0.8)';
+                                        return 'rgba(239, 68, 68, 0.8)';
+                                    }),
+                                    borderColor: chartData.map(item => {
+                                        if (item.rata_rata >= 80) return 'rgba(34, 197, 94, 1)';
+                                        if (item.rata_rata >= 70) return 'rgba(234, 179, 8, 1)';
+                                        return 'rgba(239, 68, 68, 1)';
+                                    }),
+                                    borderWidth: 1
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: {
+                                        display: false
+                                    }
+                                },
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                        max: 100,
+                                        ticks: {
+                                            stepSize: 10
+                                        }
+                                    },
+                                    x: {
+                                        ticks: {
+                                            maxRotation: 45,
+                                            minRotation: 0
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    }
+
+
                     document.addEventListener('DOMContentLoaded', function() {
                         const statusSelect = document.querySelector('#modal-control-batch select[name="status"]');
                         const kelasSelect = document.querySelector('#modal-control-batch select[name="kelas_id"]');
@@ -617,6 +932,8 @@
                         const kelasDisplayText = document.querySelector('#kelas-display');
                         const selectKelasDiv = document.querySelector('#select-kelas');
                         const formElement = document.querySelector('#modal-control-batch form');
+
+
 
                         function resetModalState() {
 
@@ -640,7 +957,6 @@
                                 if (selectKelasDiv) selectKelasDiv.classList.remove('hidden');
                                 if (kelasDisplayCard) kelasDisplayCard.classList.add('hidden');
 
-                                // Reset original value saat create
                                 statusSelect?.removeAttribute('data-original-value');
 
                                 updateDurationDisplay();
@@ -776,43 +1092,6 @@
                         tanggalMulaiInput?.addEventListener('change', validateAddBatch);
                         tanggalSelesaiInput?.addEventListener('change', validateAddBatch);
 
-
-                        function showToast(message, type = 'success') {
-                            const toast = document.createElement('div');
-                            const bgColor = {
-                                'success': 'bg-green-500',
-                                'warning': 'bg-yellow-500',
-                                'error': 'bg-red-500',
-                                'info': 'bg-blue-500'
-                            } [type] || 'bg-gray-500';
-
-                            toast.className =
-                                `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg text-white z-50 transform transition-all duration-300 ${bgColor}`;
-                            toast.textContent = message;
-                            document.body.appendChild(toast);
-
-
-                            setTimeout(() => toast.style.transform = 'translateX(0)', 10);
-
-
-                            setTimeout(() => {
-                                toast.style.opacity = '0';
-                                toast.style.transform = 'translateX(100%)';
-                                setTimeout(() => toast.remove(), 300);
-                            }, 3000);
-                        }
-
-                        @if (session('success'))
-                            showToast('{{ session('success') }}', 'success');
-                        @endif
-
-                        @if (session('error'))
-                            showToast('{{ session('error') }}', 'error');
-                        @endif
-
-                        @if (session('warning'))
-                            showToast('{{ session('warning') }}', 'warning');
-                        @endif
                     });
                 </script>
             @endif
@@ -958,40 +1237,196 @@
                     const ctx = document.getElementById('stackedBarChart').getContext('2d');
                     const chartData = @json($chartData);
 
+
+
+                    let gradientLine = null;
+                    let gradientFill = null;
+                    let width, height;
+
+                    function getGradient(ctx, chartArea, type = 'line') {
+                        const chartWidth = chartArea.right - chartArea.left;
+                        const chartHeight = chartArea.bottom - chartArea.top;
+
+                        if (!gradientLine || width !== chartWidth || height !== chartHeight) {
+                            width = chartWidth;
+                            height = chartHeight;
+
+                            gradientLine = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+                            gradientLine.addColorStop(0, '#ef4444');
+                            gradientLine.addColorStop(0.5, '#14b8a6');
+                            gradientLine.addColorStop(1, '#10b981');
+
+                            gradientFill = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+                            gradientFill.addColorStop(0, 'rgba(239, 68, 68, 0.1)');
+                            gradientFill.addColorStop(0.5, 'rgba(20, 184, 166, 0.15)');
+                            gradientFill.addColorStop(1, 'rgba(16, 185, 129, 0.2)');
+                        }
+
+                        return type === 'line' ? gradientLine : gradientFill;
+                    }
+
+                    const processedData = {
+                        labels: chartData.labels,
+                        datasets: chartData.datasets.map(dataset => {
+                            const newDataset = {
+                                ...dataset
+                            };
+
+                            if (dataset.borderColor === 'gradient') {
+                                newDataset.borderColor = function(context) {
+                                    const chart = context.chart;
+                                    const {
+                                        ctx,
+                                        chartArea
+                                    } = chart;
+                                    if (!chartArea) return '#14b8a6';
+                                    return getGradient(ctx, chartArea, 'line');
+                                };
+                            }
+
+                            if (dataset.backgroundColor === 'gradient-fill') {
+                                newDataset.backgroundColor = function(context) {
+                                    const chart = context.chart;
+                                    const {
+                                        ctx,
+                                        chartArea
+                                    } = chart;
+                                    if (!chartArea) return 'rgba(20, 184, 166, 0.1)'; // Fallback color
+                                    return getGradient(ctx, chartArea, 'fill');
+                                };
+                            }
+
+                            return newDataset;
+                        })
+                    };
+
                     new Chart(ctx, {
-                        type: 'bar',
-                        data: {
-                            labels: chartData.labels,
-                            datasets: chartData.datasets
-                        },
+                        type: 'line',
+                        data: processedData,
                         options: {
                             responsive: true,
                             maintainAspectRatio: false,
                             plugins: {
                                 title: {
                                     display: true,
-                                    text: 'Rata-rata Nilai Per Kelas'
+                                    text: 'Rata-rata Nilai Per Kelas',
+                                    font: {
+                                        size: 16,
+                                        weight: 'bold'
+                                    },
+                                    padding: {
+                                        top: 10,
+                                        bottom: 20
+                                    }
                                 },
                                 legend: {
                                     display: true,
-                                    position: 'top'
+                                    position: 'top',
+                                    labels: {
+                                        usePointStyle: true,
+                                        padding: 15,
+                                        font: {
+                                            size: 12,
+                                            family: "'Inter', -apple-system, sans-serif"
+                                        }
+                                    }
+                                },
+                                tooltip: {
+                                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                    padding: 12,
+                                    titleFont: {
+                                        size: 14,
+                                        weight: 'bold'
+                                    },
+                                    bodyFont: {
+                                        size: 13
+                                    },
+                                    callbacks: {
+                                        label: function(context) {
+                                            let label = context.dataset.label || '';
+                                            if (label) {
+                                                label += ': ';
+                                            }
+                                            label += context.parsed.y.toFixed(1);
+                                            return label;
+                                        }
+                                    }
                                 }
                             },
                             scales: {
                                 x: {
-                                    stacked: chartData.datasets.some(ds => ds.type === 'bar'),
                                     title: {
                                         display: true,
-                                        text: '{{ Auth::user()->role === 'pengajar' ? 'Permateri' : 'Bulan' }}'
-                                    }
+                                        text: 'Kelas',
+                                        font: {
+                                            size: 13,
+                                            weight: 'bold'
+                                        }
+                                    },
+                                    ticks: {
+                                        font: {
+                                            size: 10
+                                        },
+                                        maxRotation: 90,
+                                        minRotation: 45,
+                                        autoSkip: false,
+                                        callback: function(value, index, ticks) {
+                                            const label = this.getLabelForValue(value);
+                                            const maxLength = 20;
+
+                                            if (label.length > maxLength) {
+                                                const words = label.split(' ');
+                                                const lines = [];
+                                                let currentLine = '';
+
+                                                words.forEach(word => {
+                                                    if ((currentLine + ' ' + word).trim().length <=
+                                                        maxLength) {
+                                                        currentLine = (currentLine + ' ' + word).trim();
+                                                    } else {
+                                                        if (currentLine) lines.push(currentLine);
+                                                        currentLine = word;
+                                                    }
+                                                });
+
+                                                if (currentLine) lines.push(currentLine);
+                                                return lines;
+                                            }
+
+                                            return label;
+                                        }
+                                    },
+                                    grid: {
+                                        display: false,
+                                        drawBorder: true,
+                                        borderColor: '#e5e7eb'
+                                    },
+
                                 },
                                 y: {
-                                    stacked: chartData.datasets.some(ds => ds.type === 'bar'),
                                     beginAtZero: true,
                                     max: 100,
                                     title: {
                                         display: true,
-                                        text: 'Rata-rata Nilai'
+                                        text: 'Rata-rata Nilai',
+                                        font: {
+                                            size: 13,
+                                            weight: 'bold'
+                                        }
+                                    },
+                                    ticks: {
+                                        stepSize: 10,
+                                        callback: function(value) {
+                                            return value.toFixed(0);
+                                        },
+                                        font: {
+                                            size: 11
+                                        }
+                                    },
+                                    grid: {
+                                        color: 'rgba(0, 0, 0, 0.05)',
+                                        drawBorder: true,
+                                        borderColor: '#e5e7eb'
                                     }
                                 }
                             },
