@@ -183,7 +183,7 @@
                     </div>
                 @endif
 
-                {{-- Universal Drawer dengan Fetch API --}}
+
                 <x-drawer-layout type="bottomSheet" id="drawer-detail-nilai" title="Detail Hasil Ujian"
                     description="Informasi hasil ujian siswa">
                     <div x-data="{

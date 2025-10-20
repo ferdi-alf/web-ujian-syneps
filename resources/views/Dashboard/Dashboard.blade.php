@@ -500,12 +500,12 @@
                     siswaResults: [],
                 }"
                     x-on:drawerDataLoaded.window="
-            if ($event.detail.drawerId === 'drawer-detail-active-exam') {
-                examData = $event.detail.data
-                siswaResults = examData.siswa_results || []
-                console.log('Exam data diterima:', examData)
-            }
-        "
+                    if ($event.detail.drawerId === 'drawer-detail-active-exam') {
+                        examData = $event.detail.data
+                        siswaResults = examData.siswa_results || []
+                        console.log('Exam data diterima:', examData)
+                    }
+                "
                     class="space-y-6">
 
                     <template x-if="examData">

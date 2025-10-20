@@ -1,3 +1,5 @@
+{{-- components/drawer-layout.blade.php --}}
+
 @props([
     'id' => 'default-drawer',
     'title' => 'Detail Data',
@@ -6,7 +8,7 @@
 ])
 
 <div x-data="drawerManager('{{ $id }}', '{{ $type }}')" x-init="init()" x-on:open-drawer.window="handleOpen($event)"
-    x-on:close-drawer.window="handleClose($event)">
+    x-on:close-drawer.window="handleClose($event)" x-cloak>
 
 
     <div x-show="open && drawerType === 'bottomSheet'">
@@ -17,7 +19,7 @@
         <div x-show="open" x-transition:enter="transform transition ease-out duration-300"
             x-transition:enter-start="translate-y-full" x-transition:enter-end="translate-y-0"
             x-transition:leave="transform transition ease-in duration-300" x-transition:leave-start="translate-y-0"
-            x-transition:leave-end="translate-y-full" @click.stop
+            x-transition:leave-end="translate-y-full" @transitionend="handleTransitionEnd()" @click.stop
             class="fixed bottom-0 left-0 right-0 h-[80vh] bg-white rounded-t-2xl shadow-2xl z-50 flex flex-col">
 
             <div class="flex justify-center pt-3 pb-2">
@@ -73,7 +75,7 @@
         <div x-show="open" x-transition:enter="transform transition ease-out duration-300"
             x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0"
             x-transition:leave="transform transition ease-in duration-300" x-transition:leave-start="translate-x-0"
-            x-transition:leave-end="translate-x-full" @click.stop
+            x-transition:leave-end="translate-x-full" @transitionend="handleTransitionEnd()" @click.stop
             class="absolute top-0 mt-16 right-0 w-full h-full bg-white shadow-xl z-44 flex flex-col"
             style="padding-top: 0px !important;">
 
@@ -126,28 +128,19 @@
             currentDescription: '',
             drawerType: type,
             drawerId: drawerId,
+            isTransitioning: false,
 
             init() {
                 this.currentTitle = '{{ $title }}';
                 this.currentDescription = '{{ $description }}';
 
                 console.log('Drawer initialized:', this.drawerId, this.drawerType);
-                this.$nextTick(() => {
-                    console.log('Alpine ready, drawer state:', {
-                        open: this.open,
-                        type: this.drawerType,
-                        id: this.drawerId
-                    });
-                });
             },
 
             handleOpen(event) {
                 console.log('handleOpen called:', event.detail);
-                console.log('My drawer ID:', this.drawerId);
-                console.log('Event drawer ID:', event.detail.id);
 
                 if (event.detail.id !== this.drawerId) {
-                    console.log('ID mismatch, ignoring');
                     return;
                 }
 
@@ -155,14 +148,30 @@
                 this.currentDescription = event.detail.description || this.currentDescription;
 
                 this.open = true;
+                this.isTransitioning = true;
                 document.body.classList.add('overflow-hidden');
 
-                console.log('Drawer opened:', this.open);
+                console.log('Drawer opening:', this.drawerId);
 
                 if (event.detail.fetchEndpoint) {
                     this.fetchData(event.detail.fetchEndpoint);
                 } else {
                     this.dispatchDataEvent({});
+                }
+            },
+
+            // 🔥 KUNCI: Dispatch event saat transition selesai
+            handleTransitionEnd() {
+                if (this.open && this.isTransitioning) {
+                    this.isTransitioning = false;
+                    console.log('✅ Drawer transition complete, dispatching drawer-opened event');
+
+                    // Dispatch custom event
+                    window.dispatchEvent(new CustomEvent('drawer-opened', {
+                        detail: {
+                            drawerId: this.drawerId
+                        }
+                    }));
                 }
             },
 
@@ -177,9 +186,10 @@
                 this.error = false;
                 this.errorMessage = '';
                 this.loading = false;
+                this.isTransitioning = false;
                 document.body.classList.remove('overflow-hidden');
 
-                console.log('Drawer closed');
+                console.log('Drawer closed:', this.drawerId);
             },
 
             fetchData(endpoint) {
@@ -224,7 +234,6 @@
 
             dispatchDataEvent(data) {
                 console.log('Dispatching data event for drawer:', this.drawerId, 'with data:', data);
-
 
                 window.dispatchEvent(new CustomEvent('drawerdataloaded', {
                     detail: {

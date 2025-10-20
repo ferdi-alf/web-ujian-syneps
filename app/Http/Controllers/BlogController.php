@@ -5,13 +5,22 @@ namespace App\Http\Controllers;
 use App\Models\Blog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
+
 class BlogController extends Controller
 {
-    public function index()
+    public function index($act = null)
     {
+        if ($act === 'create') {
+            return view('Dashboard.BlogForm', [
+                'mode' => 'create',
+                'blog' => null
+            ]);
+        }
+
         $blogs = Blog::with('creator')->latest()->get()->map(function ($blog) {
             return [
                 'id' => $blog->id,
@@ -35,19 +44,9 @@ class BlogController extends Controller
         $blog = Blog::where('slug', $slug)->firstOrFail();
 
         if ($act === 'edit') {
-            return response()->json([
-                'success' => true,
-                'data' => [
-                    'dataUpdate' => [
-                        'id' => $blog->id,
-                        'thumbnail' => $blog->thumbnail ? asset('storage/' . $blog->thumbnail) : null,
-                        'judul' => $blog->judul,
-                        'slug' => $blog->slug,
-                        'type' => $blog->type,
-                        'content' => $blog->content,
-                        'is_published' => $blog->is_published,
-                    ]
-                ]
+            return view('Dashboard.BlogForm', [
+                'mode' => 'edit',
+                'blog' => $blog
             ]);
         }
 
@@ -73,9 +72,13 @@ class BlogController extends Controller
 
     public function store(Request $request)
     {
+       Log::info([
+            'req' => $request->all()
+       ]);
         $validated = $request->validate([
             'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'judul' => 'required|string|max:255',
+            'slug' => 'required|string|max:255|unique:blogs,slug',
             'type' => 'required|in:acara,tutorial,pengumuman,berita,tips',
             'content' => 'required|string',
             'is_published' => 'boolean',
@@ -86,7 +89,6 @@ class BlogController extends Controller
         }
 
         $validated['created_by'] = Auth::user()->id;
-        $validated['slug'] = Str::slug($validated['judul']);
 
         Blog::create($validated);
 
@@ -96,6 +98,38 @@ class BlogController extends Controller
         ]);
     }
 
+    public function uploadImage(Request $request)
+    {
+        $request->validate([
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+        ]);
+
+        try {
+            if ($request->hasFile('image')) {
+                $path = $request->file('image')->store('blog-content', 'public');
+                
+                return response()->json([
+                    'success' => true,
+                    'url' => asset('storage/' . $path)
+                ]);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'No image file provided'
+            ], 400);
+
+        } catch (\Exception $e) {
+            Log::error("Error upload gambar", [
+                'message' => $e->getMessage()
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to upload image: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function update(Request $request, $id)
     {
         $blog = Blog::findOrFail($id);
@@ -103,20 +137,21 @@ class BlogController extends Controller
         $validated = $request->validate([
             'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'judul' => 'required|string|max:255',
+            'slug' => 'required|string|max:255|unique:blogs,slug,' . $id,
             'type' => 'required|in:acara,tutorial,pengumuman,berita,tips',
             'content' => 'required|string',
             'is_published' => 'boolean',
         ]);
 
         if ($request->hasFile('thumbnail')) {
-            // Hapus thumbnail lama
             if ($blog->thumbnail) {
                 Storage::disk('public')->delete($blog->thumbnail);
             }
             $validated['thumbnail'] = $request->file('thumbnail')->store('blog-thumbnails', 'public');
         }
 
-        // Slug otomatis update jika judul berubah (handled by model)
+        $this->cleanupOrphanImages($blog->content, $validated['content']);
+
         $blog->update($validated);
 
         return response()->json([
@@ -132,6 +167,15 @@ class BlogController extends Controller
 
         if ($blog->thumbnail) {
             Storage::disk('public')->delete($blog->thumbnail);
+        }
+
+
+        $contentImages = $this->extractImageUrls($blog->content);
+        foreach ($contentImages as $imageUrl) {
+            if (strpos($imageUrl, 'storage/blog-images/') !== false) {
+                $path = str_replace(asset('storage/'), '', $imageUrl);
+                Storage::disk('public')->delete($path);
+            }
         }
 
         $blog->delete();
@@ -153,5 +197,28 @@ class BlogController extends Controller
         ];
 
         return $badges[$type] ?? $type;
+    }
+
+    private function extractImageUrls($content)
+    {
+        preg_match_all('/<img[^>]+src="([^">]+)"/', $content, $matches);
+        return $matches[1] ?? [];
+    }
+
+    private function cleanupOrphanImages($oldContent, $newContent)
+    {
+        $oldImages = $this->extractImageUrls($oldContent);
+        $newImages = $this->extractImageUrls($newContent);
+        
+    
+        $deletedImages = array_diff($oldImages, $newImages);
+        
+        foreach ($deletedImages as $imageUrl) {
+            
+            if (strpos($imageUrl, 'storage/blog-images/') !== false) {
+                $path = str_replace(asset('storage/'), '', $imageUrl);
+                Storage::disk('public')->delete($path);
+            }
+        }
     }
 }

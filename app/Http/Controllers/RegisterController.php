@@ -48,6 +48,11 @@ class RegisterController extends Controller
         if (!$peserta || $peserta->status !== 'confirmed') {
             return back()->with('error', 'Data pendaftaran tidak ditemukan');
         }
+
+        $userEmail = User::findOrFail($peserta->email);
+        if ($userEmail) {
+            return back()->with(AlertHelper::error('Email yang anda masukan sudah ada', 'Error'));
+        }
         
         $request->validate([
             'name' => 'required|string|max:255|unique:users',

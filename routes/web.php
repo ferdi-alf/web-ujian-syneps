@@ -172,13 +172,14 @@ Route::controller(ManajemenUjianController::class)->prefix('manajemen-ujian')->n
             Route::delete('/{id}', 'destroy')->name('destroy');
         });
 
-        Route::controller(BlogController::class)->prefix('blog')->name('blog.')->group(function () {
-            Route::get('/', 'index')->name('index');
-            Route::get('/{slug}/{act?}', 'show')->name('show');
-            Route::post('/', 'store')->name('store');
-            Route::put('/{id}', 'update')->name('update');
-            Route::delete('/{id}', 'destroy')->name('destroy');
-        });
+       Route::controller(BlogController::class)->prefix('blog')->name('blog.')->group(function () {
+        Route::post('/upload-image', 'uploadImage')->name('uploadImage'); // TAMBAHKAN INI
+        Route::get('/{act?}', 'index')->name('index'); 
+        Route::get('/{slug}/{act?}', 'show')->name('show'); 
+        Route::post('/', 'store')->name('store');
+        Route::put('/{id}', 'update')->name('update');
+        Route::delete('/{id}', 'destroy')->name('destroy');
+    });
 
 
 

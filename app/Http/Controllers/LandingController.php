@@ -6,6 +6,7 @@ use App\Helpers\AlertHelper;
 use App\Models\Kelas;
 use App\Models\Batches;
 use App\Models\PendaftaranPeserta;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -79,6 +80,13 @@ class LandingController extends Controller
                 'mengetahui_program_dari' => 'required|in:Instagram,Tiktok,Facebook,Website,Teman/Keluarga,Google,Lain-lain',
                 'bukti_pembayaran_dp' => 'required|image|mimes:jpg,jpeg,png|max:2048',
             ]);
+
+
+            $user = User::where('email', $request->email)->first();
+
+            if ($user) {
+                return back()->with(AlertHelper::error('Email yang anda masukan sudah terdaftar', 'Error'));
+            }
 
             $activeBatch = Batches::where('kelas_id', $request->kelas_id)
                                 ->where('status', 'registration')
