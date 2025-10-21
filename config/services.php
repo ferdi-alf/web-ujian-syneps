@@ -14,6 +14,11 @@ return [
     |
     */
 
+    'tiny' => [
+        'key' => env('TINYAPIKEY'),
+    ],
+
+
     'postmark' => [
         'token' => env('POSTMARK_TOKEN'),
     ],

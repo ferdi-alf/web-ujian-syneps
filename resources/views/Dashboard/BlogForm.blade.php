@@ -18,8 +18,8 @@
         </div>
     </div>
 
-    <div class="bg-white rounded-lg shadow-md p-6">
-        <form id="blogForm" enctype="multipart/form-data" x-data="blogFormHandler()" x-init="init()">
+    <div class="bg-white rounded-lg shadow-md p-6" x-data="blogFormHandler()" x-init="init()">
+        <form @submit.prevent="submitForm()" enctype="multipart/form-data">
             @csrf
             @if ($mode === 'edit')
                 @method('PUT')
@@ -40,7 +40,7 @@
                                     <label
                                         class="relative cursor-pointer bg-white rounded-md font-medium text-teal-600 hover:text-teal-500">
                                         <span>Upload gambar</span>
-                                        <input type="file" name="thumbnail" class="sr-only" accept="image/*"
+                                        <input type="file" x-ref="thumbnailInput" class="sr-only" accept="image/*"
                                             @change="handleFileSelect($event)">
                                     </label>
                                     <p class="pl-1">atau drag and drop</p>
@@ -64,60 +64,42 @@
             {{-- Judul --}}
             <div class="mb-6">
                 <label class="block text-sm font-medium text-gray-700 mb-2">Judul Blog</label>
-                <input type="text" name="judul" id="judul"
-                    value="{{ $mode === 'edit' ? $blog->judul : old('judul') }}" required @input="generateSlug"
+                <input type="text" x-model="formData.judul" required
                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                     placeholder="Masukkan judul blog...">
-                <p class="text-xs text-gray-500 mt-1">Slug: <span x-text="slugPreview"></span></p>
-            </div>
-
-            {{-- Slug --}}
-            <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Slug</label>
-                <input type="text" name="slug" id="slug"
-                    value="{{ $mode === 'edit' ? $blog->slug : old('slug') }}" required
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                    placeholder="slug-blog">
-                <p class="text-xs text-gray-500 mt-1">URL-friendly version dari judul</p>
+                <p class="text-xs text-gray-500 mt-1">Slug akan di-generate otomatis dari judul</p>
             </div>
 
             {{-- Type --}}
             <div class="mb-6">
                 <label class="block text-sm font-medium text-gray-700 mb-2">Kategori</label>
-                <select name="type" id="type" required
+                <select x-model="formData.type" required
                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
                     <option value="">Pilih kategori</option>
-                    <option value="acara" {{ $mode === 'edit' && $blog->type === 'acara' ? 'selected' : '' }}>Acara
-                    </option>
-                    <option value="tutorial" {{ $mode === 'edit' && $blog->type === 'tutorial' ? 'selected' : '' }}>
-                        Tutorial</option>
-                    <option value="pengumuman" {{ $mode === 'edit' && $blog->type === 'pengumuman' ? 'selected' : '' }}>
-                        Pengumuman</option>
-                    <option value="berita" {{ $mode === 'edit' && $blog->type === 'berita' ? 'selected' : '' }}>Berita
-                    </option>
-                    <option value="tips" {{ $mode === 'edit' && $blog->type === 'tips' ? 'selected' : '' }}>Tips
-                    </option>
+                    <option value="acara">Acara</option>
+                    <option value="tutorial">Tutorial</option>
+                    <option value="pengumuman">Pengumuman</option>
+                    <option value="berita">Berita</option>
+                    <option value="tips">Tips</option>
                 </select>
             </div>
 
             {{-- Content Editor --}}
             <div class="mb-6">
                 <label class="block text-sm font-medium text-gray-700 mb-2">Konten Blog</label>
-                <div id="quill-editor" class="bg-white" style="height: 400px;"></div>
-                <input type="hidden" name="content" id="content">
+                <textarea x-ref="tinymceEditor" class="w-full"></textarea>
                 <p class="text-xs text-gray-500 mt-2">
                     <i class="fa-solid fa-info-circle"></i>
-                    Gambar akan diupload ke server dan tersimpan di <code>storage/blog-images/</code>
+                    Gambar akan diupload ke server dan tersimpan di <code>storage/blog-content/</code>
                 </p>
             </div>
 
             {{-- Publish Status --}}
             <div class="mb-6">
                 <div class="flex items-center">
-                    <input type="checkbox" name="is_published" id="is_published" value="1"
-                        {{ $mode === 'edit' && $blog->is_published ? 'checked' : '' }}
+                    <input type="checkbox" x-model="formData.is_published"
                         class="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500">
-                    <label for="is_published" class="ml-2 text-sm text-gray-700">Publish blog sekarang</label>
+                    <label class="ml-2 text-sm text-gray-700">Publish blog sekarang</label>
                 </div>
             </div>
 
@@ -127,444 +109,273 @@
                     class="px-6 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition">
                     Batal
                 </a>
-                <button type="submit" id="submitBtn"
+                <button type="submit" :disabled="isSubmitting"
                     class="px-6 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition disabled:opacity-50 flex items-center gap-2">
-                    <i class="fa-solid fa-save"></i>
-                    <span>{{ $mode === 'create' ? 'Buat Blog' : 'Update Blog' }}</span>
+                    <i class="fa-solid" :class="isSubmitting ? 'fa-spinner fa-spin' : 'fa-save'"></i>
+                    <span
+                        x-text="isSubmitting ? 'Menyimpan...' : '{{ $mode === 'create' ? 'Buat Blog' : 'Update Blog' }}'"></span>
                 </button>
             </div>
         </form>
     </div>
 
-    <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet" />
-
-    <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
-
+    {{-- TinyMCE CDN --}}
+    <script src="https://cdn.tiny.cloud/1/{{ config('services.tiny.key') }}/tinymce/6/tinymce.min.js"
+        referrerpolicy="origin"></script>
     <script>
         function blogFormHandler() {
             return {
-                previewImage: @if ($mode === 'edit' && $blog->thumbnail)
-                    '{{ asset('storage/' . $blog->thumbnail) }}'
-                @else
-                    null
-                @endif ,
+
+                previewImage: @json($mode === 'edit' && $blog->thumbnail ? asset('storage/' . $blog->thumbnail) : null),
                 isDragging: false,
-                slugPreview: '{{ $mode === 'edit' ? $blog->slug : '' }}',
-                quill: null,
                 thumbnailFile: null,
+                isSubmitting: false,
+                editor: null,
+                formData: {
+                    judul: @json($mode === 'edit' ? $blog->judul : ''),
+                    type: @json($mode === 'edit' ? $blog->type : ''),
+                    is_published: {{ $mode === 'edit' && $blog->is_published ? 'true' : 'false' }}
+                },
 
                 init() {
-                    setTimeout(() => {
-                        this.initQuill();
-                        this.updateSlugPreview();
-                    }, 100);
+                    this.initTinyMCE();
                 },
 
-                initQuill() {
-                    if (this.quill) return;
 
-                    const editorElement = document.getElementById('quill-editor');
-                    if (!editorElement) {
-                        console.error('Quill editor element not found');
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: 'Editor tidak ditemukan. Silakan refresh halaman.'
-                        });
-                        return;
-                    }
+                initTinyMCE() {
+                    tinymce.init({
+                        target: this.$refs.tinymceEditor,
+                        height: 500,
+                        menubar: false,
+                        plugins: [
+                            'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+                            'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+                            'insertdatetime', 'media', 'table', 'help', 'wordcount'
+                        ],
+                        toolbar: 'undo redo | blocks | ' +
+                            'bold italic underline strikethrough | forecolor backcolor | alignleft aligncenter ' +
+                            'alignright alignjustify | bullist numlist outdent indent | ' +
+                            'removeformat | image media link | code | help',
+                        content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }',
+                        relative_urls: false,
+                        remove_script_host: false,
+                        convert_urls: true,
+                        images_upload_handler: (blobInfo, progress) => {
+                            return new Promise((resolve, reject) => {
+                                this.uploadImage(blobInfo.blob())
+                                    .then(url => resolve(url))
+                                    .catch(error => reject(error));
+                            });
+                        },
+                        automatic_uploads: true,
+                        file_picker_types: 'image',
 
-                    const self = this;
-
-                    try {
-                        this.quill = new Quill('#quill-editor', {
-                            theme: 'snow',
-                            modules: {
-                                toolbar: {
-                                    container: [
-                                        [{
-                                            'header': [1, 2, 3, 4, 5, 6, false]
-                                        }],
-                                        [{
-                                            'font': []
-                                        }],
-                                        [{
-                                            'size': ['small', false, 'large', 'huge']
-                                        }],
-                                        ['bold', 'italic', 'underline', 'strike'],
-                                        ['blockquote', 'code-block'],
-                                        [{
-                                            'list': 'ordered'
-                                        }, {
-                                            'list': 'bullet'
-                                        }],
-                                        [{
-                                            'script': 'sub'
-                                        }, {
-                                            'script': 'super'
-                                        }],
-                                        [{
-                                            'indent': '-1'
-                                        }, {
-                                            'indent': '+1'
-                                        }],
-                                        [{
-                                            'direction': 'rtl'
-                                        }],
-                                        [{
-                                            'color': []
-                                        }, {
-                                            'background': []
-                                        }],
-                                        [{
-                                            'align': []
-                                        }],
-                                        ['link', 'image', 'video'],
-                                        ['clean']
-                                    ],
-                                    handlers: {
-                                        image: () => this.imageHandler()
-                                    }
-                                }
+                        image_advtab: true,
+                        image_class_list: [{
+                                title: 'Responsive',
+                                value: 'img-fluid'
                             },
-                            placeholder: 'Tulis konten blog Anda di sini...'
-                        });
+                            {
+                                title: 'Rounded',
+                                value: 'rounded'
+                            }
+                        ],
 
-                        // Set initial content jika edit mode
-                        @if ($mode === 'edit' && $blog->content)
-                            this.quill.root.innerHTML = {!! json_encode($blog->content) !!};
-                        @endif
+                        setup: (editor) => {
+                            this.editor = editor;
 
-                        // Update hidden input on content change
-                        this.quill.on('text-change', () => {
-                            document.getElementById('content').value = this.quill.root.innerHTML;
-                        });
-
-                    } catch (error) {
-                        console.error('Error initializing Quill:', error);
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Editor Error',
-                            text: 'Gagal memuat editor. Silakan refresh halaman.'
-                        });
-                    }
+                            @if ($mode === 'edit' && $blog->content)
+                                editor.on('init', () => {
+                                    editor.setContent({!! json_encode($blog->content) !!});
+                                });
+                            @endif
+                        }
+                    });
                 },
 
-                imageHandler() {
-                    if (!this.quill) {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: 'Editor belum siap. Silakan coba lagi.'
-                        });
-                        return;
-                    }
-
-                    const input = document.createElement('input');
-                    input.setAttribute('type', 'file');
-                    input.setAttribute('accept', 'image/*');
-                    input.click();
-
-                    input.onchange = async () => {
-                        const file = input.files[0];
-                        if (!file) return;
-
-                        // Validasi file
-                        if (file.size > 2 * 1024 * 1024) {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'File Terlalu Besar',
-                                text: 'Ukuran gambar maksimal 2MB'
-                            });
-                            return;
-                        }
-
-                        // Validasi tipe file
-                        if (!file.type.startsWith('image/')) {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'File Tidak Valid',
-                                text: 'Harap pilih file gambar yang valid'
-                            });
-                            return;
-                        }
-
-                        Swal.fire({
-                            title: 'Uploading...',
-                            text: 'Mohon tunggu, gambar sedang diupload',
-                            allowOutsideClick: false,
-                            didOpen: () => {
-                                Swal.showLoading();
-                            }
-                        });
-
-                        try {
-                            const formData = new FormData();
-                            formData.append('image', file);
-
-                            const response = await fetch('{{ route('blog.uploadImage') }}', {
-                                method: 'POST',
-                                body: formData,
-                                headers: {
-                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
-                                        ?.content || '',
-                                    'Accept': 'application/json'
-                                }
-                            });
-
-                            const result = await response.json();
-
-                            if (!response.ok || !result.success) {
-                                throw new Error(result.message || 'Upload failed');
-                            }
-
-                            // FIX: Gunakan approach yang lebih aman untuk insert image
-                            this.insertImageToEditor(result.url);
-
-                            Swal.close();
-
-                        } catch (error) {
-                            console.error('Upload error:', error);
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Upload Gagal',
-                                text: error.message || 'Terjadi kesalahan saat mengupload gambar'
-                            });
-                        }
-                    };
-                },
-
-                insertImageToEditor(imageUrl) {
-                    if (!this.quill) return;
+                async uploadImage(blob) {
+                    const formData = new FormData();
+                    formData.append('image', blob);
 
                     try {
+                        const response = await fetch('{{ route('blog.uploadImage') }}', {
+                            method: 'POST',
+                            body: formData,
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json'
+                            }
+                        });
 
-                        this.quill.focus();
+                        const result = await response.json();
 
-
-                        let range = this.quill.getSelection();
-
-                        if (!range) {
-
-                            range = {
-                                index: this.quill.getLength(),
-                                length: 0
-                            };
+                        if (!response.ok || !result.success) {
+                            throw new Error(result.message || 'Upload failed');
                         }
 
-
-                        this.quill.insertEmbed(range.index, 'image', imageUrl);
-                        this.quill.setSelection(range.index + 1, 0);
-
+                        return result.url;
                     } catch (error) {
-                        console.error('Error inserting image:', error);
-                        const fallbackPosition = this.quill.getLength();
-                        this.quill.insertEmbed(fallbackPosition, 'image', imageUrl);
-                        this.quill.setSelection(fallbackPosition + 1, 0);
+                        console.error('Upload error:', error);
+                        throw error;
                     }
                 },
+
 
                 handleFileSelect(event) {
                     const file = event.target.files[0];
-                    console.log('File selected:', file);
+                    if (!file) return;
 
-                    if (file) {
-                        if (file.size > 2 * 1024 * 1024) {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'File Terlalu Besar',
-                                text: 'Ukuran file maksimal 2MB'
-                            });
-
-                            event.target.value = '';
-                            return;
-                        }
-
-                        if (!file.type.startsWith('image/')) {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'File Tidak Valid',
-                                text: 'Harap pilih file gambar (JPEG, PNG, GIF, WEBP)'
-                            });
-
-                            event.target.value = '';
-                            return;
-                        }
-
-                        this.thumbnailFile = file;
-                        this.previewImage = URL.createObjectURL(file);
-
-                        console.log('Thumbnail file set:', this.thumbnailFile);
+                    if (file.size > 2 * 1024 * 1024) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'File Terlalu Besar',
+                            text: 'Ukuran file maksimal 2MB'
+                        });
+                        event.target.value = '';
+                        return;
                     }
+
+                    if (!file.type.startsWith('image/')) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'File Tidak Valid',
+                            text: 'Harap pilih file gambar'
+                        });
+                        event.target.value = '';
+                        return;
+                    }
+
+                    this.thumbnailFile = file;
+                    this.previewImage = URL.createObjectURL(file);
                 },
+
 
                 handleDrop(event) {
                     this.isDragging = false;
                     const file = event.dataTransfer.files[0];
-                    console.log('File dropped:', file);
 
-                    if (file && file.type.startsWith('image/')) {
-                        if (file.size > 2 * 1024 * 1024) {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'File Terlalu Besar',
-                                text: 'Ukuran file maksimal 2MB'
-                            });
-                            return;
-                        }
+                    if (!file || !file.type.startsWith('image/')) return;
 
-
-                        const dataTransfer = new DataTransfer();
-                        dataTransfer.items.add(file);
-                        const fileInput = document.querySelector('input[name="thumbnail"]');
-                        fileInput.files = dataTransfer.files;
-
-                        this.thumbnailFile = file;
-                        this.previewImage = URL.createObjectURL(file);
-
-                        console.log('Thumbnail file set from drop:', this.thumbnailFile); // DEBUG
+                    if (file.size > 2 * 1024 * 1024) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'File Terlalu Besar',
+                            text: 'Ukuran file maksimal 2MB'
+                        });
+                        return;
                     }
+
+                    this.thumbnailFile = file;
+                    this.previewImage = URL.createObjectURL(file);
+
+                    // Update file input
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+                    this.$refs.thumbnailInput.files = dataTransfer.files;
                 },
+
 
                 removeImage() {
                     this.previewImage = null;
                     this.thumbnailFile = null;
-                    const fileInput = document.querySelector('input[name="thumbnail"]');
-                    fileInput.value = '';
-
-                    console.log('Thumbnail removed');
+                    this.$refs.thumbnailInput.value = '';
                 },
 
-                generateSlug(event) {
-                    const text = event.target.value;
-                    const slug = text
-                        .toLowerCase()
-                        .replace(/[^\w\s-]/g, '')
-                        .replace(/\s+/g, '-')
-                        .replace(/--+/g, '-')
-                        .trim();
 
-                    if ('{{ $mode }}' === 'create') {
-                        document.getElementById('slug').value = slug;
-                    }
-                    this.slugPreview = slug;
-                },
+                async submitForm() {
+                    // Get content from TinyMCE
+                    const content = this.editor.getContent();
 
-                updateSlugPreview() {
-                    const slugInput = document.getElementById('slug');
-                    if (slugInput) {
-                        this.slugPreview = slugInput.value;
-                        slugInput.addEventListener('input', (e) => {
-                            this.slugPreview = e.target.value;
+                    if (!content || content === '' || content === '<p></p>') {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Konten Kosong',
+                            text: 'Mohon isi konten blog terlebih dahulu'
                         });
+                        return;
+                    }
+
+                    this.isSubmitting = true;
+
+                    try {
+                        // Build FormData
+                        const formData = new FormData();
+                        formData.append('_token', '{{ csrf_token() }}');
+                        formData.append('judul', this.formData.judul);
+                        formData.append('type', this.formData.type);
+                        formData.append('content', content);
+
+                        if (this.formData.is_published) {
+                            formData.append('is_published', '1');
+                        }
+
+                        if (this.thumbnailFile) {
+                            formData.append('thumbnail', this.thumbnailFile);
+                            console.log('Thumbnail attached:', this.thumbnailFile);
+                        }
+
+                        console.log('FormData contents:');
+                        for (let [key, value] of formData.entries()) {
+                            console.log(key + ':', value);
+                        }
+
+                        // Determine URL
+                        const mode = '{{ $mode }}';
+                        let url = '{{ route('blog.store') }}';
+
+                        if (mode === 'edit') {
+                            const blogId = document.getElementById('blog_id')?.value;
+                            url = '{{ route('blog.update', ':id') }}'.replace(':id', blogId);
+                            formData.append('_method', 'PUT');
+                        }
+
+
+                        const response = await fetch(url, {
+                            method: 'POST',
+                            body: formData,
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json'
+                            }
+                        });
+
+                        const result = await response.json();
+
+                        if (response.ok && result.success) {
+                            await Swal.fire({
+                                icon: 'success',
+                                title: 'Berhasil!',
+                                text: result.message || (mode === 'create' ? 'Blog berhasil dibuat!' :
+                                    'Blog berhasil diupdate!'),
+                                showConfirmButton: false,
+                                timer: 1500
+                            });
+                            window.location.href = '{{ route('blog.index') }}';
+                        } else {
+                            let errorMessage = 'Terjadi kesalahan. Silakan coba lagi.';
+                            if (result.errors) {
+                                errorMessage = Object.values(result.errors).flat().join('\n');
+                            } else if (result.message) {
+                                errorMessage = result.message;
+                            }
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Gagal!',
+                                text: errorMessage
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error!',
+                            text: 'Terjadi kesalahan: ' + error.message
+                        });
+                    } finally {
+                        this.isSubmitting = false;
                     }
                 }
             }
         }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            const form = document.getElementById('blogForm');
-            const submitBtn = document.getElementById('submitBtn');
-
-            form.addEventListener('submit', async function(e) {
-                e.preventDefault();
-
-                const quillContent = document.getElementById('content').value;
-                if (!quillContent || quillContent === '<p><br></p>' || quillContent === '<p></p>') {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Konten Kosong',
-                        text: 'Mohon isi konten blog terlebih dahulu'
-                    });
-                    return;
-                }
-
-                console.log('Form elements:', form.elements);
-
-                const formData = new FormData(form);
-
-                const thumbnailInput = form.querySelector('input[name="thumbnail"]');
-                console.log('Thumbnail input:', thumbnailInput);
-                console.log('Thumbnail files:', thumbnailInput?.files);
-
-                if (thumbnailInput && thumbnailInput.files.length > 0) {
-                    console.log('Thumbnail file found:', thumbnailInput.files[0]);
-                } else {
-                    console.log('No thumbnail file selected');
-                }
-
-                console.log('FormData entries:');
-                for (let [key, value] of formData.entries()) {
-                    console.log(key + ': ', value);
-                }
-
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = `
-                    <i class="fa-solid fa-spinner fa-spin"></i>
-                    <span>Menyimpan...</span>
-                `;
-
-                try {
-                    const mode = '{{ $mode }}';
-                    let url = '{{ route('blog.store') }}';
-
-                    if (mode === 'edit') {
-                        url = '{{ route('blog.update', ':id') }}'.replace(':id', document
-                            .getElementById('blog_id').value);
-                        formData.append('_method', 'PUT');
-                    }
-
-                    const response = await fetch(url, {
-                        method: 'POST',
-                        body: formData,
-                        headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                            'Accept': 'application/json'
-                        }
-                    });
-
-                    const result = await response.json();
-
-                    if (response.ok && result.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Berhasil!',
-                            text: result.message || (mode === 'create' ?
-                                'Blog berhasil dibuat!' : 'Blog berhasil diupdate!'),
-                            showConfirmButton: false,
-                            timer: 1500
-                        }).then(() => {
-                            window.location.href = '{{ route('blog.index') }}';
-                        });
-                    } else {
-                        let errorMessage = 'Terjadi kesalahan. Silakan coba lagi.';
-                        if (result.errors) {
-                            errorMessage = Object.values(result.errors).flat().join('\n');
-                        } else if (result.message) {
-                            errorMessage = result.message;
-                        }
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Gagal!',
-                            text: errorMessage,
-                            scrollbarPadding: false
-                        });
-                    }
-                } catch (error) {
-                    console.error('Error:', error);
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error!',
-                        text: 'Terjadi kesalahan saat menyimpan data: ' + error.message
-                    });
-                } finally {
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = `
-                <i class="fa-solid fa-save"></i>
-                <span>{{ $mode === 'create' ? 'Buat Blog' : 'Update Blog' }}</span>
-            `;
-                }
-            });
-        });
     </script>
 @endsection

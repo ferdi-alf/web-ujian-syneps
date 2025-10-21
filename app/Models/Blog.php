@@ -21,7 +21,7 @@ class Blog extends Model
         'is_published' => 'boolean',
     ];
 
-    // Auto-generate slug dari judul
+
     protected static function boot()
     {
         parent::boot();

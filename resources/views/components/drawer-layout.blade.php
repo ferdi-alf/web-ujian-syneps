@@ -7,6 +7,18 @@
     'type' => 'bottomSheet',
 ])
 
+<style>
+    .drawer-container {
+        width: 83.5%;
+    }
+
+    @media (max-width: 764px) {
+        .drawer-container {
+            width: 100%;
+        }
+    }
+</style>
+
 <div x-data="drawerManager('{{ $id }}', '{{ $type }}')" x-init="init()" x-on:open-drawer.window="handleOpen($event)"
     x-on:close-drawer.window="handleClose($event)" x-cloak>
 
@@ -70,46 +82,48 @@
         </div>
     </div>
 
-    <div x-show="open && drawerType === 'slideOver'">
+    <div x-show="open && drawerType === 'slideOver'" class="overflow-auto">
 
         <div x-show="open" x-transition:enter="transform transition ease-out duration-300"
             x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0"
             x-transition:leave="transform transition ease-in duration-300" x-transition:leave-start="translate-x-0"
             x-transition:leave-end="translate-x-full" @transitionend="handleTransitionEnd()" @click.stop
-            class="absolute top-0 mt-16 right-0 w-full h-full bg-white shadow-xl z-44 flex flex-col"
-            style="padding-top: 0px !important;">
+            class="fixed top-0 mt-16 drawer-container right-0  overflow-auto h-screen shadow-xl z-44 flex flex-col">
 
-            <nav class="w-full p-3 shadow-lg flex justify-start">
-                <div class="md:w-1/2 w-fit flex justify-between items-center">
-                    <button @click="closeDrawer()"
-                        class="p-3 rounded-lg border-2 border-gray-100 hover:shadow-lg hover:bg-gray-100 flex justify-center items-center cursor-pointer hover:text-gray-700">
-                        <i class="fa-solid fa-arrow-left"></i>
-                    </button>
-                    <h2 x-text="currentTitle" class="font-semibold">{{ $title }}</h2>
-                </div>
-            </nav>
+            <div class="relative">
 
-            <div class="p-4 overflow-y-auto flex-1">
-                <div x-show="loading" class="flex items-center justify-center h-64">
-                    <div class="flex flex-col items-center">
-                        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
-                        <p class="text-gray-600">Memuat data...</p>
-                    </div>
-                </div>
-
-                <div x-show="error" class="flex items-center justify-center ">
-                    <div class="text-center">
-                        <i class="fa-solid fa-exclamation-triangle text-4xl text-red-500 mb-4"></i>
-                        <p class="text-red-600" x-text="errorMessage"></p>
+                <nav class="w-full bg-white p-3 fixed top-14 z-30 shadow-lg flex justify-start">
+                    <div class="md:w-5/12 w-fit flex justify-between items-center">
                         <button @click="closeDrawer()"
-                            class="mt-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
-                            Tutup
+                            class="p-3 rounded-lg border-2 border-gray-100 hover:shadow-lg hover:bg-gray-100 flex justify-center items-center cursor-pointer hover:text-gray-700">
+                            <i class="fa-solid fa-arrow-left"></i>
                         </button>
+                        <h2 x-text="currentTitle" class="font-semibold">{{ $title }}</h2>
                     </div>
-                </div>
+                </nav>
 
-                <div x-show="!loading && !error" class="md:p-6 p-0">
-                    {{ $slot }}
+                <div class="  flex-1 pt-3 bg-white">
+                    <div x-show="loading" class="flex items-center justify-center h-64">
+                        <div class="flex flex-col items-center">
+                            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
+                            <p class="text-gray-600">Memuat data...</p>
+                        </div>
+                    </div>
+
+                    <div x-show="error" class="flex items-center justify-center ">
+                        <div class="text-center">
+                            <i class="fa-solid fa-exclamation-triangle text-4xl text-red-500 mb-4"></i>
+                            <p class="text-red-600" x-text="errorMessage"></p>
+                            <button @click="closeDrawer()"
+                                class="mt-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
+                                Tutup
+                            </button>
+                        </div>
+                    </div>
+
+                    <div x-show="!loading && !error" class="md:p-6 p-3 mt-20">
+                        {{ $slot }}
+                    </div>
                 </div>
             </div>
         </div>
