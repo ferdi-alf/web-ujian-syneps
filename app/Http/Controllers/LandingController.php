@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Helpers\AlertHelper;
 use App\Models\Kelas;
 use App\Models\Batches;
+use App\Models\Blog;
 use App\Models\PendaftaranPeserta;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -18,7 +20,14 @@ class LandingController extends Controller
      */
     public function index()
     {
+
         try {
+            $blogs = Cache::remember('carousel_blogs', 3600, function() {
+            return Blog::where('is_published', true)
+                ->latest()
+                ->take(5)
+                ->get(['id', 'thumbnail', 'judul', 'slug', 'type', 'content', 'created_at']);
+            });
             $kelasWithActiveBatch = Kelas::with(['batches' => function($query) {
             $query->where('status', 'registration');
             }])->get();
@@ -27,11 +36,11 @@ class LandingController extends Controller
                 return $kelasItem->hasRegistrationBatch();
             });
         
-            return view('welcome', compact('kelas'));
+            return view('welcome', compact('kelas', 'blogs'));
         } catch (\Exception $e) {
            
             Log::error('Error loading landing page: ' . $e->getMessage());
-            $kelas = collect(); // Empty collection
+            $kelas = collect(); 
             return view('welcome', compact('kelas'));
         }
     }

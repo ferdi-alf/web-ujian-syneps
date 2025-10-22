@@ -1,6 +1,5 @@
 @extends('layouts.landing-layout')
 
-@section('title', 'Home')
 
 @section('content')
     @if (empty($showKelasDetail))
@@ -198,9 +197,57 @@
     @else
         @include('components.kelas-carousel')
     @endif
+    @if ($blogs->count() > 0)
+        <section class="bg-gray-50 py-20">
+            <div class="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
 
+                <div class="text-center mb-16" data-aos="fade-up">
+                    <h1 class="text-lg font-semibold">Blog Terbaru</h1>
+                </div>
+
+                @if ($blogs->count() > 0)
+                    <div class="mb-16">
+                        <div class="flex flex-col gap-1 space-y-1">
+                            @foreach ($blogs as $blog)
+                                <a href="{{ route('read-blog.read', $blog->slug) }}" class="group">
+                                    <div
+                                        class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition duration-300 flex items-center flex-row">
+                                        <img src="{{ $blog->thumbnail ? asset('storage/' . $blog->thumbnail) : asset('images/default-blog.jpg') }}"
+                                            alt="{{ e($blog->judul) }}" class="blog-list-img p-2" loading="lazy">
+                                        <div class="p-4 flex-1">
+                                            <span
+                                                class="inline-block px-2 py-1 text-xs font-semibold rounded-full mb-2 bg-green-100 text-green-800">
+                                                Berita
+                                            </span>
+                                            <h3
+                                                class="text-lg font-semibold mb-2 group-hover:text-blue-600 transition line-clamp-2">
+                                                {{ e($blog->judul) }}
+                                            </h3>
+                                            <p class="text-gray-600 text-sm line-clamp-2 hidden sm:block">
+                                                {{ e(Str::limit(strip_tags($blog->content), 150)) }}
+                                            </p>
+                                            <span
+                                                class="text-xs text-gray-500 mt-2 block">{{ $blog->created_at->format('d M Y') }}</span>
+                                        </div>
+                                    </div>
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+
+                <div class="flex  justify-center items-center space-x-1.5 font-semibold text-teal-400">
+                    <a href="/read-blog">
+
+                        <span>Lihat lainnya</span>
+                        <i class="fa-solid fa-right-long"></i>
+                    </a>
+                </div>
+            </div>
+        </section>
+    @endif
     @if (empty($showKelasDetail))
-        <section class="bg-gray-50 py-16 overflow-hidden">
+        <section class="bg-white py-16 overflow-hidden">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="text-center mb-12">
                     <h2 class="text-2xl font-bold">
@@ -457,10 +504,7 @@
         }
 
         button:focus,
-        a:focus {
-            outline: 2px solid #10b981;
-            outline-offset: 2px;
-        }
+
 
         .faq-section button:focus,
         .faq-section a:focus {

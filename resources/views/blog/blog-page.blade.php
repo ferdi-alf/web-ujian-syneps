@@ -22,12 +22,6 @@
             object-fit: cover;
         }
 
-        .blog-list-img {
-            width: 120px;
-            height: 120px;
-            object-fit: cover;
-            flex-shrink: 0;
-        }
 
         @media (max-width: 640px) {
             .blog-list-img {
