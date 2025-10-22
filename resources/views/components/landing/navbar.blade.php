@@ -100,26 +100,31 @@
                         Online Class
                     </a>
 
-                    <a href="#"
-                        class="text-gray-700 hover:text-teal-500 px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 hover:bg-teal-50">
-                        Project Based
-                    </a>
+
                 </div>
             </div>
 
             <div class="hidden md:block">
-                @auth
-                    <a href="{{ route('dashboard') }}"
-                        class="bg-gradient-to-r from-teal-300 via-emerald-300 to-emerald-400 text-white px-6 py-2 rounded-lg text-sm font-semibold hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-300">
-                        Dashboard
+                <div class="flex md:flex-row flex-col gap-2">
+
+                    <a href="{{ route('read-blog.index') }}"
+                        class="border-2 border-teal-400 text-teal-500 px-6 py-2 rounded-lg text-sm font-semibold hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-300">
+                        Blog
                     </a>
-                @endauth
-                @guest
-                    <a href="{{ route('login.index') }}"
-                        class="bg-gradient-to-r from-teal-300 via-emerald-300 to-emerald-400 text-white px-6 py-2 rounded-lg text-sm font-semibold hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-300">
-                        Login
-                    </a>
-                @endguest
+                    @auth
+                        <a href="{{ route('dashboard') }}"
+                            class="bg-gradient-to-r from-teal-300 via-emerald-300 to-emerald-400 text-white px-6 py-2 rounded-lg text-sm font-semibold hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-300">
+                            Dashboard
+                        </a>
+                    @endauth
+                    @guest
+                        <a href="{{ route('login.index') }}"
+                            class="bg-gradient-to-r from-teal-300 via-emerald-300 to-emerald-400 text-white px-6 py-2 rounded-lg text-sm font-semibold hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-300">
+                            Login
+                        </a>
+                    @endguest
+                </div>
+
             </div>
 
             <div class="md:hidden">
@@ -258,11 +263,32 @@
 </nav>
 
 <style>
-    #main-navbar.nav-scrolled { box-shadow: 0 10px 30px rgba(0,0,0,.06); }
-    .nav-link { position: relative; }
-    .nav-link::after { content:''; position:absolute; left:0.75rem; right:0.75rem; bottom:.35rem; height:2px; background: linear-gradient(90deg, #5eead4, #6ee7b7, #34d399); transform: scaleX(0); transform-origin:left; transition: transform .25s ease; }
-    .nav-link:hover::after { transform: scaleX(1); }
-/* Gradient text hover/active for nav items (override) */
+    #main-navbar.nav-scrolled {
+        box-shadow: 0 10px 30px rgba(0, 0, 0, .06);
+    }
+
+    .nav-link {
+        position: relative;
+    }
+
+    .nav-link::after {
+        content: '';
+        position: absolute;
+        left: 0.75rem;
+        right: 0.75rem;
+        bottom: .35rem;
+        height: 2px;
+        background: linear-gradient(90deg, #5eead4, #6ee7b7, #34d399);
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform .25s ease;
+    }
+
+    .nav-link:hover::after {
+        transform: scaleX(1);
+    }
+
+    /* Gradient text hover/active for nav items (override) */
     #main-navbar .ml-10 a:hover,
     #main-navbar .ml-10 button:hover,
     #mobile-menu a:hover,
@@ -280,15 +306,18 @@
 
 <script>
     // Navbar shadow on scroll
-    (function(){
+    (function() {
         const nav = document.getElementById('main-navbar');
-        function onScroll(){
+
+        function onScroll() {
             if (!nav) return;
             if (window.scrollY > 4) nav.classList.add('nav-scrolled');
             else nav.classList.remove('nav-scrolled');
         }
         onScroll();
-        window.addEventListener('scroll', onScroll, { passive: true });
+        window.addEventListener('scroll', onScroll, {
+            passive: true
+        });
     })();
     const mobileMenuButton = document.getElementById('mobile-menu-button');
     const mobileMenu = document.getElementById('mobile-menu');

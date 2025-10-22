@@ -6,6 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <title>Syneps Academy - {{ $title ?? 'Home' }}</title>
+    <meta name="description"
+        content="{{ e($description ?? 'Jadi Programmer dengan Peluang Kerja Tanpa Batas! - Pelatihan Intensif yang akan membawamu ke pekerjaan dengan hasil yang menjanjikan!') }}">
+    <meta name="keywords"
+        content="{{ e($keywords ?? 'tempat pelatihan coding palembang, tempat pelatihan coding di palembang, coding, sekolah coding palembang, pelatihan coding') }}">
 
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />

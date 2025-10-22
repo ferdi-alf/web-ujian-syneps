@@ -135,8 +135,8 @@
                 this.minimumScreenPercentage = 80;
                 this.lastTabSwitchViolation = 0; // Track last tab switch violation time
                 this.debounceDelay = 500; // Debounce delay in milliseconds
+                this.isSubmitting = false;
 
-                // Show initial SweetAlert warning
                 this.showInitialWarning();
 
                 this.initDetection();
@@ -176,6 +176,7 @@
 
             detectTabSwitch() {
                 window.addEventListener('blur', () => {
+                    if (this.isSubmitting) return;
                     if (this.isWindowFocused) {
                         this.isWindowFocused = false;
                         const now = Date.now();
@@ -194,6 +195,7 @@
                 });
 
                 document.addEventListener('visibilitychange', () => {
+                    if (this.isSubmitting) return;
                     if (document.hidden) {
                         const now = Date.now();
                         if (now - this.lastTabSwitchViolation > this.debounceDelay) {
@@ -509,8 +511,8 @@
                 this.answers = JSON.parse(localStorage.getItem('ujian_answers_{{ $ujian->id }}') || '{}');
                 this.startTime = Date.now();
                 this.ujianSlug = '{{ \Illuminate\Support\Str::slug($ujian->judul) }}';
-                this.isMobile = window.innerWidth < 768; // Detect mobile screen (md breakpoint)
-
+                this.isMobile = window.innerWidth < 768;
+                this.isSubmitting = false;
                 this.initializeTimer();
                 this.loadSavedAnswers();
                 this.bindEvents();
@@ -518,7 +520,7 @@
                 this.renderQuestionNavigation();
                 localStorage.setItem('ujian_start_time_{{ $ujian->id }}', this.startTime);
 
-                // Update navigation on window resize
+
                 window.addEventListener('resize', () => {
                     const newIsMobile = window.innerWidth < 768;
                     if (newIsMobile !== this.isMobile) {
@@ -551,7 +553,7 @@
                 const timerElement = document.getElementById('timer');
                 timerElement.textContent =
                     `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-                if (this.timeLimit <= 300) { // 5 minutes
+                if (this.timeLimit <= 300) { // 5 menit aje
                     timerElement.parentElement.className =
                         'bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded-lg animate-pulse';
                 }
@@ -580,10 +582,7 @@
                     });
                 });
 
-                window.addEventListener('beforeunload', (e) => {
-                    e.preventDefault();
-                    return 'Apakah Anda yakin ingin meninggalkan halaman? Jawaban akan tersimpan.';
-                });
+
             }
 
             saveProgress(soalId, jawaban) {
@@ -654,18 +653,16 @@
 
             renderQuestionNavigation() {
                 const container = document.getElementById('question-nav-container');
-                container.innerHTML = ''; // Clear existing buttons
+                container.innerHTML = '';
 
                 const soals = @json($ujian->soals);
-                const maxButtonsMobile = 5; // Show 5 buttons on mobile (first 2, current, last 2)
+                const maxButtonsMobile = 5;
 
                 if (this.isMobile && this.totalQuestions > maxButtonsMobile) {
-                    // Mobile: Show limited buttons with ellipsis
                     let buttonsToShow = [];
                     const current = this.currentQuestion;
                     const total = this.totalQuestions;
 
-                    // Always show first 2, current, last 2
                     if (current < 2) {
                         buttonsToShow = [0, 1, 2];
                         if (total > 4) buttonsToShow.push('...');
@@ -736,6 +733,11 @@
             }
 
             submitUjian(autoSubmit = false) {
+                this.isSubmitting = true;
+                if (this.antiCheat) {
+                    this.antiCheat.isSubmitting = true;
+                }
+
                 const answeredQuestions = Object.keys(this.answers).length;
 
                 if (!autoSubmit && answeredQuestions < this.totalQuestions) {
@@ -751,6 +753,11 @@
                     }).then((result) => {
                         if (result.isConfirmed) {
                             this.processSubmit();
+                        } else {
+                            this.isSubmitting = false;
+                            if (this.antiCheat) {
+                                this.antiCheat.isSubmitting = false;
+                            }
                         }
                     });
                 } else {
@@ -808,6 +815,12 @@
                         }
                     })
                     .catch(error => {
+
+                        this.isSubmitting = false;
+                        if (this.antiCheat) {
+                            this.antiCheat.isSubmitting = false;
+                        }
+
                         Swal.fire({
                             title: 'Error!',
                             text: error.message || 'Terjadi kesalahan saat menyimpan jawaban.',

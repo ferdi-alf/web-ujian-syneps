@@ -18,6 +18,11 @@
 /public/storage
 /storage/*.key
 /storage/pail
+/storage/public/blog-content/*
+/storage/public/blog-thumbnails/*
+/storage/public/dp/*
+/storage/public/forum-media/*
+/storage/public/pembayaran-bulanan/*
 /vendor
 Homestead.json
 Homestead.yaml

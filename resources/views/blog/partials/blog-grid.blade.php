@@ -41,8 +41,6 @@
                         </div>
                     @endif
                 </div>
-
-                <!-- Content Section -->
                 <div class="p-5 flex-1 flex flex-col cursor-pointer"
                     onclick="openDrawerWithData('drawer-blog-form', {
                         id: '{{ $blog['id'] }}',
@@ -66,8 +64,6 @@
                         <span>{{ $blog['created_at'] }}</span>
                     </div>
                 </div>
-
-                <!-- Action Buttons -->
                 <div class="px-5 pb-4 flex gap-2 border-t border-gray-100 pt-3">
                     <a href="{{ route('blog.show', ['slug' => $blog['slug'], 'act' => 'edit']) }}"
                         onclick="event.stopPropagation();"

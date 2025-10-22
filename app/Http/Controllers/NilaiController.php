@@ -128,7 +128,7 @@ class NilaiController extends Controller
                 $totalHasil = $hasilUjians->count();
                 $rataRata = $totalHasil > 0 ? $hasilUjians->avg('nilai') : 0;
                 
-                $batchNama = optional($ujian->batch)->nama ?? '-';
+                $batchNama = optional($ujian->batch)->nama  ?? '-';
                 $batchStatus = optional($ujian->batch)->status ?? '-';
                 $badgeClass = $batchStatus === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800';
                 $batchBadge = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ' . $badgeClass . '">' . $batchNama . '</span>';

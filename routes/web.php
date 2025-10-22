@@ -24,11 +24,21 @@ use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\ManajemenUjianController;
 use App\Http\Controllers\MateriController;
+use App\Http\Controllers\ReadBlogController;
 
 //fatih - LANDING PAGE INTEGRATION ACTIVATED
 Route::get('/', [LandingController::class, 'index'])->name('index');
 Route::get('/kelas/{slug}', [LandingController::class, 'kelasDetail'])->name('kelas.detail');
 Route::post('/daftar', [LandingController::class, 'daftar'])->name('daftar.store');
+
+// blog
+Route::controller(ReadBlogController::class)->prefix('read-blog')->name('read-blog.')->group(function () {
+    Route::get('/', 'index')->name('index');
+    Route::get('/search', 'search')->name('search')->middleware('blog.search.throttle');
+    Route::get('/{slug}', 'read')->name('read');
+});
+
+
 
 
 
@@ -196,7 +206,7 @@ Route::controller(ManajemenUjianController::class)->prefix('manajemen-ujian')->n
             Route::get('/show/{id}', 'show')->name('show');
             Route::post('/', 'store')->name('store');
             Route::put('/{id}', 'update')->name('update');
-            Route::delete('/{id}', 'destroy')->name('destroy');
+            Route::delete('/destroy/{id}', 'destroy')->name('destroy');
         });
     });
 
